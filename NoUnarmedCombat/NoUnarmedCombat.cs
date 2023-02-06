@@ -4,8 +4,8 @@ using HarmonyLib;
 
 namespace NoUnarmedCombat
 {
-	// Keep the version up-to-date with AssemblyInfo.cs
-	[BepInPlugin( "com.riintouge.nounarmedcombat" , "No Unarmed Combat" , "1.0" )]
+	// Keep the version up-to-date with AssemblyInfo.cs and manifest.json!
+	[BepInPlugin( "com.riintouge.nounarmedcombat" , "No Unarmed Combat" , "1.0.0" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class NoUnarmedCombat : BaseUnityPlugin
 	{

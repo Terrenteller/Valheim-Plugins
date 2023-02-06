@@ -30,6 +30,14 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Package|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>libs\0Harmony.dll</HintPath>
@@ -66,6 +74,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins"</PostBuildEvent>
+    <PostBuildEvent>copy $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins"
+if $(ConfigurationName) == Package (
+del /Q $(TargetDir)\$(ProjectName).zip
+powershell -Command "Compress-Archive -Path '$(TargetPath)','$(ProjectDir)\tsmeta\*' -DestinationPath '$(ProjectName).zip' -Force"
+)</PostBuildEvent>
   </PropertyGroup>
 </Project>
