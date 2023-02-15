@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace PingTweaks
 {
-	// Keep the version up-to-date with AssemblyInfo.cs and manifest.json!
-	[BepInPlugin( "com.riintouge.pingtweaks" , "Ping Tweaks" , "1.0.0" )]
+	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
+	[BepInPlugin( "com.riintouge.pingtweaks" , "Ping Tweaks" , "1.0.1" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class PingTweaks : BaseUnityPlugin
     {

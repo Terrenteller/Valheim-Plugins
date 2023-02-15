@@ -12,6 +12,7 @@ namespace PingTweaks
 			[HarmonyPrefix]
 			private static void AddInworldTextPrefix( ref string text , out string __state )
 			{
+				// Grab the text before the real method modifies it
 				__state = text;
 			}
 
@@ -38,7 +39,7 @@ namespace PingTweaks
 				if( worldTextInstance == null )
 					return;
 
-				worldTextInstance.m_text = __state;
+				worldTextInstance.m_text = Localization.instance.Localize( __state ).ToUpperInvariant();
 				Traverse.Create( __instance )
 					.Method( "UpdateWorldTextField" , new[] { typeof( Chat.WorldTextInstance ) } )
 					.GetValue( worldTextInstance );

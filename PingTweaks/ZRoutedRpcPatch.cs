@@ -35,8 +35,12 @@ namespace PingTweaks
 					Minimap.PinData pinData = Traverse.Create( minimap )
 						.Method( "GetClosestPin" , new[] { typeof( Vector3 ) , typeof( float ) } )
 						.GetValue< Minimap.PinData >( position , radius );
+
 					if( pinData != null )
-						parameters[ 3 ] = text = pinData.m_name.ToUpperInvariant();
+					{
+						text = pinData.m_nameElement.text;
+						parameters[ 3 ] = pinData.m_name;
+					}
 				}
 
 				if( PingBroadcastModifier.Value != KeyCode.None
