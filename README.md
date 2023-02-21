@@ -2,6 +2,15 @@
 
 Each mod/plugin in this repo is briefly described below. Please refer to settings as defined in source for up-to-date configuration information.
 
+### No Lossy Cooking Stations | [Settings](NoLossyCookingStations/NoLossyCookingStations.cs)
+
+Helps prevent cooking station network lag from eating your food by:
+1. Forcefully taking network ownership of the cooking station
+2. Limiting the rate at which items can be added
+3. Dumping overflow back into the world
+
+Also works with fermenters.
+
 ### No Unarmed Combat | [Settings](NoUnarmedCombat/NoUnarmedCombat.cs)
 
 Vikings may love to fight and throwing hands is a great way to start a brawl, but actual weapons are considerably more effective. The base function of this mod is to prevent the player from punching at all, because since when is that what you ever wanted to do? By default, sheathed equipment or gear from your toolbar will be equipped instead of trying to cast fist on the nearest empty space, wooden wall, or seeker soldier.
