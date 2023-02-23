@@ -2,6 +2,10 @@
 
 Each mod/plugin in this repo is briefly described below. Please refer to settings as defined in source for up-to-date configuration information.
 
+### Longer Pet Names | [Settings](LongerPetNames/LongerPetNames.cs)
+
+Increases the tamed animal name input length limit from 10 to 100 characters.
+
 ### No Lossy Cooking Stations | [Settings](NoLossyCookingStations/NoLossyCookingStations.cs)
 
 Helps prevent cooking station network lag from eating your food by:
