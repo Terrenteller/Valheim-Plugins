@@ -6,6 +6,10 @@ Each mod/plugin in this repo is briefly described below. Please refer to setting
 
 Increases the tamed animal name input length limit from 10 to 100 characters.
 
+### Mastercraft Hammer | [Settings](MastercraftHammer/MastercraftHammer.cs)
+
+Greatly increases the control over object damage states for placement and repair.
+
 ### No Lossy Cooking Stations | [Settings](NoLossyCookingStations/NoLossyCookingStations.cs)
 
 Helps prevent cooking station network lag from eating your food by:
