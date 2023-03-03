@@ -27,6 +27,10 @@ Vikings may love to fight and throwing hands is a great way to start a brawl, bu
 
 Stops the chat box from appearing when anyone pings anything, prevents the player's own pings from being broadcast to everyone without a modifier key, and shows map marker text when markers are pinged.
 
+### Restful Arrival | [Settings](RestfulArrival/RestfulArrival.cs)
+
+Removes the delay between resting and rested upon joining a world.
+
 ### Tar Tweaks | [Settings](TarTweaks/TarTweaks.cs)
 
 Vanilla tar is simultaneously too punishing and not punishing enough. First, you can swim in tar, so what sense does it make for items to be stuck in tar? Second, you can swim in tar, and what sense does that make at all? This mod allows items to be interactively and automatically taken from tar while greatly restricting movement when in or dripping with tar.
