@@ -20,7 +20,7 @@ namespace LongerPetNames
 				"0 - Core",
 				"LoadOnStart",
 				true,
-				"Determines if this mod loads on game start." );
+				"Whether this mod loads on game start." );
 
 			if( LoadOnStart.Value )
 				Harmony.PatchAll();

@@ -23,7 +23,7 @@ namespace NoLossyCookingStations
 				// so the interact animation is not played if adding an item fails
 
 				List< CodeInstruction > instructions = new List< CodeInstruction >( instructionsIn );
-				for( int index = 0 ; index < instructions.Count ; index++ )
+				for( int index = 0 ; ( index + 1 ) < instructions.Count ; index++ )
 				{
 					if( instructions[ index ].opcode == OpCodes.Call && instructions[ index + 1 ].opcode == OpCodes.Pop )
 					{

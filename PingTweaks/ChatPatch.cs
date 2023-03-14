@@ -44,7 +44,7 @@ namespace PingTweaks
 					.Method( "UpdateWorldTextField" , new[] { typeof( Chat.WorldTextInstance ) } )
 					.GetValue( worldTextInstance );
 			}
-			
+
 			[HarmonyPatch( "OnNewChatMessage" )]
 			[HarmonyPrefix]
 			private static bool OnNewChatMessagePrefix(

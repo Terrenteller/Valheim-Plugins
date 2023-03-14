@@ -4,7 +4,7 @@ using HarmonyLib;
 
 namespace NoUnarmedCombat
 {
-	// Keep the version up-to-date with AssemblyInfo.cs and manifest.json!
+	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
 	[BepInPlugin( "com.riintouge.nounarmedcombat" , "No Unarmed Combat" , "1.0.0" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class NoUnarmedCombat : BaseUnityPlugin
@@ -26,13 +26,13 @@ namespace NoUnarmedCombat
 				"0 - Core",
 				"Enable",
 				true,
-				"Determines if this mod has any effect when loaded." );
+				"Whether this mod has any effect when loaded." );
 
 			LoadOnStart = Config.Bind(
 				"0 - Core",
 				"LoadOnStart",
 				true,
-				"Determines if this mod loads on game start." );
+				"Whether this mod loads on game start." );
 
 			// Kicking by accident is rarely a problem so we provide a separate toggle
 			AllowKick = Config.Bind(

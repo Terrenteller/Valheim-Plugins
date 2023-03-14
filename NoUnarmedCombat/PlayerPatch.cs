@@ -5,7 +5,7 @@ namespace NoUnarmedCombat
 	public partial class NoUnarmedCombat
 	{
 		[HarmonyPatch( typeof( Player ) )]
-		class PlayerPatch
+		private class PlayerPatch
 		{
 			// If we unsheathe a bow instead of punching without clearing these timers:
 			// 1. We cannot sheathe it the same way. The character will immediately equip it again.
@@ -14,7 +14,7 @@ namespace NoUnarmedCombat
 
 			[HarmonyPatch( "PlayerAttackInput" )]
 			[HarmonyPostfix]
-			static void PlayerAttackInputPostfix(
+			private static void PlayerAttackInputPostfix(
 				ref float ___m_queuedAttackTimer,
 				ref float ___m_queuedSecondAttackTimer )
 			{

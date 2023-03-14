@@ -7,16 +7,21 @@ namespace NoUnarmedCombat
 	public partial class NoUnarmedCombat
 	{
 		[HarmonyPatch( typeof( Humanoid ) )]
-		class HumanoidPatch
+		private class HumanoidPatch
 		{
 			private static bool PerformingSecondaryAttack = false;
 			private static bool SheathedBecauseSwimming = false;
 
+			private static bool HumanoidIsLocalPlayer( Humanoid instance )
+			{
+				return instance.IsPlayer() && instance.GetZDOID().userID == ZDOMan.instance.GetMyID();
+			}
+
 			[HarmonyPatch( "GetCurrentBlocker" )]
 			[HarmonyPostfix]
-			static void GetCurrentBlockerPostfix( ref Humanoid __instance , ref ItemDrop.ItemData __result )
+			private static void GetCurrentBlockerPostfix( ref Humanoid __instance , ref ItemDrop.ItemData __result )
 			{
-				if( !IsEnabled.Value || !__instance.IsPlayer() )
+				if( !IsEnabled.Value || !HumanoidIsLocalPlayer( __instance ) )
 					return;
 
 				// Just because we can't punch shouldn't mean we can't block
@@ -25,9 +30,9 @@ namespace NoUnarmedCombat
 
 			[HarmonyPatch( "GetCurrentWeapon" )]
 			[HarmonyPostfix]
-			static void GetCurrentWeaponPostfix( ref Humanoid __instance , ref ItemDrop.ItemData __result )
+			private static void GetCurrentWeaponPostfix( ref Humanoid __instance , ref ItemDrop.ItemData __result )
 			{
-				if( !IsEnabled.Value || !__instance.IsPlayer() )
+				if( !IsEnabled.Value || !HumanoidIsLocalPlayer( __instance ) )
 					return;
 
 				// If we allow kicking, we allow all secondary attacks.
@@ -41,9 +46,9 @@ namespace NoUnarmedCombat
 
 			[HarmonyPatch( "StartAttack" )]
 			[HarmonyPrefix]
-			static void StartAttackPrefix( ref Humanoid __instance , ref bool secondaryAttack )
+			private static void StartAttackPrefix( ref Humanoid __instance , ref bool secondaryAttack )
 			{
-				if( !IsEnabled.Value || !__instance.IsPlayer() )
+				if( !IsEnabled.Value || !HumanoidIsLocalPlayer( __instance ) )
 					return;
 
 				PerformingSecondaryAttack = secondaryAttack;
@@ -51,13 +56,13 @@ namespace NoUnarmedCombat
 
 			[HarmonyPatch( "StartAttack" )]
 			[HarmonyPostfix]
-			static void StartAttackPostfix(
+			private static void StartAttackPostfix(
 				ref Humanoid __instance,
 				ref ItemDrop.ItemData ___m_hiddenLeftItem,
 				ref ItemDrop.ItemData ___m_hiddenRightItem,
 				ref ZSyncAnimation ___m_zanim )
 			{
-				if( !IsEnabled.Value || !__instance.IsPlayer() )
+				if( !IsEnabled.Value || !HumanoidIsLocalPlayer( __instance ) )
 					return;
 
 				if( PerformingSecondaryAttack || __instance.GetCurrentWeapon() != null )
@@ -102,12 +107,12 @@ namespace NoUnarmedCombat
 
 			[HarmonyPatch( "UpdateEquipment" )]
 			[HarmonyPrefix]
-			static void UpdateEquipmentPrefix(
+			private static void UpdateEquipmentPrefix(
 				ref Humanoid __instance,
 				ref ItemDrop.ItemData ___m_leftItem,
 				ref ItemDrop.ItemData ___m_rightItem )
 			{
-				if( !__instance.IsPlayer() )
+				if( !HumanoidIsLocalPlayer( __instance ) )
 					return;
 
 				if( __instance.IsSwiming() && !__instance.IsOnGround() )

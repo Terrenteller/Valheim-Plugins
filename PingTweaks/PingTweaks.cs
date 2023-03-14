@@ -20,20 +20,20 @@ namespace PingTweaks
 		public static ConfigEntry< bool > SuppressIncomingPings;
 
 		private readonly Harmony Harmony = new Harmony( "com.riintouge.pingtweaks" );
-		
+
 		private void Awake()
 		{
 			IsEnabled = Config.Bind(
 				"0 - Core",
 				"Enable",
 				true,
-				"Determines if this mod has any effect when loaded." );
+				"Whether this mod has any effect when loaded." );
 
 			LoadOnStart = Config.Bind(
 				"0 - Core",
 				"LoadOnStart",
 				true,
-				"Determines if this mod loads on game start." );
+				"Whether this mod loads on game start." );
 
 			// Note that LeftControl as a modifier will cause the player to teleport under specific circumstances
 			PingBroadcastModifier = Config.Bind(
