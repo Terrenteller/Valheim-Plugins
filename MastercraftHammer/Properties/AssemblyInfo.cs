@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle( "MastercraftHammer" )]
-[assembly: AssemblyDescription( "Greatly enhances the control over object damage states for placement and repair." )]
+[assembly: AssemblyDescription( "" )]
 [assembly: AssemblyConfiguration( "" )]
 [assembly: AssemblyCompany( "Riintouge" )]
 [assembly: AssemblyProduct( "MastercraftHammer"  )]

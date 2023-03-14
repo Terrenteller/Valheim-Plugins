@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle( "RestfulArrival" )]
-[assembly: AssemblyDescription( "Removes the delay between resting and rested upon joining a world." )]
+[assembly: AssemblyDescription( "" )]
 [assembly: AssemblyConfiguration( "" )]
 [assembly: AssemblyCompany( "Riintouge" )]
 [assembly: AssemblyProduct( "RestfulArrival" )]

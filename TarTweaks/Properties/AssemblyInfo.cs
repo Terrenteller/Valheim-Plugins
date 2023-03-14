@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle( "TarTweaks" )]
-[assembly: AssemblyDescription( "Miscellaneous changes to how tar works." )]
+[assembly: AssemblyDescription( "" )]
 [assembly: AssemblyConfiguration( "" )]
 [assembly: AssemblyCompany( "Riintouge" )]
 [assembly: AssemblyProduct( "Tar Tweaks" )]

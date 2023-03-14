@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle( "NoUnarmedCombat" )]
-[assembly: AssemblyDescription( "Prevents the player from punching and provides alternative actions." )]
+[assembly: AssemblyDescription( "" )]
 [assembly: AssemblyConfiguration( "" )]
 [assembly: AssemblyCompany( "Riintouge" )]
 [assembly: AssemblyProduct( "No Unarmed Combat" )]

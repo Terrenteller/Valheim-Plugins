@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle( "LongerPetNames" )]
-[assembly: AssemblyDescription( "Increases the tamed animal name input length limit from 10 to 100 characters." )]
+[assembly: AssemblyDescription( "" )]
 [assembly: AssemblyConfiguration( "" )]
-[assembly: AssemblyCompany( "" )]
+[assembly: AssemblyCompany( "Riintouge" )]
 [assembly: AssemblyProduct( "LongerPetNames" )]
 [assembly: AssemblyCopyright( "Copyright © 2023" )]
 [assembly: AssemblyTrademark( "" )]
