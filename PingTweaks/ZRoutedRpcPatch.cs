@@ -16,12 +16,11 @@ namespace PingTweaks
 					return true;
 
 				int? typeRaw = parameters[ 1 ] as int?;
-				Talker.Type type = typeRaw.HasValue ? (Talker.Type)typeRaw.Value : Talker.Type.Normal;
-				if( type != Talker.Type.Ping )
+				if( !typeRaw.HasValue || (Talker.Type)typeRaw.Value != Talker.Type.Ping )
 					return true;
 
 				Vector3? position = parameters[ 0 ] as Vector3?;
-				string name = parameters[ 2 ] as string;
+				UserInfo userInfo = parameters[ 2 ] as UserInfo;
 				string text = parameters[ 3 ] as string;
 				string senderAccountId = parameters[ 4 ] as string;
 
@@ -38,15 +37,15 @@ namespace PingTweaks
 
 					if( pinData != null )
 					{
-						text = pinData.m_nameElement.text;
-						parameters[ 3 ] = pinData.m_name;
+						parameters[ 3 ] = pinData.m_name; // Unlocalized
+						text = pinData.m_NamePinData.PinNameText.text; // Localized
 					}
 				}
 
 				if( PingBroadcastModifier.Value != KeyCode.None
 					&& !Input.GetKey( PingBroadcastModifier.Value )
 					&& position.HasValue
-					&& name != null
+					&& userInfo != null
 					&& text != null
 					&& senderAccountId != null )
 				{
@@ -54,8 +53,8 @@ namespace PingTweaks
 						null,
 						ZNet.instance.GetUID(),
 						position.Value,
-						type,
-						name,
+						Talker.Type.Ping,
+						userInfo,
 						text,
 						senderAccountId );
 

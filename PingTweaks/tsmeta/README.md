@@ -2,6 +2,10 @@ Prevents the chat box from appearing when the map is pinged, prevents the player
 
 ## Changelog
 
+1.0.2
+
+- Update for version 0.214.2.
+
 1.0.1
 
 - Resolve localized marker text

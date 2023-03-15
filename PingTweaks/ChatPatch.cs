@@ -43,6 +43,8 @@ namespace PingTweaks
 				Traverse.Create( __instance )
 					.Method( "UpdateWorldTextField" , new[] { typeof( Chat.WorldTextInstance ) } )
 					.GetValue( worldTextInstance );
+
+				MinimapPatch.RegeneratePingPins = true;
 			}
 
 			[HarmonyPatch( "OnNewChatMessage" )]

@@ -1,6 +1,6 @@
 {
 	"name": "PingTweaks",
-	"version_number": "1.0.1",
+	"version_number": "1.0.2",
 	"website_url": "https://github.com/Terrenteller/ValheimMods",
 	"description": "Prevents the chat box from appearing when the map is pinged, and more.",
 	"dependencies": [
