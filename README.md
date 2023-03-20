@@ -37,7 +37,7 @@ Removes the delay between resting and rested upon joining a world.
 
 ### Tar Tweaks | [Settings](TarTweaks/TarTweaks.cs)
 
-Vanilla tar is simultaneously too punishing and not punishing enough. First, you can swim in tar, so what sense does it make for items to be stuck in tar? Second, you can swim in tar, and what sense does that make at all? This mod allows items to be interactively and automatically taken from tar while greatly restricting movement when in or dripping with tar.
+Vanilla tar is simultaneously too punishing and not punishing enough. This mod allows items to be interactively taken from tar while restricting movement when in or dripping with tar.
 
 # Legal Stuff
 

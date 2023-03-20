@@ -4,7 +4,7 @@ using HarmonyLib;
 
 namespace TarTweaks
 {
-	// Keep the version up-to-date with AssemblyInfo.cs and manifest.json!
+	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
 	[BepInPlugin( "com.riintouge.tartweaks" , "Tar Tweaks" , "1.0.0" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class TarTweaks : BaseUnityPlugin
@@ -13,19 +13,12 @@ namespace TarTweaks
 		public static ConfigEntry< bool > IsEnabled;
 		public static ConfigEntry< bool > LoadOnStart;
 		// 1 - Items
-		public static ConfigEntry< bool > CanAutomaticallyTakeFromTar;
 		public static ConfigEntry< bool > CanInteractivelyTakeFromTar;
+		// 2 - Characters
+		public static ConfigEntry< bool > ApplyMovementPenalties;
 
 		private readonly Harmony Harmony = new Harmony( "com.riintouge.tartweaks" );
 
-		// TODO / Considerations:
-		// - Server sync
-		// - Players need to be able to climb out of tar pits
-		// - Stamina drain when moving in tar
-		// - Higher stamina drain when swimming in tar
-		// - Drowning in tar inflicts poison
-		// - Optional stamina requirement when only interactive pickup is enabled
-		// - Sap collector collects tar
 		private void Awake()
 		{
 			IsEnabled = Config.Bind(
@@ -40,17 +33,17 @@ namespace TarTweaks
 				true,
 				"Determines if this mod loads on game start." );
 
-			CanAutomaticallyTakeFromTar = Config.Bind(
-				"1 - Items",
-				"CanAutomaticallyTakeFromTar",
-				false,
-				"Allow the player to automatically take items stuck in tar." );
-
 			CanInteractivelyTakeFromTar = Config.Bind(
 				"1 - Items",
 				"CanInteractivelyTakeFromTar",
 				true,
 				"Allow the player to interactively take items stuck in tar." );
+			
+			ApplyMovementPenalties = Config.Bind(
+				"2 - Characters",
+				"ApplyMovementPenalties",
+				true,
+				"Penalizes character movement (not just players) when tarred and in tar." );
 
 			if( LoadOnStart.Value )
 				Harmony.PatchAll();

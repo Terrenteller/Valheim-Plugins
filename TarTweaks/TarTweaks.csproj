@@ -77,10 +77,12 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins"
+    <PostBuildEvent>copy "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins"
 if $(ConfigurationName) == Package (
-del /Q $(TargetDir)\$(ProjectName).zip
+del /Q "$(TargetDir)\$(ProjectName).zip"
+powershell -Command "(Get-Item '$(TargetPath)').LastWriteTime = (Get-Date).Date"
 powershell -Command "Compress-Archive -Path '$(TargetPath)','$(ProjectDir)\tsmeta\*' -DestinationPath '$(ProjectName).zip' -Force"
+powershell -Command "(Get-Item '$(ProjectName).zip').LastWriteTime = (Get-Date).Date"
 )</PostBuildEvent>
   </PropertyGroup>
 </Project>

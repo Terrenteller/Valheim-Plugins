@@ -7,33 +7,42 @@ namespace TarTweaks
 		[HarmonyPatch( typeof( ItemDrop ) )]
 		class ItemDropPatch
 		{
-			internal static bool SuppressInTar = false;
+			private static bool SuppressInTar = false;
+			private static bool WasInTar = false;
+			private const float TakeFromTarStamina = 3.0f;
 
 			[HarmonyPatch( "InTar" )]
-			[HarmonyPrefix]
-			private static bool InTarPrefix( ref bool __result )
+			[HarmonyPostfix]
+			private static bool InTarPostfix( bool result )
 			{
-				if( IsEnabled.Value && SuppressInTar )
+				if( IsEnabled.Value && SuppressInTar && result )
 				{
-					__result = false;
+					WasInTar = true;
 					return false;
 				}
 
-				return true;
+				return result;
 			}
 
 			[HarmonyPatch( "Interact" )]
 			[HarmonyPrefix]
-			private static void InteractPrefix()
+			private static void InteractPrefix( ref Humanoid character )
 			{
-				SuppressInTar = CanInteractivelyTakeFromTar.Value;
+				SuppressInTar = IsEnabled.Value
+					&& CanInteractivelyTakeFromTar.Value
+					&& character.HaveStamina( TakeFromTarStamina );
 			}
 
 			[HarmonyPatch( "Interact" )]
 			[HarmonyPostfix]
-			private static void InteractPostfix()
+			private static bool InteractPostfix( bool result , ref Humanoid character )
 			{
+				if( IsEnabled.Value && CanInteractivelyTakeFromTar.Value && WasInTar && result )
+					character.UseStamina( TakeFromTarStamina );
+
 				SuppressInTar = false;
+				WasInTar = false;
+				return result;
 			}
 		}
 	}
