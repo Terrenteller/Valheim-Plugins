@@ -1,0 +1,9 @@
+{
+	"name": "NagMessages",
+	"version_number": "1.0.0",
+	"website_url": "https://github.com/Terrenteller/ValheimMods",
+	"description": "Notifies the player about things they may not be paying attention to.",
+	"dependencies": [
+		"denikson-BepInExPack_Valheim-5.4.1901"
+	]
+}

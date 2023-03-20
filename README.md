@@ -10,6 +10,10 @@ Increases the tamed animal name input length limit from 10 to 100 characters.
 
 Greatly increases the control over object damage states for placement and repair.
 
+### Nag Messages | [Settings](NagMessages/NagMessages.cs)
+
+Nags the player to change their forsaken power if their current power is not a preferred one and to eat if their stomach is empty. Can also notify the player when the benefits of their foods are wearing off before they wear off completely.
+
 ### No Lossy Cooking Stations | [Settings](NoLossyCookingStations/NoLossyCookingStations.cs)
 
 Helps prevent cooking station network lag from eating your food by:

@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MastercraftHammer", "Master
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestfulArrival", "RestfulArrival\RestfulArrival.csproj", "{78540E8C-1CA5-4548-B3C1-5D6259B4DB5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NagMessages", "NagMessages\NagMessages.csproj", "{7F021C97-1954-4A61-83AD-7BB4BE2E18EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,6 +68,12 @@ Global
 		{78540E8C-1CA5-4548-B3C1-5D6259B4DB5E}.Package|Any CPU.Build.0 = Package|Any CPU
 		{78540E8C-1CA5-4548-B3C1-5D6259B4DB5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78540E8C-1CA5-4548-B3C1-5D6259B4DB5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F021C97-1954-4A61-83AD-7BB4BE2E18EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F021C97-1954-4A61-83AD-7BB4BE2E18EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F021C97-1954-4A61-83AD-7BB4BE2E18EF}.Package|Any CPU.ActiveCfg = Package|Any CPU
+		{7F021C97-1954-4A61-83AD-7BB4BE2E18EF}.Package|Any CPU.Build.0 = Package|Any CPU
+		{7F021C97-1954-4A61-83AD-7BB4BE2E18EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F021C97-1954-4A61-83AD-7BB4BE2E18EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
