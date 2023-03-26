@@ -1,8 +1,8 @@
 {
 	"name": "NoUnarmedCombat",
-	"version_number": "1.0.0",
+	"version_number": "1.0.1",
 	"website_url": "https://github.com/Terrenteller/ValheimMods",
-	"description": "Prevents the player from punching and provides alternative actions.",
+	"description": "Prevents the player from punching by equipping them with their gear.",
 	"dependencies": [
 		"denikson-BepInExPack_Valheim-5.4.1901"
 	]

@@ -38,7 +38,7 @@ namespace TarTweaks
 				"CanInteractivelyTakeFromTar",
 				true,
 				"Allow the player to interactively take items stuck in tar." );
-			
+
 			ApplyMovementPenalties = Config.Bind(
 				"2 - Characters",
 				"ApplyMovementPenalties",

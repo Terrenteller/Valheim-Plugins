@@ -9,12 +9,41 @@ namespace NoUnarmedCombat
 		[HarmonyPatch( typeof( Humanoid ) )]
 		private class HumanoidPatch
 		{
+			private static bool InStartAttack = false;
 			private static bool PerformingSecondaryAttack = false;
 			private static bool SheathedBecauseSwimming = false;
+			private static bool SkipNextEquipAttempt = false;
 
-			private static bool HumanoidIsLocalPlayer( Humanoid instance )
+			private static ItemDrop.ItemData[] GetToolbarWeaponAndShield( Humanoid humanoid )
 			{
-				return instance.IsPlayer() && instance.GetZDOID().userID == ZDOMan.instance.GetMyID();
+				// Mods which add additional slots may do so as distinct inventories.
+				// Items in them may have the same X/Y coordinates as items in the vanilla inventory.
+				// Therefore, we cannot call GetAllItems() because we cannot distinguish between inventories.
+				List< ItemDrop.ItemData > toolbarItems = new List< ItemDrop.ItemData>();
+				humanoid.GetInventory().GetBoundItems( toolbarItems );
+				IEnumerable< ItemDrop.ItemData > validToolbarItems = toolbarItems
+					.OrderBy( x => x.m_gridPos.x )
+					.Where( x => x.GetDurabilityPercentage() > 0.0f );
+
+				ItemDrop.ItemData weapon = validToolbarItems.FirstOrDefault( itemData => itemData.IsWeapon() );
+				ItemDrop.ItemData[] weaponAndShield = new ItemDrop.ItemData[ 2 ];
+				weaponAndShield[ 0 ] = weapon;
+				weaponAndShield[ 1 ] = weapon == null || !weapon.IsTwoHanded()
+					? validToolbarItems.FirstOrDefault( itemData => itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield )
+					: null;
+
+				return weaponAndShield;
+			}
+
+			private static bool HumanoidIsLocalPlayer( Humanoid humanoid )
+			{
+				return humanoid.IsPlayer() && humanoid.GetZDOID().userID == ZDOMan.instance.GetMyID();
+			}
+
+			private static bool ItemIsWeaponOrShield( ItemDrop.ItemData itemData )
+			{
+				return itemData != null
+					&& ( itemData.IsWeapon() || itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield );
 			}
 
 			[HarmonyPatch( "GetCurrentBlocker" )]
@@ -30,18 +59,36 @@ namespace NoUnarmedCombat
 
 			[HarmonyPatch( "GetCurrentWeapon" )]
 			[HarmonyPostfix]
-			private static void GetCurrentWeaponPostfix( ref Humanoid __instance , ref ItemDrop.ItemData __result )
+			private static ItemDrop.ItemData GetCurrentWeaponPostfix(
+				ItemDrop.ItemData result,
+				ref Humanoid __instance,
+				ref ItemDrop.ItemData ___m_hiddenLeftItem,
+				ref ItemDrop.ItemData ___m_hiddenRightItem )
 			{
-				if( !IsEnabled.Value || !HumanoidIsLocalPlayer( __instance ) )
-					return;
+				if( InStartAttack
+					&& IsEnabled.Value
+					&& result == __instance.m_unarmedWeapon?.m_itemData
+					&& HumanoidIsLocalPlayer( __instance )
+					&& ( !PerformingSecondaryAttack || !AllowKick.Value ) )
+				{
+					if( UnsheatheOnPunch.Value && ( ___m_hiddenLeftItem != null || ___m_hiddenRightItem != null ) )
+						return null;
 
-				// If we allow kicking, we allow all secondary attacks.
-				// We don't need to check if the secondary is actually a kick.
-				if( PerformingSecondaryAttack && AllowKick.Value )
-					return;
+					if( ToolbarEquipOnPunch.Value )
+					{
+						ItemDrop.ItemData[] weaponAndShield = GetToolbarWeaponAndShield( __instance );
+						if( weaponAndShield[ 0 ] != null )
+							return null;
+					}
 
-				if( __result == __instance.m_unarmedWeapon?.m_itemData )
-					__result = null;
+					if( !FallbackFisticuffs.Value )
+					{
+						SkipNextEquipAttempt = true;
+						return null;
+					}
+				}
+
+				return result;
 			}
 
 			[HarmonyPatch( "StartAttack" )]
@@ -51,6 +98,7 @@ namespace NoUnarmedCombat
 				if( !IsEnabled.Value || !HumanoidIsLocalPlayer( __instance ) )
 					return;
 
+				InStartAttack = true;
 				PerformingSecondaryAttack = secondaryAttack;
 			}
 
@@ -62,47 +110,67 @@ namespace NoUnarmedCombat
 				ref ItemDrop.ItemData ___m_hiddenRightItem,
 				ref ZSyncAnimation ___m_zanim )
 			{
-				if( !IsEnabled.Value || !HumanoidIsLocalPlayer( __instance ) )
+				bool skipEquip = !IsEnabled.Value
+					|| !HumanoidIsLocalPlayer( __instance )
+					|| __instance.GetCurrentWeapon() != null
+					|| !InStartAttack
+					|| SkipNextEquipAttempt;
+
+				InStartAttack = false;
+				PerformingSecondaryAttack = false;
+				SkipNextEquipAttempt = false;
+
+				if( skipEquip )
 					return;
 
-				if( PerformingSecondaryAttack || __instance.GetCurrentWeapon() != null )
-				{
-					PerformingSecondaryAttack = false;
-					return;
-				}
-
+				// We can't reliably equip from the toolbar while unsheathing in the same pass
+				// because not all equipment correctly reports two-handed-ness, like hammers.
+				// The double-edged sword here, logically, is this method gets called A LOT.
+				// If the first pass unsheathed equipment, the second pass will respect what
+				// the player is holding. A shield only may cause us to look for a weapon
+				// on the toolbar while a hammer will count as a weapon so we will never get here.
 				if( UnsheatheOnPunch.Value && ( ___m_hiddenLeftItem != null || ___m_hiddenRightItem != null ) )
 				{
 					__instance.ShowHandItems();
 				}
 				else if( ToolbarEquipOnPunch.Value )
 				{
-					// Mods which add additional slots may do so as distinct inventories.
-					// Items in them may have the same X/Y coordinates as items in the vanilla inventory.
-					// Therefore, we cannot call GetAllItems() because we cannot distinguish between inventories.
-					List< ItemDrop.ItemData > toolbarItems = new List< ItemDrop.ItemData >();
-					__instance.GetInventory().GetBoundItems( toolbarItems );
-					IEnumerable< ItemDrop.ItemData > validToolbarItems = toolbarItems
-						.OrderBy( x => x.m_gridPos.x )
-						.Where( x => x.GetDurabilityPercentage() > 0.0f );
+					ItemDrop.ItemData[] weaponAndShield = GetToolbarWeaponAndShield( __instance );
+					ItemDrop.ItemData weapon = weaponAndShield[ 0 ];
+					ItemDrop.ItemData shield = weaponAndShield[ 1 ];
+					ItemDrop.ItemData rightItem = __instance.GetRightItem();
+					ItemDrop.ItemData leftItem = __instance.GetLeftItem();
+					bool equipmentChanged = false;
 
-					ItemDrop.ItemData firstWeapon = validToolbarItems.FirstOrDefault( itemData => itemData.IsWeapon() );
-					if( firstWeapon != null )
-						__instance.EquipItem( firstWeapon );
-
-					ItemDrop.ItemData firstShield = null;
-					if( firstWeapon == null || !firstWeapon.IsTwoHanded() )
+					if( rightItem != null && rightItem.IsWeapon() )
 					{
-						firstShield = validToolbarItems.FirstOrDefault( itemData => itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield );
-						if( firstShield != null )
-							__instance.EquipItem( firstShield );
+						weapon = __instance.GetRightItem();
+					}
+					else if( leftItem != null && leftItem.IsWeapon() )
+					{
+						weapon = __instance.GetLeftItem();
+					}
+					else if( weapon != null )
+					{
+						__instance.EquipItem( weapon );
+						equipmentChanged = true;
 					}
 
-					if( firstWeapon != null || firstShield != null )
+					if( ( weapon == null || !weapon.IsTwoHanded() )
+						&& shield != null
+						&& !ItemIsWeaponOrShield( __instance.GetLeftItem() ) )
+					{
+						__instance.EquipItem( shield );
+						equipmentChanged = true;
+					}
+
+					if( equipmentChanged )
 						___m_zanim.SetTrigger( "equip_hip" );
 				}
+				else
+					return;
 
-				PlayerPatch.ClearQueuedAttackTimers = true;
+				PlayerPatch.RestoreQueuedAttackTimers = true;
 			}
 
 			[HarmonyPatch( "UpdateEquipment" )]

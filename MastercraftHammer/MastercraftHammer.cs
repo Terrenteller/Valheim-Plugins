@@ -110,7 +110,7 @@ namespace MastercraftHammer
 				"ResetSingleTouch",
 				false,
 				"Toggle to true to reset the list of single-touched objects." );
-			
+
 			AllowNew = Config.Bind(
 				"4 - New",
 				"AllowNew",

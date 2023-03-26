@@ -37,7 +37,7 @@ namespace MastercraftHammer
 				int maxWeight = 0;
 				foreach( int weight in stateWeights )
 					maxWeight += weight;
-				
+
 				if( maxWeight == 0 )
 					return null;
 

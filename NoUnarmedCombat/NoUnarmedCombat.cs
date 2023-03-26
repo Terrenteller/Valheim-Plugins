@@ -5,7 +5,7 @@ using HarmonyLib;
 namespace NoUnarmedCombat
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.nounarmedcombat" , "No Unarmed Combat" , "1.0.0" )]
+	[BepInPlugin( "com.riintouge.nounarmedcombat" , "No Unarmed Combat" , "1.0.1" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class NoUnarmedCombat : BaseUnityPlugin
 	{
@@ -14,6 +14,7 @@ namespace NoUnarmedCombat
 		public static ConfigEntry< bool > LoadOnStart;
 		// 1 - General
 		public static ConfigEntry< bool > AllowKick;
+		public static ConfigEntry< bool > FallbackFisticuffs;
 		public static ConfigEntry< bool > ToolbarEquipOnPunch;
 		public static ConfigEntry< bool > UnsheatheAfterSwimming;
 		public static ConfigEntry< bool > UnsheatheOnPunch;
@@ -41,6 +42,12 @@ namespace NoUnarmedCombat
 				false,
 				"Allow the player to kick." );
 
+			FallbackFisticuffs = Config.Bind(
+				"1 - General",
+				"FallbackFisticuffs",
+				true,
+				"Allow the player to punch and kick when they have no weapon to equip." );
+
 			ToolbarEquipOnPunch = Config.Bind(
 				"1 - General",
 				"ToolbarEquipOnPunch",
@@ -59,7 +66,7 @@ namespace NoUnarmedCombat
 				"1 - General",
 				"UnsheatheOnPunch",
 				true,
-				"Instead of punching, equip gear from the player's back. Takes precedence over the toolbar." );
+				"Instead of punching, equip sheathed equipment. Takes precedence over equipment on the toolbar." );
 
 			if( LoadOnStart.Value )
 				Harmony.PatchAll();

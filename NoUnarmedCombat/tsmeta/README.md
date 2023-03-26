@@ -1,6 +1,11 @@
-Vikings may love to fight and throwing hands is a great way to start a brawl, but actual weapons are considerably more effective. The base function of this mod is to prevent the player from punching at all, because since when is that what you ever wanted to do? By default, sheathed equipment or gear from your toolbar will be equipped instead of trying to cast fist on the nearest empty space, wooden wall, or seeker soldier.
+Vikings may love to fight and throwing hands is a great way to start a brawl, but actual weapons are considerably more effective at getting the point across. Rather than punching, sheathed equipment will be withdrawn and gear from the toolbar will be equipped instead of trying to cast fist like magic missile.
 
 ## Changelog
+
+1.0.1
+
+- Allow punching and kicking by default when the player has no weapon to equip
+- Fixed incompatibility with BowPlugin
 
 1.0.0
 
