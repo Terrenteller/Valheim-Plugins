@@ -5,7 +5,7 @@ using HarmonyLib;
 namespace NoLossyCookingStations
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.nolossycookingstations" , "No Lossy Cooking Stations" , "1.0.0" )]
+	[BepInPlugin( "com.riintouge.nolossycookingstations" , "No Lossy Cooking Stations" , "1.0.1" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class NoLossyCookingStations : BaseUnityPlugin
 	{
@@ -21,13 +21,13 @@ namespace NoLossyCookingStations
 				"0 - Core",
 				"Enable",
 				true,
-				"Whether this mod has any effect when loaded." );
+				"Whether this plugin has any effect when loaded." );
 
 			LoadOnStart = Config.Bind(
 				"0 - Core",
 				"LoadOnStart",
 				true,
-				"Whether this mod loads on game start." );
+				"Whether this plugin loads on game start." );
 
 			if( LoadOnStart.Value )
 				Harmony.PatchAll();

@@ -7,6 +7,10 @@ Also works with fermenters.
 
 ## Changelog
 
+1.0.1
+
+- Update for 0.217.46 (pre-Ashlands)
+
 1.0.0
 
 - Initial release

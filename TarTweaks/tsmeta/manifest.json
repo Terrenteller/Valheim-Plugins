@@ -1,9 +1,9 @@
 {
 	"name": "TarTweaks",
-	"version_number": "1.0.0",
-	"website_url": "https://github.com/Terrenteller/ValheimMods",
+	"version_number": "1.0.1",
+	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
 	"description": "Makes tar better AND worse.",
 	"dependencies": [
-		"denikson-BepInExPack_Valheim-5.4.1901"
+		"denikson-BepInExPack_Valheim-5.4.2202"
 	]
 }

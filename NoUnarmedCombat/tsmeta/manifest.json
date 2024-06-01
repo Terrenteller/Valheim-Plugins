@@ -1,9 +1,9 @@
 {
 	"name": "NoUnarmedCombat",
-	"version_number": "1.0.1",
-	"website_url": "https://github.com/Terrenteller/ValheimMods",
-	"description": "Prevents the player from punching by equipping them with their gear.",
+	"version_number": "1.0.2",
+	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
+	"description": "Tries to replace the air in your fists with sharper things.",
 	"dependencies": [
-		"denikson-BepInExPack_Valheim-5.4.1901"
+		"denikson-BepInExPack_Valheim-5.4.2202"
 	]
 }

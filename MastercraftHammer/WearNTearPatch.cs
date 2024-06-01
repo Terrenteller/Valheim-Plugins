@@ -54,28 +54,59 @@ namespace MastercraftHammer
 				return null;
 			}
 
-			[HarmonyPatch( "OnPlaced" )]
-			[HarmonyPrefix]
-			private static void OnPlacedPrefix( ref WearNTear __instance , ref ZNetView ___m_nview )
+			private static void RandomizeHealth( WearNTear instance , ZNetView netView , bool forPlacement )
 			{
-				if( IsEnabled.Value
-					&& RandomizeStateOnPlacement.Value
-					&& DoesMaterialPassFilter( __instance.m_materialType ) )
+				ZDO zdo = netView.GetZDO();
+				if( !DoesMaterialPassFilter( instance.m_materialType )
+					|| ( EnableSingleTouch.Value && WornNTorn.Contains( zdo.m_uid.ID ) ) )
 				{
-					float? health = GetRandomHealth( __instance , true );
-					if( health != null )
-					{
-						WornNTorn.Add( ___m_nview.GetZDO().m_uid.id );
-						___m_nview.GetZDO().Set( "health" , health.Value );
-					}
+					return;
+				}
+
+				float health = GetRandomHealth( instance , forPlacement ) ?? instance.m_health;
+				if( health == 0.0f )
+				{
+					instance.Remove();
+					return;
+				}
+
+				if( EnableSingleTouch.Value )
+					WornNTorn.Add( zdo.m_uid.ID );
+
+				if( health != zdo.GetFloat( "health" , instance.m_health ) )
+				{
+					zdo.Set( "health" , health );
+					netView.InvokeRPC( ZNetView.Everybody , "WNTHealthChanged" , health );
 				}
 			}
 
+			[HarmonyPatch( "OnPlaced" )]
+			[HarmonyPostfix]
+			private static void OnPlacedPostfix( ref WearNTear __instance , ref ZNetView ___m_nview )
+			{
+				if( IsEnabled.Value && RandomizeStateOnPlacement.Value )
+					RandomizeHealth( __instance , ___m_nview , true );
+			}
+			
+			[HarmonyPatch( "Remove" )]
+			[HarmonyPrefix]
+			private static void RemovePrefix( ref WearNTear __instance , ref ZNetView ___m_nview , out uint __state )
+			{
+				__state = ___m_nview.GetZDO().m_uid.ID;
+			}
+			
+			[HarmonyPatch( "Remove" )]
+			[HarmonyPostfix]
+			private static void RemovePostfix( ref WearNTear __instance , ref ZNetView ___m_nview , ref uint __state )
+			{
+				WornNTorn.Remove( __state );
+			}
+			
 			[HarmonyPatch( "Repair" )]
 			[HarmonyTranspiler]
 			private static IEnumerable< CodeInstruction > RepairPatch( IEnumerable< CodeInstruction > instructionsIn )
 			{
-				// Pave over the health check and only do it in a prefix when the mod is NOT enabled
+				// Pave over the health check and only do it in a prefix when the plugin is NOT enabled
 
 				List< CodeInstruction > instructions = new List< CodeInstruction >( instructionsIn );
 				int lastRetIndex = -1;
@@ -121,7 +152,7 @@ namespace MastercraftHammer
 			{
 				if( IsEnabled.Value
 					&& RandomizeStateOnRepair.Value
-					&& sender == ZDOMan.instance.GetMyID()
+					&& sender == ZDOMan.GetSessionID()
 					&& ___m_nview.IsValid()
 					&& ___m_nview.IsOwner()
 					&& ZNet.instance
@@ -129,28 +160,7 @@ namespace MastercraftHammer
 					&& ZNet.instance.GetPeerConnections() == 0
 					&& Player.m_localPlayer )
 				{
-					if( !DoesMaterialPassFilter( __instance.m_materialType ) )
-						return false;
-
-					ZDO zdo = ___m_nview.GetZDO();
-					if( EnableSingleTouch.Value && WornNTorn.Contains( zdo.m_uid.id ) )
-						return false;
-
-					float? health = GetRandomHealth( __instance , false );
-					if( health == null || health == zdo.GetFloat( "health" , __instance.m_health ) )
-						return false;
-
-					if( health > 0.0f )
-					{
-						if( EnableSingleTouch.Value )
-							WornNTorn.Add( zdo.m_uid.id );
-
-						zdo.Set( "health" , health.Value );
-						___m_nview.InvokeRPC( ZNetView.Everybody , "WNTHealthChanged" , health.Value );
-					}
-					else
-						__instance.Remove();
-
+					RandomizeHealth( __instance , ___m_nview , false );
 					return false;
 				}
 

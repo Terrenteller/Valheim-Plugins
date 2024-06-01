@@ -82,3 +82,9 @@ Global
 		SolutionGuid = {36B9E4CF-2823-4049-B19D-B42FB83D06DB}
 	EndGlobalSection
 EndGlobal
+
+<!--
+ServerSync does a neat thing for assembly search paths:
+https://github.com/blaxxun-boop/ServerSync/blob/master/ServerSync.csproj
+Can we do that here for all projects?
+-->

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace PingTweaks
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.pingtweaks" , "Ping Tweaks" , "1.0.1" )]
+	[BepInPlugin( "com.riintouge.pingtweaks" , "Ping Tweaks" , "1.0.3" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class PingTweaks : BaseUnityPlugin
     {
@@ -15,9 +15,8 @@ namespace PingTweaks
 		public static ConfigEntry< bool > LoadOnStart;
 		// 1 - General
 		public static ConfigEntry< KeyCode > PingBroadcastModifier;
-		public static ConfigEntry< bool > ShowMapMarkerTextWhenPinged;
-		public static ConfigEntry< bool > SuppressChatBoxOnPing;
-		public static ConfigEntry< bool > SuppressIncomingPings;
+		public static ConfigEntry< Color > PingColor;
+		public static ConfigEntry< bool > SavePinnedPings;
 
 		private readonly Harmony Harmony = new Harmony( "com.riintouge.pingtweaks" );
 
@@ -27,38 +26,33 @@ namespace PingTweaks
 				"0 - Core",
 				"Enable",
 				true,
-				"Whether this mod has any effect when loaded." );
+				"Whether this plugin has any effect when loaded." );
 
 			LoadOnStart = Config.Bind(
 				"0 - Core",
 				"LoadOnStart",
 				true,
-				"Whether this mod loads on game start." );
+				"Whether this plugin loads on game start." );
 
-			// Note that LeftControl as a modifier will cause the player to teleport under specific circumstances
+			// LeftControl as a modifier will cause the player to teleport with cheats
 			PingBroadcastModifier = Config.Bind(
 				"1 - General",
 				"PingBroadcastModifier",
 				KeyCode.LeftShift,
 				"If set and not \"None\", pings will only be sent to other players when the specified key is pressed." );
 
-			ShowMapMarkerTextWhenPinged = Config.Bind(
+			// FIXME: Why doesn't this work on the minimap?
+			PingColor = Config.Bind(
 				"1 - General",
-				"ShowMapMarkerTextWhenPinged",
-				true,
-				"If true, pinging map markers will show the marker text to any player with this mod and option enabled." );
+				"PingColor",
+				new Color( 0.6f , 0.7f , 1.0f , 1.0f ), // Vanilla default
+				"In-world ping text color." );
 
-			SuppressChatBoxOnPing = Config.Bind(
+			SavePinnedPings = Config.Bind(
 				"1 - General",
-				"SuppressChatBoxOnPing",
-				true,
-				"If true, pings will not cause the chat box to appear." );
-
-			SuppressIncomingPings = Config.Bind(
-				"1 - General",
-				"SuppressIncomingPings",
+				"SavePinnedPings",
 				false,
-				"If true, pings from other players will not be shown." );
+				"Whether double-clicking on a ping from another player creates a persistent pin. Off by default to not conflict with the cartography table." );
 
 			if( LoadOnStart.Value )
 				Harmony.PatchAll();

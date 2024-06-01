@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using UnityEngine;
 
 namespace NagMessages
 {
@@ -29,13 +28,9 @@ namespace NagMessages
 					FirstSpawnPending = false;
 
 					// Forsaken powers are status effects like any other
-					// and we do not retain them upon switching worlds
-					Instance.StopCoroutine( "NagAboutPowerIn" );
-					Instance.StopCoroutine( "ForceNagAboutPowerIn" );
-					PlayerPatch.ForsakenPowerTimeout = Time.timeAsDouble;
-
-					Instance.Nag( true , true );
-					Instance.Nag( true , false );
+					// and are not retained upon switching worlds
+					Instance.NagAboutPower( MessageHudPatch.MessageTTL * 2.0 , true );
+					Instance.NagAboutHunger( MessageHudPatch.MessageTTL * 3.0 , true );
 				}
 			}
 		}

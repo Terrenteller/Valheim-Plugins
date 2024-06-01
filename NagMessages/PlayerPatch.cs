@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace NagMessages
 {
@@ -9,8 +8,6 @@ namespace NagMessages
 		[HarmonyPatch( typeof( Player ) )]
 		private class PlayerPatch
 		{
-			internal static double ForsakenPowerTimeout = 0.0;
-
 			[HarmonyPatch( "ActivateGuardianPower" )]
 			[HarmonyPrefix]
 			private static void ActivateGuardianPowerPrefix( ref Player __instance , out float __state )
@@ -27,13 +24,9 @@ namespace NagMessages
 			{
 				if( __instance.m_guardianPowerCooldown != __state && ___m_guardianSE )
 				{
-					StatusEffect power = __instance.GetSEMan().GetStatusEffect( ___m_guardianSE.name );
+					StatusEffect power = __instance.GetSEMan().GetStatusEffect( ___m_guardianSE.NameHash() );
 					if( power )
-					{
-						float powerDuration = power.GetRemaningTime();
-						ForsakenPowerTimeout = Time.timeAsDouble + (double)powerDuration;
-						Instance.StartCoroutine( "ForceNagAboutPowerIn" , powerDuration );
-					}
+						Instance.NagAboutPower( power.GetRemaningTime() , true );
 				}
 			}
 
@@ -41,7 +34,7 @@ namespace NagMessages
 			[HarmonyPostfix]
 			private static void SetGuardianPowerPostfix()
 			{
-				Instance.StartCoroutine( "NagAboutPowerIn" , PowerNagFrequency.Value * 60.0f );
+				Instance.NagAboutPower();
 			}
 
 			[HarmonyPatch( "SetMaxEitr" )]
@@ -98,7 +91,7 @@ namespace NagMessages
 			private static void UpdateFoodPostfix( ref List< Player.Food > ___m_foods , ref int __state )
 			{
 				if( ___m_foods.Count == 0 && __state > 0 )
-					Instance.StartCoroutine( "NagAboutEatingIn" , PowerNagFrequency.Value * 60.0f );
+					Instance.NagAboutHunger();
 			}
 		}
 	}

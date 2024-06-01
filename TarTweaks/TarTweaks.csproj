@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CharacterPatch.cs" />
+    <Compile Include="Common.cs" />
     <Compile Include="PickablePatch.cs" />
     <Compile Include="ItemDropPatch.cs" />
     <Compile Include="PlayerPatch.cs" />

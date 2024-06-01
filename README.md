@@ -1,6 +1,6 @@
 # At a Glance
 
-Each mod/plugin in this repo is briefly described below. Please refer to settings as defined in source for up-to-date configuration information.
+Each plugin in this repo is briefly described below. Please refer to settings as defined in source for up-to-date configuration information.
 
 ### Longer Pet Names | [Settings](LongerPetNames/LongerPetNames.cs)
 
@@ -8,11 +8,13 @@ Increases the tamed animal name input length limit from 10 to 100 characters.
 
 ### Mastercraft Hammer | [Settings](MastercraftHammer/MastercraftHammer.cs)
 
-Greatly increases the control over object damage states for placement and repair.
+Greatly enhances the control over object damage states for placement and repair. Building condemned structures has never been easier!
+
+Known to be compatible with AzuAreaRepair. An in-game configuration editor is strongly recommended.
 
 ### Nag Messages | [Settings](NagMessages/NagMessages.cs)
 
-Nags the player to change their forsaken power if their current power is not a preferred one and to eat if their stomach is empty. Can also notify the player when the benefits of their foods are wearing off before they wear off completely.
+Nags the player to change their forsaken power if their current power is not preferred and to eat if their stomach is empty. The player can also be notified when food benefits are wearing off before they wear off completely.
 
 ### No Lossy Cooking Stations | [Settings](NoLossyCookingStations/NoLossyCookingStations.cs)
 
@@ -29,18 +31,25 @@ Vikings may love to fight and throwing hands is a great way to start a brawl, bu
 
 ### Ping Tweaks | [Settings](PingTweaks/PingTweaks.cs)
 
-Stops the chat box from appearing when anyone pings anything, prevents the player's own pings from being broadcast to everyone without a modifier key, and shows map marker text when markers are pinged.
+PingTweaks improves the appearance and behavior of pings.
+
+- Pings are not broadcast to other players without a modifier key
+- Map marker pings show the marker text
+- Pings are sent and map markers are created with proper elevation data
+- Pings show distance in meters
+- In-world ping text color may be changed
+- Pings from other players may be pinned by double-clicking on them (persistence optional)
+
+PingTweaks is client-side but works better when all clients have it.
 
 ### Restful Arrival | [Settings](RestfulArrival/RestfulArrival.cs)
 
 Removes the delay between resting and rested upon joining a world.
-
-### Tar Tweaks | [Settings](TarTweaks/TarTweaks.cs)
-
-Vanilla tar is simultaneously too punishing and not punishing enough. This mod allows items to be interactively taken from tar while restricting movement when in or dripping with tar.
 
 # Legal Stuff
 
 This repo is licenced under [LGPL 3.0](LICENCE.md) unless where otherwise stated.
 
 Package preview imagery is derived from content provided by https://clipart-library.com and is approved for "Non-Commercial Use" per their [custom license](http://clipart-library.com/terms.html).
+
+Modification of Valheim is understood to be acceptable per [Iron Gate's official stance on mods](https://www.valheimgame.com/news/regarding-mods/). NOT AN OFFICIAL VALHEIM PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH IRON GATE.

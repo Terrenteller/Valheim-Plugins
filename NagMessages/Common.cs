@@ -1,96 +1,143 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NagMessages
 {
+	// TODO: Clean up the outrageous redundancy in this project
 	public partial class NagMessages
 	{
-		private const string BonemassPowerName = "GP_Bonemass";
-		private const string EikthyrPowerName = "GP_Eikthyr";
-		private const string ModerPowerName = "GP_Moder";
-		private const string TheElderPowerName = "GP_TheElder";
-		private const string TheQueenPowerName = "GP_Queen";
-		private const string YagluthPowerName = "GP_Yagluth";
-		private const float DelayFudgeFactor = 0.01f;
-		private static double LastPowerNagTime = 0.0;
-		private static double LastStomachNagTime = 0.0;
+		private readonly int BonemassPowerNameHash = "GP_Bonemass".GetHashCode();
+		private readonly int EikthyrPowerNameHash = "GP_Eikthyr".GetHashCode();
+		private readonly int ModerPowerNameHash = "GP_Moder".GetHashCode();
+		private readonly int TheElderPowerNameHash = "GP_TheElder".GetHashCode();
+		private readonly int TheQueenPowerNameHash = "GP_Queen".GetHashCode();
+		private readonly int YagluthPowerNameHash = "GP_Yagluth".GetHashCode();
 
-		public void Nag( bool force , bool aboutPower )
+		private static List< Coroutine > PowerNagCoroutines = new List< Coroutine >();
+		internal static double MinTimeOfNextPowerNag = 0.0;
+		private static List< Coroutine > HungerNagCoroutines = new List< Coroutine >();
+		internal static double MinTimeOfNextHungerNag = 0.0;
+
+		private class NagArgs
+		{
+			public double delay;
+			public bool force;
+			public Coroutine self;
+		}
+
+		public void NagAboutPower()
+		{
+			NagAboutPower( PowerNagFrequency.Value * 60.0f , false );
+		}
+
+		public void NagAboutPower( double delay , bool force )
+		{
+			NagArgs args = new NagArgs { delay = delay , force = force };
+			Coroutine coroutine = Instance.StartCoroutine( CoNagAboutPower( args ) );
+			args.self = coroutine;
+			PowerNagCoroutines.Add( coroutine );
+		}
+
+		private IEnumerator CoNagAboutPower( NagArgs args )
+		{
+			// Brief delay so the caller can set args.coroutine
+			yield return new WaitForSecondsRealtime( 1.0f );
+
+			if( args.delay > 1.0f )
+				yield return new WaitForSecondsRealtime( (float)args.delay );
+
+			Instance.NagAboutPower( args );
+		}
+
+		private void NagAboutPower( NagArgs args )
 		{
 			Player player = Player.m_localPlayer;
 			if( !IsEnabled.Value || !player )
 				return;
 
 			double now = Time.timeAsDouble;
-			if( aboutPower )
+			if( !args.force && now < MinTimeOfNextPowerNag )
 			{
-				if( !force )
-				{
-					double secondsSinceLastNag = now - LastPowerNagTime;
-					double nagFrequencyInSeconds = PowerNagFrequency.Value * 60.0;
-					if( now < PlayerPatch.ForsakenPowerTimeout || secondsSinceLastNag < nagFrequencyInSeconds )
-						return;
-				}
+				Instance.StopCoroutine( args.self );
+				PowerNagCoroutines.Remove( args.self );
+				if( PowerNagCoroutines.Count == 0 )
+					NagAboutPower( MinTimeOfNextPowerNag - now , false );
 
-				string powerName = player.GetGuardianPowerName();
-				if( ( !AllowBonemass.Value && powerName.CompareTo( BonemassPowerName ) == 0 )
-					|| ( !AllowEikthyr.Value && powerName.CompareTo( EikthyrPowerName ) == 0 )
-					|| ( !AllowModer.Value && powerName.CompareTo( ModerPowerName ) == 0 )
-					|| ( !AllowTheElder.Value && powerName.CompareTo( TheElderPowerName ) == 0 )
-					|| ( !AllowTheQueen.Value && powerName.CompareTo( TheQueenPowerName ) == 0 )
-					|| ( !AllowYagluth.Value && powerName.CompareTo( YagluthPowerName ) == 0 ) )
-				{
-					player.Message( MessageHud.MessageType.Center , "Change your forsaken power!" );
-					LastPowerNagTime = now;
-					Instance.StartCoroutine( "NagAboutPowerIn" , PowerNagFrequency.Value * 60.0f );
-				}
+				return;
 			}
-			else
-			{
-				if( !force )
-				{
-					double secondsSinceLastNag = now - LastStomachNagTime;
-					double nagFrequencyInSeconds = StomachNagFrequency.Value * 60.0;
-					if( secondsSinceLastNag < nagFrequencyInSeconds )
-						return;
-				}
 
-				if( player.GetFoods().Count == 0 )
-				{
-					player.Message( MessageHud.MessageType.Center , "Your stomach is growling" );
-					LastStomachNagTime = now;
-					Instance.StartCoroutine( "NagAboutEatingIn" , StomachNagFrequency.Value * 60.0f );
-				}
+			int powerNameHash = player.GetGuardianPowerName().GetHashCode();
+			if( ( !AllowBonemass.Value && powerNameHash == BonemassPowerNameHash )
+				|| ( !AllowEikthyr.Value && powerNameHash == EikthyrPowerNameHash )
+				|| ( !AllowModer.Value && powerNameHash == ModerPowerNameHash )
+				|| ( !AllowTheElder.Value && powerNameHash == TheElderPowerNameHash )
+				|| ( !AllowTheQueen.Value && powerNameHash == TheQueenPowerNameHash )
+				|| ( !AllowYagluth.Value && powerNameHash == YagluthPowerNameHash ) )
+			{
+				// TODO: Don't nag if the world does not have any of the preferred powers unlocked
+				player.Message( MessageHud.MessageType.Center , "Change your forsaken power!" );
+				MinTimeOfNextPowerNag = now + ( PowerNagFrequency.Value * 60.0f );
+
+				foreach( Coroutine coroutine in PowerNagCoroutines )
+					Instance.StopCoroutine( coroutine );
+				PowerNagCoroutines.Clear();
+
+				NagAboutPower();
 			}
 		}
-
-		public IEnumerator NagAboutPowerIn( float seconds )
+		
+		public void NagAboutHunger()
 		{
-			if( seconds > 1.0f )
-			{
-				yield return new WaitForSecondsRealtime( seconds + DelayFudgeFactor );
-
-				Instance.Nag( false , true );
-			}
+			NagAboutHunger( HungerNagFrequency.Value * 60.0f , false );
+		}
+		
+		public void NagAboutHunger( double delay , bool force )
+		{
+			NagArgs args = new NagArgs { delay = delay , force = force };
+			Coroutine coroutine = Instance.StartCoroutine( CoNagAboutHunger( args ) );
+			args.self = coroutine;
+			HungerNagCoroutines.Add( coroutine );
 		}
 
-		public IEnumerator ForceNagAboutPowerIn( float seconds )
+		private IEnumerator CoNagAboutHunger( NagArgs args )
 		{
-			if( seconds > 1.0f )
-			{
-				yield return new WaitForSecondsRealtime( seconds + DelayFudgeFactor );
+			// Brief delay so the caller can set args.coroutine
+			yield return new WaitForSecondsRealtime( 1.0f );
 
-				Instance.Nag( true , true );
-			}
+			if( args.delay > 1.0f )
+				yield return new WaitForSecondsRealtime( (float)args.delay );
+
+			Instance.NagAboutHunger( args );
 		}
 
-		public IEnumerator NagAboutEatingIn( float seconds )
+		private void NagAboutHunger( NagArgs args )
 		{
-			if( seconds > 1.0f )
-			{
-				yield return new WaitForSecondsRealtime( seconds + DelayFudgeFactor );
+			Player player = Player.m_localPlayer;
+			if( !IsEnabled.Value || !player )
+				return;
 
-				Instance.Nag( false , false );
+			double now = Time.timeAsDouble;
+			if( !args.force && now < MinTimeOfNextHungerNag )
+			{
+				Instance.StopCoroutine( args.self );
+				HungerNagCoroutines.Remove( args.self );
+				if( HungerNagCoroutines.Count == 0 )
+					NagAboutHunger( MinTimeOfNextHungerNag - now , false );
+
+				return;
+			}
+
+			if( player.GetFoods().Count == 0 )
+			{
+				player.Message( MessageHud.MessageType.Center , "Your stomach is growling" );
+				MinTimeOfNextHungerNag = now + ( HungerNagFrequency.Value * 60.0f );
+
+				foreach( Coroutine coroutine in HungerNagCoroutines )
+					Instance.StopCoroutine( coroutine );
+				HungerNagCoroutines.Clear();
+
+				NagAboutHunger();
 			}
 		}
 	}

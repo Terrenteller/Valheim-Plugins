@@ -48,7 +48,7 @@ namespace NoLossyCookingStations
 				ref string itemName )
 			{
 				// This method is redundant with us taking network ownership but still applies when a peer
-				// does not have this mod and over-fills a cooking station for which we are the network owner
+				// does not have this plugin and over-fills a cooking station for which we are the network owner
 
 				// Vanilla does not have this ownership check as of writing
 				if( !IsEnabled.Value || !___m_nview.IsOwner() )
@@ -66,9 +66,8 @@ namespace NoLossyCookingStations
 
 				long derefSender = sender;
 				ZNet.PlayerInfo senderInfo = ZNet.instance.GetPlayerList()
-					.FirstOrDefault( x => derefSender == x.m_characterID.userID );
+					.FirstOrDefault( x => derefSender == x.m_characterID.ID );
 
-				// senderInfo can never be null because ZNet.PlayerInfo is a struct (value type)
 				if( senderInfo.m_position != null )
 				{
 					Traverse.Create( __instance )

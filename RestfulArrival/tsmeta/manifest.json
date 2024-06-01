@@ -1,7 +1,7 @@
 {
 	"name": "RestfulArrival",
-	"version_number": "1.0.0",
-	"website_url": "https://github.com/Terrenteller/ValheimMods",
+	"version_number": "1.0.1",
+	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
 	"description": "Removes the delay between resting and rested upon joining a world.",
 	"dependencies": [
 		"denikson-BepInExPack_Valheim-5.4.1901"

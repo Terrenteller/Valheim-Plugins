@@ -2,6 +2,11 @@ Vikings may love to fight and throwing hands is a great way to start a brawl, bu
 
 ## Changelog
 
+1.0.2
+
+- Update for 0.217.46 (pre-Ashlands)
+- Improve equipment selection logic
+
 1.0.1
 
 - Allow punching and kicking by default when the player has no weapon to equip

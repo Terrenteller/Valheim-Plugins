@@ -7,7 +7,7 @@ using UnityEngine;
 namespace MastercraftHammer
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.mastercrafthammer" , "Mastercraft Hammer" , "1.0.0" )]
+	[BepInPlugin( "com.riintouge.mastercrafthammer" , "Mastercraft Hammer" , "1.0.1" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class MastercraftHammer : BaseUnityPlugin
 	{
@@ -47,13 +47,13 @@ namespace MastercraftHammer
 				"0 - Core",
 				"Enable",
 				true,
-				"Whether this mod has any effect when loaded." );
+				"Whether this plugin has any effect when loaded." );
 
 			LoadOnStart = Config.Bind(
 				"0 - Core",
 				"LoadOnStart",
 				true,
-				"Whether this mod loads on game start." );
+				"Whether this plugin loads on game start." );
 
 			RandomizeStateOnPlacement = Config.Bind(
 				"1 - General",
@@ -62,7 +62,7 @@ namespace MastercraftHammer
 				"Affect objects newly placed into the world." );
 
 			// This can destroy entire buildings with a single click and possibly crash the game
-			// when used with an area repair mod! It should never work in multiplayer!
+			// when used with an area repair plugin! It should never work in multiplayer!
 			RandomizeStateOnRepair = Config.Bind(
 				"1 - General",
 				"RandomizeOnRepair",
@@ -103,7 +103,7 @@ namespace MastercraftHammer
 				"3 - Single Touch",
 				"EnableSingleTouch",
 				false,
-				"Prevent objects from being affected more than once." );
+				"Prevent objects from being affected more than once during a single session. Does not persist." );
 
 			ResetSingleTouch = Config.Bind(
 				"3 - Single Touch",

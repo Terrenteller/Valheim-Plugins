@@ -4,6 +4,11 @@ Known to be compatible with AzuAreaRepair. An in-game configuration editor is st
 
 ## Changelog
 
+1.0.1
+
+- Update for 0.217.46 (pre-Ashlands)
+- Reliability improvements
+
 1.0.0
 
 - Initial release

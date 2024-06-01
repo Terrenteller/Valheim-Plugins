@@ -15,10 +15,10 @@ namespace NagMessages
 			// Vanilla does not queue or stack multiple front-and-center messages
 			// that will most likely happen upon joining a world, so we must do it
 
+			internal const double MessageTTL = 4.0; // Taken from MessageHud.ShowMessage()
 			private static string CurrentMessage = null;
 			private static double MinimumTimeOfNextMessage = 0.0;
 			private static readonly LinkedList< string > PendingMessages = new LinkedList< string >();
-			private const double MessageTTL = 4.0; // Taken from MessageHud.ShowMessage()
 
 			[HarmonyPatch( "ShowMessage" )]
 			[HarmonyPrefix]

@@ -35,7 +35,7 @@ namespace NoLossyCookingStations
 				}
 
 				rateLimitTimeout = Time.timeAsDouble + NetworkClaimDelay;
-				long previousOwner = netView.GetZDO().m_uid.userID;
+				long previousOwner = netView.GetZDO().m_uid.ID;
 				netView.ClaimOwnership(); // Look at me. I am the owner now.
 				ZDOMan.instance.ForceSendZDO( previousOwner , netView.GetZDO().m_uid );
 

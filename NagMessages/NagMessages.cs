@@ -1,11 +1,13 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
+using System;
+using UnityEngine;
 
 namespace NagMessages
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.nagmessages" , "Nag Messages" , "1.0.0" )]
+	[BepInPlugin( "com.riintouge.nagmessages" , "Nag Messages" , "1.0.1" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class NagMessages : BaseUnityPlugin
 	{
@@ -24,11 +26,13 @@ namespace NagMessages
 		public static ConfigEntry< bool > AllowTheQueen;
 		public static ConfigEntry< bool > AllowYagluth;
 		public static ConfigEntry< int > PowerNagFrequency;
+		private static int LastPowerNagFrequency;
 		// 3 - Food Effects
 		public static ConfigEntry< int > EitrThreshold;
 		public static ConfigEntry< int > HealthThreshold;
+		public static ConfigEntry< int > HungerNagFrequency;
+		private static int LastHungerNagFrequency;
 		public static ConfigEntry< int > StaminaThreshold;
-		public static ConfigEntry< int > StomachNagFrequency;
 
 		private readonly Harmony Harmony = new Harmony( "com.riintouge.nagmessages" );
 
@@ -38,13 +42,13 @@ namespace NagMessages
 				"0 - Core",
 				"Enable",
 				true,
-				"Whether this mod has any effect when loaded." );
+				"Whether this plugin has any effect when loaded." );
 
 			LoadOnStart = Config.Bind(
 				"0 - Core",
 				"LoadOnStart",
 				true,
-				"Whether this mod loads on game start." );
+				"Whether this plugin loads on game start." );
 
 			// We need messages to be queued to operate smoothly, but this tweak is not specific to us.
 			// Allow our tweak to be toggled off so we don't break someone else's fix.
@@ -93,8 +97,8 @@ namespace NagMessages
 			PowerNagFrequency = Config.Bind(
 				"2 - Forsaken Powers",
 				"PowerNagFrequency",
-				5,
-				"Minutes between forsaken power nag messages." );
+				3,
+				"Minimum time in minutes between forsaken power nag messages." );
 
 			// This one is particularly useful because the amount of eitr required to cast fireball
 			// is more than a single eitr food can provide a few minutes before the food wears off
@@ -110,22 +114,94 @@ namespace NagMessages
 				0,
 				"Warn the player when their maximum health drops to or below this amount." );
 
+			// Is there a sound we could play too? What about for the power?
+			HungerNagFrequency = Config.Bind(
+				"3 - Food Effects",
+				"HungerNagFrequency",
+				3,
+				"Minimum time in minutes between hunger nag messages." );
+
 			StaminaThreshold = Config.Bind(
 				"3 - Food Effects",
 				"StaminaThreshold",
 				0,
 				"Warn the player when their maximum stamina drops to or below this amount." );
 
-			StomachNagFrequency = Config.Bind(
-				"3 - Food Effects",
-				"StomachNagFrequency",
-				5,
-				"Minutes between empty stomach nag messages." );
-
 			if( LoadOnStart.Value )
 			{
 				Instance = this;
 				Harmony.PatchAll();
+
+				LastHungerNagFrequency = HungerNagFrequency.Value;
+				Config.SettingChanged += Config_SettingChanged;
+			}
+		}
+
+		private void Config_SettingChanged( object sender , SettingChangedEventArgs e )
+		{
+			if( e.ChangedSetting == AllowBonemass
+				|| e.ChangedSetting == AllowEikthyr
+				|| e.ChangedSetting == AllowModer
+				|| e.ChangedSetting == AllowTheElder
+				|| e.ChangedSetting == AllowTheQueen
+				|| e.ChangedSetting == AllowYagluth )
+			{
+				if( !(bool)e.ChangedSetting.BoxedValue )
+					NagAboutPower();
+			}
+			else if( e.ChangedSetting == PowerNagFrequency )
+			{
+				int changeInMinutes = PowerNagFrequency.Value - LastPowerNagFrequency;
+				double changeInSeconds = changeInMinutes * 60.0;
+
+				// We only need to schedule a nag when the delay shrinks.
+				// If the delay grows, a pending nag will cause a new one
+				// to be scheduled in the right amount of time.
+				if( changeInMinutes > 0 )
+				{
+					MinTimeOfNextPowerNag += changeInSeconds;
+				}
+				else if( changeInMinutes < 0 )
+				{
+					double now = Time.timeAsDouble;
+					changeInSeconds = Math.Abs( changeInSeconds );
+
+					if( ( MinTimeOfNextPowerNag - changeInSeconds ) < now )
+						MinTimeOfNextPowerNag = now + ( PowerNagFrequency.Value * 60.0 );
+					else
+						MinTimeOfNextPowerNag -= changeInSeconds;
+
+					NagAboutPower();
+				}
+
+				LastPowerNagFrequency = PowerNagFrequency.Value;
+			}
+			else if( e.ChangedSetting == HungerNagFrequency )
+			{
+				int changeInMinutes = HungerNagFrequency.Value - LastHungerNagFrequency;
+				double changeInSeconds = changeInMinutes * 60.0;
+
+				// We only need to schedule a nag when the delay shrinks.
+				// If the delay grows, a pending nag will cause a new one
+				// to be scheduled in the right amount of time.
+				if( changeInMinutes > 0 )
+				{
+					MinTimeOfNextHungerNag += changeInSeconds;
+				}
+				else if( changeInMinutes < 0 )
+				{
+					double now = Time.timeAsDouble;
+					changeInSeconds = Math.Abs( changeInSeconds );
+
+					if( ( MinTimeOfNextHungerNag - changeInSeconds ) < now )
+						MinTimeOfNextHungerNag = now + ( HungerNagFrequency.Value * 60.0 );
+					else
+						MinTimeOfNextHungerNag -= changeInSeconds;
+
+					NagAboutHunger();
+				}
+
+				LastHungerNagFrequency = HungerNagFrequency.Value;
 			}
 		}
 	}

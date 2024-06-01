@@ -14,47 +14,45 @@ namespace NoUnarmedCombat
 			private static bool SheathedBecauseSwimming = false;
 			private static bool SkipNextEquipAttempt = false;
 
-			private static ItemDrop.ItemData[] GetToolbarWeaponAndShield( Humanoid humanoid )
+			private static ItemDrop.ItemData[] GetToolbarWeaponsAndShield( Humanoid humanoid )
 			{
 				// Mods which add additional slots may do so as distinct inventories.
 				// Items in them may have the same X/Y coordinates as items in the vanilla inventory.
 				// Therefore, we cannot call GetAllItems() because we cannot distinguish between inventories.
-				List< ItemDrop.ItemData > toolbarItems = new List< ItemDrop.ItemData>();
+				List< ItemDrop.ItemData > toolbarItems = new List< ItemDrop.ItemData >();
 				humanoid.GetInventory().GetBoundItems( toolbarItems );
-				IEnumerable< ItemDrop.ItemData > validToolbarItems = toolbarItems
+				List< ItemDrop.ItemData > validToolbarItems = toolbarItems
 					.OrderBy( x => x.m_gridPos.x )
-					.Where( x => x.GetDurabilityPercentage() > 0.0f );
+					.Where( x => x.GetDurabilityPercentage() > 0.0f )
+					.ToList();
 
-				ItemDrop.ItemData weapon = validToolbarItems.FirstOrDefault( itemData => itemData.IsWeapon() );
-				ItemDrop.ItemData[] weaponAndShield = new ItemDrop.ItemData[ 2 ];
-				weaponAndShield[ 0 ] = weapon;
-				weaponAndShield[ 1 ] = weapon == null || !weapon.IsTwoHanded()
-					? validToolbarItems.FirstOrDefault( itemData => itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield )
-					: null;
+				ItemDrop.ItemData[] weaponsAndShield = new ItemDrop.ItemData[ 3 ];
+				weaponsAndShield[ 0 ] = validToolbarItems.FirstOrDefault(
+					itemData => itemData.IsWeapon() && itemData.IsTwoHanded() );
+				weaponsAndShield[ 1 ] = validToolbarItems.FirstOrDefault(
+					itemData => itemData.IsWeapon() && !itemData.IsTwoHanded() );
+				weaponsAndShield[ 2 ] = validToolbarItems.FirstOrDefault(
+					itemData => ItemIsShield( itemData ) );
 
-				return weaponAndShield;
+				return weaponsAndShield;
 			}
 
 			private static bool HumanoidIsLocalPlayer( Humanoid humanoid )
 			{
-				return humanoid.IsPlayer() && humanoid.GetZDOID().userID == ZDOMan.instance.GetMyID();
+				return humanoid.IsPlayer() && humanoid.GetZDOID().UserID == ZDOMan.GetSessionID();
 			}
 
-			private static bool ItemIsWeaponOrShield( ItemDrop.ItemData itemData )
+			private static bool ItemIsShield( ItemDrop.ItemData itemData )
 			{
-				return itemData != null
-					&& ( itemData.IsWeapon() || itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield );
+				return itemData?.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield;
 			}
-
-			[HarmonyPatch( "GetCurrentBlocker" )]
-			[HarmonyPostfix]
-			private static void GetCurrentBlockerPostfix( ref Humanoid __instance , ref ItemDrop.ItemData __result )
+			
+			private static void ShowHandItems( ref Humanoid __instance )
 			{
-				if( !IsEnabled.Value || !HumanoidIsLocalPlayer( __instance ) )
-					return;
-
-				// Just because we can't punch shouldn't mean we can't block
-				__result = __result ?? __instance.m_unarmedWeapon?.m_itemData;
+				// Protected for some reason when it wasn't before
+				Traverse.Create( __instance )
+					.Method( "ShowHandItems" )
+					.GetValue();
 			}
 
 			[HarmonyPatch( "GetCurrentWeapon" )]
@@ -76,8 +74,8 @@ namespace NoUnarmedCombat
 
 					if( ToolbarEquipOnPunch.Value )
 					{
-						ItemDrop.ItemData[] weaponAndShield = GetToolbarWeaponAndShield( __instance );
-						if( weaponAndShield[ 0 ] != null )
+						ItemDrop.ItemData[] weaponAndShield = GetToolbarWeaponsAndShield( __instance );
+						if( weaponAndShield[ 0 ] != null || weaponAndShield[ 1 ] != null )
 							return null;
 					}
 
@@ -93,13 +91,21 @@ namespace NoUnarmedCombat
 
 			[HarmonyPatch( "StartAttack" )]
 			[HarmonyPrefix]
-			private static void StartAttackPrefix( ref Humanoid __instance , ref bool secondaryAttack )
+			private static bool StartAttackPrefix( ref Humanoid __instance , ref bool secondaryAttack )
 			{
-				if( !IsEnabled.Value || !HumanoidIsLocalPlayer( __instance ) )
-					return;
+				if( !IsEnabled.Value )
+					return true;
+
+				// Rarely, the player may unsheathe or attack when panning around the minimap.
+				// This may be related to something which causes the minimap to close when an enemy
+				// spawns nearby or gets too close to the player. More testing is needed.
+				if( HumanoidIsLocalPlayer( __instance ) && Minimap.IsOpen() )
+					return false;
 
 				InStartAttack = true;
 				PerformingSecondaryAttack = secondaryAttack;
+
+				return true;
 			}
 
 			[HarmonyPatch( "StartAttack" )]
@@ -123,53 +129,125 @@ namespace NoUnarmedCombat
 				if( skipEquip )
 					return;
 
-				// We can't reliably equip from the toolbar while unsheathing in the same pass
-				// because not all equipment correctly reports two-handed-ness, like hammers.
-				// The double-edged sword here, logically, is this method gets called A LOT.
-				// If the first pass unsheathed equipment, the second pass will respect what
-				// the player is holding. A shield only may cause us to look for a weapon
-				// on the toolbar while a hammer will count as a weapon so we will never get here.
-				if( UnsheatheOnPunch.Value && ( ___m_hiddenLeftItem != null || ___m_hiddenRightItem != null ) )
+				ItemDrop.ItemData activeMainHandItem = __instance.RightItem;
+				ItemDrop.ItemData activeOffHandItem = __instance.LeftItem;
+				if( activeMainHandItem != null || activeOffHandItem != null )
+					return;
+
+				// BEWARE: Not all equipment correctly reports two-handed-ness, like hammers.
+				// Equipping some items may unexpectedly unequip others.
+
+				ItemDrop.ItemData chosenMainHandItem = null;
+				ItemDrop.ItemData chosenOffHandItem = null;
+
+				if( UnsheatheOnPunch.Value && ( ___m_hiddenRightItem != null || ___m_hiddenLeftItem != null ) )
 				{
-					__instance.ShowHandItems();
+					if( !ToolbarEquipOnPunch.Value
+						|| ( ___m_hiddenLeftItem != null && ___m_hiddenRightItem != null ) )
+					{
+						ShowHandItems( ref __instance );
+						return;
+					}
+
+					// Not technically active, but unsheathing has priority
+					activeMainHandItem = ___m_hiddenRightItem;
+					activeOffHandItem = ___m_hiddenLeftItem;
+					chosenMainHandItem = ___m_hiddenRightItem;
+					chosenOffHandItem = ___m_hiddenLeftItem;
 				}
-				else if( ToolbarEquipOnPunch.Value )
+				
+				if( ToolbarEquipOnPunch.Value && ( chosenMainHandItem == null || chosenOffHandItem == null ) )
 				{
-					ItemDrop.ItemData[] weaponAndShield = GetToolbarWeaponAndShield( __instance );
-					ItemDrop.ItemData weapon = weaponAndShield[ 0 ];
-					ItemDrop.ItemData shield = weaponAndShield[ 1 ];
-					ItemDrop.ItemData rightItem = __instance.GetRightItem();
-					ItemDrop.ItemData leftItem = __instance.GetLeftItem();
-					bool equipmentChanged = false;
+					ItemDrop.ItemData[] weaponsAndShield = GetToolbarWeaponsAndShield( __instance );
+					ItemDrop.ItemData toolbarWeaponTwoHanded = weaponsAndShield[ 0 ];
+					ItemDrop.ItemData toolbarWeaponOneHanded = weaponsAndShield[ 1 ];
+					ItemDrop.ItemData toolbarShield = weaponsAndShield[ 2 ];
 
-					if( rightItem != null && rightItem.IsWeapon() )
+					if( chosenMainHandItem == null && chosenOffHandItem == null )
 					{
-						weapon = __instance.GetRightItem();
+						if( toolbarWeaponOneHanded != null && toolbarWeaponTwoHanded != null )
+						{
+							if( toolbarWeaponOneHanded.m_gridPos.x < toolbarWeaponTwoHanded.m_gridPos.x )
+							{
+								chosenMainHandItem = toolbarWeaponOneHanded;
+								chosenOffHandItem = toolbarShield;
+							}
+							else
+								chosenMainHandItem = toolbarWeaponTwoHanded;
+						}
+						else if( toolbarWeaponTwoHanded != null )
+						{
+							chosenMainHandItem = toolbarWeaponTwoHanded;
+						}
+						else
+						{
+							chosenMainHandItem = toolbarWeaponOneHanded;
+							chosenOffHandItem = toolbarShield;
+						}
 					}
-					else if( leftItem != null && leftItem.IsWeapon() )
+					else if( chosenMainHandItem != null && chosenOffHandItem == null )
 					{
-						weapon = __instance.GetLeftItem();
+						if( chosenMainHandItem.IsTwoHanded() )
+						{
+							// No-op
+						}
+						else
+						{
+							chosenOffHandItem = toolbarShield;
+						}
 					}
-					else if( weapon != null )
+					else if( chosenMainHandItem == null && chosenOffHandItem != null )
 					{
-						__instance.EquipItem( weapon );
-						equipmentChanged = true;
+						if( chosenOffHandItem.IsTwoHanded() )
+						{
+							// No-op
+						}
+						else if( chosenOffHandItem.IsWeapon() )
+						{
+							// No-op
+						}
+						else if( ItemIsShield( chosenOffHandItem ) )
+						{
+							if( toolbarWeaponOneHanded != null )
+								chosenMainHandItem = toolbarWeaponOneHanded;
+						}
 					}
-
-					if( ( weapon == null || !weapon.IsTwoHanded() )
-						&& shield != null
-						&& !ItemIsWeaponOrShield( __instance.GetLeftItem() ) )
-					{
-						__instance.EquipItem( shield );
-						equipmentChanged = true;
-					}
-
-					if( equipmentChanged )
-						___m_zanim.SetTrigger( "equip_hip" );
 				}
 				else
 					return;
 
+				// Yet another balancing act. The active items are assumed to be compatible.
+
+				if( activeMainHandItem != null )
+				{
+					__instance.EquipItem( activeMainHandItem );
+				}
+				else if( chosenMainHandItem != null && !__instance.IsItemEquiped( chosenMainHandItem ) )
+				{
+					__instance.EquipItem( chosenMainHandItem );
+					activeMainHandItem = chosenMainHandItem;
+				}
+
+				if( activeOffHandItem != null )
+				{
+					__instance.EquipItem( activeOffHandItem );
+				}
+				else if( chosenOffHandItem != null && !__instance.IsItemEquiped( chosenOffHandItem ) )
+				{
+					__instance.EquipItem( chosenOffHandItem );
+
+					if( activeMainHandItem != null && !__instance.IsItemEquiped( activeMainHandItem ) )
+						__instance.EquipItem( activeMainHandItem );
+					else
+						activeOffHandItem = chosenOffHandItem;
+				}
+
+				if( activeMainHandItem != null || activeOffHandItem != null )
+					___m_zanim.SetTrigger( "equip_hip" );
+
+				// FIXME: It's possible that us equipping stuff in the postfix is the reason
+				// why players may attack after unsheathing/equipping equipment.
+				// We should probably do this in the prefix.
 				PlayerPatch.RestoreQueuedAttackTimers = true;
 			}
 
@@ -183,14 +261,14 @@ namespace NoUnarmedCombat
 				if( !HumanoidIsLocalPlayer( __instance ) )
 					return;
 
-				if( __instance.IsSwiming() && !__instance.IsOnGround() )
+				if( __instance.IsSwimming() && !__instance.IsOnGround() )
 				{
 					SheathedBecauseSwimming |= ___m_leftItem != null || ___m_rightItem != null;
 				}
 				else if( SheathedBecauseSwimming )
 				{
 					if( IsEnabled.Value && UnsheatheAfterSwimming.Value )
-						__instance.ShowHandItems();
+						ShowHandItems( ref __instance );
 
 					SheathedBecauseSwimming = false;
 				}

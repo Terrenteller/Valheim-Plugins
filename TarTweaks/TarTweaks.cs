@@ -5,7 +5,7 @@ using HarmonyLib;
 namespace TarTweaks
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.tartweaks" , "Tar Tweaks" , "1.0.0" )]
+	[BepInPlugin( "com.riintouge.tartweaks" , "Tar Tweaks" , "1.0.1" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class TarTweaks : BaseUnityPlugin
 	{
@@ -19,20 +19,23 @@ namespace TarTweaks
 
 		private readonly Harmony Harmony = new Harmony( "com.riintouge.tartweaks" );
 
+		// TODO: This plugin operates client-side but the server will need to control costs and penalties.
+		// See https://valheim-modding.github.io/Jotunn/tutorials/config.html for how to do this.
 		private void Awake()
 		{
 			IsEnabled = Config.Bind(
 				"0 - Core",
 				"Enable",
 				true,
-				"Determines if this mod has any effect when loaded." );
+				"Whether this plugin has any effect when loaded." );
 
 			LoadOnStart = Config.Bind(
 				"0 - Core",
 				"LoadOnStart",
 				true,
-				"Determines if this mod loads on game start." );
+				"Whether this plugin loads on game start." );
 
+			// TODO: Stamina cost option
 			CanInteractivelyTakeFromTar = Config.Bind(
 				"1 - Items",
 				"CanInteractivelyTakeFromTar",

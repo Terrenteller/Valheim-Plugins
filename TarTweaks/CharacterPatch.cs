@@ -31,14 +31,18 @@ namespace TarTweaks
 					return false;
 				}
 
-				StatusEffect tarEffect = character.GetSEMan().GetStatusEffect( SE_StatsPatch.TarEffectName );
+				StatusEffect tarEffect = GetStatusEffectByName( character.GetSEMan() , SE_StatsPatch.TarEffectName );
 				float percentTarredEffect = 0.0f;
 				if( tarEffect != null )
 				{
 					float tarEffectFactor = tarEffect.GetRemaningTime() / ( tarEffect.GetDuration() + tarEffect.GetRemaningTime() );
 					percentTarredEffect = PercentInLiquidWhenSwimming * tarEffectFactor;
 				}
-				float percentTarredWorld = character.InTar() ? PercentSubmerged( character ) : 0.0f;
+
+				bool inTar = Traverse.Create( character )
+					.Method( "InTar" )
+					.GetValue< bool >();
+				float percentTarredWorld = inTar ? PercentSubmerged( character ) : 0.0f;
 
 				percentInTar = Mathf.Clamp01( Mathf.Max( percentTarredEffect , percentTarredWorld ) );
 				return percentInTar > TarForgivenessThreshold;
@@ -84,7 +88,7 @@ namespace TarTweaks
 			[HarmonyPostfix]
 			private static void ApplyLiquidResistancePostfix( ref Character __instance , ref float speed )
 			{
-				StatusEffect tarEffect = __instance.GetSEMan().GetStatusEffect( SE_StatsPatch.TarEffectName );
+				StatusEffect tarEffect = GetStatusEffectByName( __instance.GetSEMan() , SE_StatsPatch.TarEffectName );
 				if( tarEffect != null )
 					return; // SE_StatsPatch.ModifySpeedPostfix() handles this case
 

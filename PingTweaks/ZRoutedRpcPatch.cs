@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using BepInEx;
+using HarmonyLib;
 using UnityEngine;
 
 namespace PingTweaks
@@ -19,23 +20,32 @@ namespace PingTweaks
 				if( !typeRaw.HasValue || (Talker.Type)typeRaw.Value != Talker.Type.Ping )
 					return true;
 
-				Vector3? position = parameters[ 0 ] as Vector3?;
+				Vector3? maybePosition = parameters[ 0 ] as Vector3?;
+				if( maybePosition == null || !maybePosition.HasValue )
+					return true;
+
+				Vector3 position = maybePosition.Value;
+				float originalY = position.y;
 				UserInfo userInfo = parameters[ 2 ] as UserInfo;
 				string text = parameters[ 3 ] as string;
 				string senderAccountId = parameters[ 4 ] as string;
 
-				if( ShowMapMarkerTextWhenPinged.Value )
+				Minimap minimap = Minimap.instance;
+				float zoomFactor = Traverse.Create( minimap )
+					.Field( "m_largeZoom" )
+					.GetValue< float >();
+				float radius = minimap.m_removeRadius * zoomFactor * 2.0f;
+				Minimap.PinData pinData = MinimapPatch.GetClosestPin( minimap , position , radius , true );
+				if( pinData != null )
 				{
-					Minimap minimap = Minimap.instance;
-					float zoomFactor = Traverse.Create( minimap )
-						.Field( "m_largeZoom" )
-						.GetValue< float >();
-					float radius = minimap.m_removeRadius * zoomFactor * 2.0f;
-					Minimap.PinData pinData = Traverse.Create( minimap )
-						.Method( "GetClosestPin" , new[] { typeof( Vector3 ) , typeof( float ) } )
-						.GetValue< Minimap.PinData >( position , radius );
+					position = pinData.m_pos;
 
-					if( pinData != null )
+					// Old pins won't have a Y coordinate
+					if( position.y == 0.0f )
+						position.y = originalY;
+
+					// Pins don't have to have text
+					if( !pinData.m_name.IsNullOrWhiteSpace() )
 					{
 						parameters[ 3 ] = pinData.m_name; // Unlocalized
 						text = pinData.m_NamePinData.PinNameText.text; // Localized
@@ -44,23 +54,25 @@ namespace PingTweaks
 
 				if( PingBroadcastModifier.Value != KeyCode.None
 					&& !Input.GetKey( PingBroadcastModifier.Value )
-					&& position.HasValue
 					&& userInfo != null
 					&& text != null
 					&& senderAccountId != null )
 				{
 					Chat.instance.OnNewChatMessage(
 						null,
-						ZNet.instance.GetUID(),
-						position.Value,
+						ZNet.GetUID(),
+						position,
 						Talker.Type.Ping,
 						userInfo,
 						text,
 						senderAccountId );
 
+					// No need to send anything, even to ourself
 					return false;
 				}
 
+				// Need to send the modified position!
+				parameters[ 0 ] = position;
 				return true;
 			}
 		}

@@ -5,7 +5,7 @@ using HarmonyLib;
 namespace LongerPetNames
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.longerpetnames" , "Longer Pet Names" , "1.0.0" )]
+	[BepInPlugin( "com.riintouge.longerpetnames" , "Longer Pet Names" , "1.0.1" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class LongerPetNames : BaseUnityPlugin
 	{
@@ -20,7 +20,7 @@ namespace LongerPetNames
 				"0 - Core",
 				"LoadOnStart",
 				true,
-				"Whether this mod loads on game start." );
+				"Whether this plugin loads on game start." );
 
 			if( LoadOnStart.Value )
 				Harmony.PatchAll();

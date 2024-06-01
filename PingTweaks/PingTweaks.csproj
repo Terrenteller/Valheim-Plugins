@@ -45,6 +45,9 @@
     <Reference Include="assembly_guiutils">
       <HintPath>..\libs\assembly_guiutils.dll</HintPath>
     </Reference>
+    <Reference Include="assembly_utils">
+      <HintPath>..\libs\assembly_utils.dll</HintPath>
+    </Reference>
     <Reference Include="assembly_valheim">
       <HintPath>..\libs\assembly_valheim.dll</HintPath>
     </Reference>
@@ -77,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChatPatch.cs" />
+    <Compile Include="Common.cs" />
     <Compile Include="MinimapPatch.cs" />
     <Compile Include="PingTweaks.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
