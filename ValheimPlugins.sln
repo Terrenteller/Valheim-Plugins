@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestfulArrival", "RestfulAr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NagMessages", "NagMessages\NagMessages.csproj", "{7F021C97-1954-4A61-83AD-7BB4BE2E18EF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template", "Template\Template.csproj", "{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -74,6 +76,12 @@ Global
 		{7F021C97-1954-4A61-83AD-7BB4BE2E18EF}.Package|Any CPU.Build.0 = Package|Any CPU
 		{7F021C97-1954-4A61-83AD-7BB4BE2E18EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F021C97-1954-4A61-83AD-7BB4BE2E18EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}.Package|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}.Package|Any CPU.Build.0 = Debug|Any CPU
+		{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

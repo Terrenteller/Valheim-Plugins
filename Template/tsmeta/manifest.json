@@ -1,0 +1,9 @@
+{
+	"name": "Template",
+	"version_number": "1.0.0",
+	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
+	"description": "A template project which may be used for prototyping.",
+	"dependencies": [
+		"denikson-BepInExPack_Valheim-5.4.2202"
+	]
+}
