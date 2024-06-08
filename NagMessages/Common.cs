@@ -76,7 +76,7 @@ namespace NagMessages
 				|| ( !AllowYagluth.Value && powerNameHash == YagluthPowerNameHash ) )
 			{
 				// TODO: Don't nag if the world does not have any of the preferred powers unlocked
-				player.Message( MessageHud.MessageType.Center , "Change your forsaken power!" );
+				player.Message( MessageHud.MessageType.Center , "Change your Forsaken Power!" );
 				MinTimeOfNextPowerNag = now + ( PowerNagFrequency.Value * 60.0f );
 
 				foreach( Coroutine coroutine in PowerNagCoroutines )

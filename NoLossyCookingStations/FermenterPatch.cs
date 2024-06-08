@@ -17,7 +17,7 @@ namespace NoLossyCookingStations
 
 			[HarmonyPatch( "Interact" )]
 			[HarmonyTranspiler]
-			private static IEnumerable< CodeInstruction > InteractPatch( IEnumerable< CodeInstruction > instructionsIn )
+			private static IEnumerable< CodeInstruction > InteractTranspiler( IEnumerable< CodeInstruction > instructionsIn )
 			{
 				// Locate and replace pop with return after the call to Fermenter.AddItem()
 				// so the interact animation is not played if adding an item fails

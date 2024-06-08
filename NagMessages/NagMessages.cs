@@ -98,7 +98,7 @@ namespace NagMessages
 				"2 - Forsaken Powers",
 				"PowerNagFrequency",
 				3,
-				"Minimum time in minutes between forsaken power nag messages." );
+				"Minimum time in minutes between Forsaken Power nag messages." );
 
 			// This one is particularly useful because the amount of eitr required to cast fireball
 			// is more than a single eitr food can provide a few minutes before the food wears off

@@ -11,7 +11,7 @@ namespace LongerPetNames
 		{
 			[HarmonyPatch( "SetName" )]
 			[HarmonyTranspiler]
-			private static IEnumerable< CodeInstruction > SetNamePatch( IEnumerable< CodeInstruction > instructionsIn )
+			private static IEnumerable< CodeInstruction > SetNameTranspiler( IEnumerable< CodeInstruction > instructionsIn )
 			{
 				foreach( CodeInstruction instruction in instructionsIn )
 				{

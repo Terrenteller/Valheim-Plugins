@@ -14,7 +14,7 @@ Known to be compatible with AzuAreaRepair. An in-game configuration editor is st
 
 ### Nag Messages | [Settings](NagMessages/NagMessages.cs)
 
-Nags the player to change their forsaken power if their current power is not preferred and to eat if their stomach is empty. The player can also be notified when food benefits are wearing off before they wear off completely.
+Nags the player to change their Forsaken Power if their current power is not preferred and to eat if their stomach is empty. The player can also be notified when food benefits are wearing off before they wear off completely.
 
 ### No Lossy Cooking Stations | [Settings](NoLossyCookingStations/NoLossyCookingStations.cs)
 

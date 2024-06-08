@@ -79,7 +79,7 @@ namespace PingTweaks
 
 			[HarmonyPatch( "SendPing" )]
 			[HarmonyTranspiler]
-			private static IEnumerable< CodeInstruction > SendPingPatch( IEnumerable< CodeInstruction > instructionsIn )
+			private static IEnumerable< CodeInstruction > SendPingTranspiler( IEnumerable< CodeInstruction > instructionsIn )
 			{
 				// Pave over the overwrite of the original Y coordinate with the player's Y coordinate
 

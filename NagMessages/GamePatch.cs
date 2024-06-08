@@ -27,7 +27,7 @@ namespace NagMessages
 				{
 					FirstSpawnPending = false;
 
-					// Forsaken powers are status effects like any other
+					// Forsaken Powers are status effects like any other
 					// and are not retained upon switching worlds
 					Instance.NagAboutPower( MessageHudPatch.MessageTTL * 2.0 , true );
 					Instance.NagAboutHunger( MessageHudPatch.MessageTTL * 3.0 , true );

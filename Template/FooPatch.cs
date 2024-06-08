@@ -18,7 +18,7 @@ namespace Template
 
 			[HarmonyPatch( "Bar" )]
 			[HarmonyTranspiler]
-			private static IEnumerable< CodeInstruction > BarPatch( IEnumerable< CodeInstruction > instructionsIn )
+			private static IEnumerable< CodeInstruction > BarTranspiler( IEnumerable< CodeInstruction > instructionsIn )
 			{
 				foreach( CodeInstruction instruction in instructionsIn )
 					yield return instruction;

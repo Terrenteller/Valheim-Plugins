@@ -104,7 +104,7 @@ namespace MastercraftHammer
 			
 			[HarmonyPatch( "Repair" )]
 			[HarmonyTranspiler]
-			private static IEnumerable< CodeInstruction > RepairPatch( IEnumerable< CodeInstruction > instructionsIn )
+			private static IEnumerable< CodeInstruction > RepairTranspiler( IEnumerable< CodeInstruction > instructionsIn )
 			{
 				// Pave over the health check and only do it in a prefix when the plugin is NOT enabled
 
