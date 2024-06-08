@@ -2,6 +2,14 @@
 
 Each plugin in this repo is briefly described below. Please refer to settings as defined in source for up-to-date configuration information.
 
+### Custom Slot Item Lib | [Settings](CustomSlotItemLib/CustomSlotItemLib.cs)
+
+Allows items to be equipped in custom slots defined by other plugins or a configuration value.
+
+This is an update and drop-in replacement of [CustomSlotItemLib](https://thunderstore.io/c/valheim/p/nearbear/CustomSlotItemLib/) originally written by [nearbear](https://github.com/nearbear/ValheimBepinexMods/tree/main/CustomSlotItemLib). It was broken by an unknown game update and appears to be abandoned. More information can be found in the original [README](https://github.com/nearbear/ValheimBepinexMods/blob/main/CustomSlotItemLib/Package/README.md).
+
+WARNING: Addons made for the original plugin, like [WishboneSlot](https://thunderstore.io/c/valheim/p/nearbear/WishboneSlot/) by [nearbear](https://github.com/nearbear/ValheimBepinexMods/tree/main/WishboneSlot) and [WisplightSlot](https://thunderstore.io/c/valheim/p/ValheimAddicts/WisplightSlot/) by [ValheimAddicts](https://github.com/DerNap/ValheimAddicts/tree/main/WisplightSlot), are compatible with this one, BUT ARE NOT COMPATIBLE THROUGH MOD MANAGERS DUE TO THEIR THUNDERSTORE DEPENDENCY ON THE ORIGINAL PLUGIN. The functionality of these two is provided by default to account for this.
+
 ### Longer Pet Names | [Settings](LongerPetNames/LongerPetNames.cs)
 
 Increases the tamed animal name input length limit from 10 to 100 characters.
@@ -48,7 +56,9 @@ Removes the delay between resting and rested upon joining a world.
 
 # Legal Stuff
 
-This repo is licenced under [LGPL 3.0](LICENCE.md) unless where otherwise stated.
+This repo is licenced under [LGPL 3.0](LICENCE.md) unless where otherwise stated. Markdown-formatted licences are provided by [IQAndreas/markdown-licenses](https://github.com/IQAndreas/markdown-licenses).
+
+CustomItemSlotLib is a fork of [nearbear](https://github.com/nearbear/ValheimBepinexMods/tree/main/CustomSlotItemLib)'s repo and remains licensed under the [MIT Licence](CustomSlotItemLib/LICENCE).
 
 Package preview imagery is derived from content provided by https://clipart-library.com and is approved for "Non-Commercial Use" per their [custom license](http://clipart-library.com/terms.html).
 
