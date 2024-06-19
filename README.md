@@ -54,6 +54,10 @@ PingTweaks is client-side but works better when all clients have it.
 
 Removes the delay between resting and rested upon joining a world.
 
+### Super Ultrawide Support | [Settings](SuperUltrawideSupport/SuperUltrawideSupport.cs)
+
+Do your monitors fulfill the Manifest Destiny of your desk? Does your cursor accumulate frequent flyer miles? Never skip neck day? Designed for a triple-monitor experience, SuperUltrawideSupport fits important HUD and GUI elements to an aspect ratio of your choice.
+
 # Legal Stuff
 
 This repo is licenced under [LGPL 3.0](LICENCE.md) unless where otherwise stated. Markdown-formatted licences are provided by [IQAndreas/markdown-licenses](https://github.com/IQAndreas/markdown-licenses).
