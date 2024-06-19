@@ -1,0 +1,9 @@
+{
+	"name": "SuperUltrawideSupport",
+	"version_number": "1.1.0",
+	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
+	"description": "Freshly squeezed HUD is GUI.",
+	"dependencies": [
+		"denikson-BepInExPack_Valheim-5.4.2202"
+	]
+}

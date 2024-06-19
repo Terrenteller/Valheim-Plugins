@@ -6,7 +6,7 @@ using HarmonyLib;
 // 1. Duplicate the top-level "Template" directory outside of Visual Studio
 // 2. Generate a new GUID in .../Properties/AssemblyInfo.cs
 // 3. Add the new project to the solution
-// 4. Replace all instances of "Template" with a real name
+// 4. Replace all instances of "Template" with a real name, minding capitalization and spaces
 
 namespace Template
 {

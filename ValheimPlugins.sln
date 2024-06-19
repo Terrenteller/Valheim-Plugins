@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NagMessages", "NagMessages\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template", "Template\Template.csproj", "{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperUltrawideSupport", "SuperUltrawideSupport\SuperUltrawideSupport.csproj", "{8CA56582-078A-4428-B55F-0E59E84925FF}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomSlotItemLib", "CustomSlotItemLib\CustomSlotItemLib.csproj", "{6BCA374E-6DA0-4450-B33C-CEEED956AC8B}"
 EndProject
 Global
@@ -84,6 +86,12 @@ Global
 		{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}.Package|Any CPU.Build.0 = Debug|Any CPU
 		{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CA56582-078A-4428-B55F-0E59E84925FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CA56582-078A-4428-B55F-0E59E84925FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CA56582-078A-4428-B55F-0E59E84925FF}.Package|Any CPU.ActiveCfg = Package|Any CPU
+		{8CA56582-078A-4428-B55F-0E59E84925FF}.Package|Any CPU.Build.0 = Package|Any CPU
+		{8CA56582-078A-4428-B55F-0E59E84925FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CA56582-078A-4428-B55F-0E59E84925FF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6BCA374E-6DA0-4450-B33C-CEEED956AC8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6BCA374E-6DA0-4450-B33C-CEEED956AC8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6BCA374E-6DA0-4450-B33C-CEEED956AC8B}.Package|Any CPU.ActiveCfg = Package|Any CPU
