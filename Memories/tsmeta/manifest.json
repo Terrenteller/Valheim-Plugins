@@ -1,0 +1,9 @@
+{
+	"name": "Memories",
+	"version_number": "1.1.0",
+	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
+	"description": "Remembers your camera zoom.",
+	"dependencies": [
+		"denikson-BepInExPack_Valheim-5.4.2202"
+	]
+}
