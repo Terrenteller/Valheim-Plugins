@@ -5,7 +5,7 @@ using HarmonyLib;
 namespace CustomSlotItemLib
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.customslotitemlib" , "CustomSlotItemLib" , "1.1.0" )]
+	[BepInPlugin( "com.riintouge.customslotitemlib" , "CustomSlotItemLib" , "1.1.1" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class CustomSlotItemLib : BaseUnityPlugin
 	{

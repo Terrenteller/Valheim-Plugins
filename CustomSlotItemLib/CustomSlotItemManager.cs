@@ -67,7 +67,7 @@ namespace CustomSlotItemLib
 			if( humanoid == null || !customSlotItemData.ContainsKey( humanoid ) )
 				return Enumerable.Empty< ItemDrop.ItemData > ();
 
-			return customSlotItemData[ humanoid ].Values.Where( x => x != null );
+			return customSlotItemData[ humanoid ].Values.Where( x => x != null ).ToList();
 		}
 
 		public static void ApplyCustomSlotItem( GameObject gameObject , string slotName )

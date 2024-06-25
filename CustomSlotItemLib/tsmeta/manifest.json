@@ -1,6 +1,6 @@
 {
 	"name": "CustomSlotItemLib",
-	"version_number": "1.1.0",
+	"version_number": "1.1.1",
 	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
 	"description": "Allows items to be equipped in custom slots.",
 	"dependencies": [

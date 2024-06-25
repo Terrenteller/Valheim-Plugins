@@ -6,6 +6,10 @@ WARNING: Addons made for the original plugin, like [WishboneSlot](https://thunde
 
 ## Changelog
 
+1.1.1
+
+- Fix soft hang on death when multiple items are equipped
+
 1.1.0
 
 - Update for 0.218.15 (Ashlands)
