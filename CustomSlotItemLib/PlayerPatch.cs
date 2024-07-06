@@ -5,6 +5,7 @@ namespace CustomSlotItemLib
 	public partial class CustomSlotItemLib
 	{
 		[HarmonyPatch( typeof( Player ) )]
+		[HarmonyPriority( Priority.High )]
 		internal class PlayerPatch
 		{
 			[HarmonyPatch( "Load" )]

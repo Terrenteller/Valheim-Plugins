@@ -6,6 +6,10 @@ WARNING: Addons made for the original plugin, like [WishboneSlot](https://thunde
 
 ## Changelog
 
+1.1.2
+
+- Raise priority of Harmony patches so other plugins have a higher chance of working correctly without explicit ordering
+
 1.1.1
 
 - Fix soft hang on death when multiple items are equipped

@@ -9,6 +9,7 @@ namespace CustomSlotItemLib
 	public partial class CustomSlotItemLib
 	{
 		[HarmonyPatch( typeof( Humanoid ) )]
+		[HarmonyPriority( Priority.High )]
 		public class HumanoidPatch
 		{
 			public static HashSet< StatusEffect > GetStatusEffectsFromCustomSlotItems( Humanoid __instance )

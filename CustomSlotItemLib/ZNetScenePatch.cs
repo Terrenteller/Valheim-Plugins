@@ -28,6 +28,7 @@ namespace CustomSlotItemLib
 		}
 		
 		[HarmonyPatch( typeof( ZNetScene ) )]
+		[HarmonyPriority( Priority.High )]
 		public class ZNetScenePatch
 		{
 			[HarmonyPatch( "Awake" )]

@@ -30,7 +30,7 @@ namespace CustomSlotItemLib
 			return item?.m_dropPrefab?.GetComponent< CustomSlotData >()?.slotName;
 		}
 
-		private static Dictionary< string , ItemDrop.ItemData > GetCustomSlots( Humanoid humanoid  )
+		private static Dictionary< string , ItemDrop.ItemData > GetCustomSlots( Humanoid humanoid )
 		{
 			return humanoid != null && customSlotItemData.ContainsKey( humanoid )
 				? customSlotItemData[ humanoid ]

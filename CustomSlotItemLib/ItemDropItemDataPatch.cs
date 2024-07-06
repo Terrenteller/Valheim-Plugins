@@ -5,6 +5,7 @@ namespace CustomSlotItemLib
 	public partial class CustomSlotItemLib
 	{
 		[HarmonyPatch( typeof( ItemDrop.ItemData ) )]
+		[HarmonyPriority( Priority.High )]
 		private class ItemDropItemDataPatch
 		{
 			[HarmonyPatch( "IsEquipable" )]
