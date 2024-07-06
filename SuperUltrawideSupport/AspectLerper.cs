@@ -112,7 +112,7 @@ namespace SuperUltrawideSupport
 		{
 			lock( originals )
 			{
-				if( rectTransform != null )
+				if( rectTransform != null && original != null )
 				{
 					rectTransform.anchorMin = new Vector2( original.minX , original.minY );
 					rectTransform.anchorMax = new Vector2( original.maxX , original.maxY );
@@ -156,19 +156,41 @@ namespace SuperUltrawideSupport
 		{
 			lock( originals )
 			{
-				if( enabled )
+				try
 				{
-					rectTransform.anchorMin = new Vector2(
-						Mathf.Lerp( xBufferNormalized , 1.0f - xBufferNormalized , original.minX ) ,
-						Mathf.Lerp( yBufferNormalized , 1.0f - yBufferNormalized , original.minY ) );
-					rectTransform.anchorMax = new Vector2(
-						Mathf.Lerp( xBufferNormalized , 1.0f - xBufferNormalized , original.maxX ) ,
-						Mathf.Lerp( yBufferNormalized , 1.0f - yBufferNormalized , original.maxY ) );
+					if( enabled )
+					{
+						rectTransform.anchorMin = new Vector2(
+							Mathf.Lerp( xBufferNormalized , 1.0f - xBufferNormalized , original.minX ) ,
+							Mathf.Lerp( yBufferNormalized , 1.0f - yBufferNormalized , original.minY ) );
+						rectTransform.anchorMax = new Vector2(
+							Mathf.Lerp( xBufferNormalized , 1.0f - xBufferNormalized , original.maxX ) ,
+							Mathf.Lerp( yBufferNormalized , 1.0f - yBufferNormalized , original.maxY ) );
+					}
+					else
+					{
+						rectTransform.anchorMin = new Vector2( original.minX , original.minY );
+						rectTransform.anchorMax = new Vector2( original.maxX , original.maxY );
+					}
 				}
-				else
+				catch( NullReferenceException )
 				{
-					rectTransform.anchorMin = new Vector2( original.minX , original.minY );
-					rectTransform.anchorMax = new Vector2( original.maxX , original.maxY );
+					// [Error  : Unity Log] NullReferenceException
+					// Stack trace:
+					// UnityEngine.RectTransform.set_anchorMin (UnityEngine.Vector2 value)
+					// SuperUltrawideSupport.AspectLerper.LerpCore (...)
+					// SuperUltrawideSupport.AspectLerper.Update ()
+					// SuperUltrawideSupport.SuperUltrawideSupport+InventoryGuiPatch.AwakePostfix (...)
+					// (wrapper dynamic-method) InventoryGui.DMD<InventoryGui::Awake>(InventoryGui)
+					// UnityEngine.GameObject:SetActive(GameObject, Boolean)
+					// SetActiveOnAwake:Awake()
+
+					// Observed twice after joining a game after leaving a game.
+					// The first departure was due to a timeout, the second departure was deliberate.
+					// But how are we REALLY getting here? rectTransform is not null.
+					// Are we holding on to something that has been mostly GC'd or already deleted inside Unity?
+
+					//System.Console.WriteLine( $"Failed to update \"{rectTransform.name}\"! Is it out-of-date?" );
 				}
 			}
 

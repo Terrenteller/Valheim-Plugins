@@ -8,7 +8,7 @@ using UnityEngine;
 namespace SuperUltrawideSupport
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.superultrawidesupport" , "Super Ultrawide Support" , "1.1.0" )]
+	[BepInPlugin( "com.riintouge.superultrawidesupport" , "Super Ultrawide Support" , "1.1.1" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class SuperUltrawideSupport : BaseUnityPlugin
 	{
