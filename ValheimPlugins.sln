@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NagMessages", "NagMessages\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template", "Template\Template.csproj", "{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MagneticWishbone", "MagneticWishbone\MagneticWishbone.csproj", "{4533B312-0061-4916-B569-170707A29C8F}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Memories", "Memories\Memories.csproj", "{8FEB5558-D229-48A5-B282-45680131F27D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperUltrawideSupport", "SuperUltrawideSupport\SuperUltrawideSupport.csproj", "{8CA56582-078A-4428-B55F-0E59E84925FF}"
@@ -88,6 +90,12 @@ Global
 		{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}.Package|Any CPU.Build.0 = Release|Any CPU
 		{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4533B312-0061-4916-B569-170707A29C8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4533B312-0061-4916-B569-170707A29C8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4533B312-0061-4916-B569-170707A29C8F}.Package|Any CPU.ActiveCfg = Package|Any CPU
+		{4533B312-0061-4916-B569-170707A29C8F}.Package|Any CPU.Build.0 = Package|Any CPU
+		{4533B312-0061-4916-B569-170707A29C8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4533B312-0061-4916-B569-170707A29C8F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8FEB5558-D229-48A5-B282-45680131F27D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8FEB5558-D229-48A5-B282-45680131F27D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8FEB5558-D229-48A5-B282-45680131F27D}.Package|Any CPU.ActiveCfg = Package|Any CPU

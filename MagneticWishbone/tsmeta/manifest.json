@@ -1,0 +1,10 @@
+{
+	"name": "MagneticWishbone",
+	"version_number": "1.1.0",
+	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
+	"description": "Turns the Wishbone into an item magnet via upgrades.",
+	"dependencies": [
+		"denikson-BepInExPack_Valheim-5.4.2202",
+		"ValheimModding-Jotunn-2.20.1"
+	]
+}
