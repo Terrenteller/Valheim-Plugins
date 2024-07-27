@@ -90,6 +90,7 @@
     <Compile Include="ButtonPatch.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="InventoryButton.cs" />
+    <Compile Include="MouseContext.cs" />
     <Compile Include="VanillaDragState.cs" />
     <Compile Include="FrameInputs.cs" />
     <Compile Include="InventoryGridPatch.cs" />

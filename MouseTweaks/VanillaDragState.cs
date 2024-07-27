@@ -29,6 +29,8 @@ namespace MouseTweaks
 				return;
 			}
 
+			// TODO: Multiple states may be new'd up every frame.
+			// Expose these more directly. Consider making a mutable version of this class.
 			dragInventory = Traverse.Create( inventoryGui )
 				.Field( "m_dragInventory" )
 				.GetValue< Inventory >();

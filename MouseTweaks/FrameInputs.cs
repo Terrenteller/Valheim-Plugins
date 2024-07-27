@@ -21,6 +21,8 @@ namespace MouseTweaks
 			Released
 		}
 
+		// TODO: These here couple other classes too closely to this one.
+		// Tracking successive clicks makes it worse. Can we factor these out?
 		public static FrameInputs Prior = null;
 		public static FrameInputs Current = new FrameInputs( true );
 
@@ -40,6 +42,7 @@ namespace MouseTweaks
 		public bool LeftOnly => Only( LeftButton );
 		public bool RightOnly => Only( RightButton );
 
+		public bool None => mouseButtons == 0;
 		public bool Any => mouseButtons > 0;
 		public bool Exclusive => ( mouseButtons & ( mouseButtons - 1 ) ) == 0;
 
