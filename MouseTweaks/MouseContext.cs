@@ -22,7 +22,7 @@ namespace MouseTweaks
 		}
 
 		public abstract State Think( VanillaDragState dragState );
-		public abstract void End();
+		public abstract void End(); // TODO: Soft VS hard termination bool
 	}
 
 	public class BlockingLeftMouseContext : IInventoryGuiMouseContext
@@ -36,7 +36,7 @@ namespace MouseTweaks
 
 		public override void End()
 		{
-			System.Console.WriteLine( $"DRAG: Ending BlockingLeftMouseContext" );
+			System.Console.WriteLine( $"CNTX: Ending BlockingLeftMouseContext" );
 		}
 
 		public override State Think( VanillaDragState dragState )
@@ -63,7 +63,7 @@ namespace MouseTweaks
 
 		public override void End()
 		{
-			System.Console.WriteLine( $"DRAG: Ending BlockingRightMouseContext" );
+			System.Console.WriteLine( $"CNTX: Ending BlockingRightMouseContext" );
 		}
 
 		public override State Think( VanillaDragState dragState )
@@ -99,11 +99,18 @@ namespace MouseTweaks
 			List< InventoryButton > containerButtons,
 			InventoryButton firstButton )
 		{
+			// containerGrid can be null, but the list from the GUI cannot be
+			if( playerGrid == null || playerButtons == null || containerButtons == null )
+			{
+				CurrentState = State.Invalid;
+				return;
+			}
+
 			PlayerGrid = playerGrid;
 			PlayerButtons = playerButtons;
 			ContainerGrid = containerGrid;
 			ContainerButtons = containerButtons;
-			FirstButton = firstButton ?? MouseTweaks.InventoryGuiPatch.GetHoveredButton( playerGrid , containerGrid );
+			FirstButton = firstButton ?? MouseTweaks.InventoryGuiPatch.GetHoveredButton( PlayerGrid , ContainerGrid );
 
 			VanillaDragState dragState = new VanillaDragState();
 			UpdateInventoryButtons( playerGrid , PlayerButtons , dragState.dragItem );
@@ -133,15 +140,17 @@ namespace MouseTweaks
 
 		public override void End() // TODO: force option? Like the user closed the GUI
 		{
-			//PlayerButtons.Clear();
-			//ContainerButtons.Clear();
+			//PlayerButtons.ForEach( x => x.considerForDrag = false );
+			//ContainerButtons.ForEach( x => x.considerForDrag = false );
 			HighlightedButtons.ForEach( x => x.SetSelectionState( InventoryButton.SelectionState.Normal , false ) );
 			HighlightedButtons.Clear();
-			// Should this set considerForDrag to false?
 		}
 
 		public override State Think( VanillaDragState dragState )
 		{
+			if( CurrentState == State.Invalid || CurrentState == State.Done )
+				return CurrentState;
+
 			// TODO: Should we track mouse frames here?
 			// TODO: At some point we should track whether items in the inventory changed.
 			PreviousButton = CurrentButton;
@@ -170,7 +179,7 @@ namespace MouseTweaks
 
 		public override void End()
 		{
-			System.Console.WriteLine( $"DRAG: Ending ShiftLeftDragContext" );
+			System.Console.WriteLine( $"CNTX: Ending ShiftLeftDragContext" );
 
 			base.End();
 			VanillaDragState.ClearDrag();
@@ -214,16 +223,21 @@ namespace MouseTweaks
 			InventoryButton firstButton )
 			: base( inventoryGui , playerGrid , playerButtons , containerGrid , containerButtons , firstButton )
 		{
+			if( CurrentState == State.Invalid || VanillaDragState.IsValid() )
+			{
+				CurrentState = State.Invalid;
+				return;
+			}
+
 			FirstButton.considerForDrag = false;
 			SmearedButtons.Add( FirstButton );
-			// TODO: Start invalid if there's a valid drag?
 		}
 
 		// InventoryButtonTrackingContext overrides
 
 		public override void End()
 		{
-			System.Console.WriteLine( $"DRAG: Ending LeftDragContext" );
+			System.Console.WriteLine( $"CNTX: Ending LeftDragContext" );
 
 			if( CurrentState == State.Done && SmearedButtons.Count > 1 )
 			{
@@ -267,7 +281,7 @@ namespace MouseTweaks
 			if( targetItem == null || Common.CanStackOnto( FirstButton.curItem , targetItem ) )
 			{
 				Vector2i gridPos = CurrentButton.gridPos;
-				System.Console.WriteLine( $"DRAG: Smear into ({gridPos})" );
+				System.Console.WriteLine( $"DRAG: Left, into ({gridPos})" );
 				CurrentButton.SetSelectionState( InventoryButton.SelectionState.Highlighted , true );
 				CurrentButton.considerForDrag = false;
 				HighlightedButtons.Add( CurrentButton );
@@ -300,7 +314,7 @@ namespace MouseTweaks
 
 		public override void End()
 		{
-			System.Console.WriteLine( $"DRAG: Ending RightDragContext" );
+			System.Console.WriteLine( $"CNTX: Ending RightDragContext" );
 
 			base.End();
 		}
@@ -327,7 +341,7 @@ namespace MouseTweaks
 			if( !MouseTweaks.InventoryGuiPatch.AddItem( inv , dragItem , 1 , gridPos.x , gridPos.y ) )
 				return SetState( State.NoChange );
 
-			System.Console.WriteLine( $"DRAG: Right, into acceptable slot ({gridPos})" );
+			System.Console.WriteLine( $"DRAG: Right, into ({gridPos})" );
 			CurrentButton.SetSelectionState( InventoryButton.SelectionState.Highlighted , true );
 			CurrentButton.considerForDrag = false;
 			HighlightedButtons.Add( CurrentButton );

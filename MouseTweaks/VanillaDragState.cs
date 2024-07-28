@@ -108,14 +108,7 @@ namespace MouseTweaks
 			System.Console.WriteLine( $"TEST: VanillaDragState.ClearDrag()" );
 			MouseTweaks.InventoryGuiPatch.SetupDragItem( InventoryGui.instance , null , null , 1 );
 		}
-		
-		public static void ClearDragIfInvalid( VanillaDragState dragState = null )
-		{
-			System.Console.WriteLine( $"TEST: VanillaDragState.ClearDragIfInvalid()" );
-			if( !( dragState ?? new VanillaDragState() ).isValid )
-				ClearDrag();
-		}
-		
+
 		public static bool IsValid()
 		{
 			return ( new VanillaDragState() ).isValid;

@@ -20,6 +20,7 @@ namespace MouseTweaks
 		// 2 - Keybinds
 		public static ConfigEntry< KeyCode > DropOneKey;
 		public static ConfigEntry< bool > DropOneRightClick;
+		// Option to not swap shift and ctrl?
 
 		public enum WheelActionEnum
 		{
