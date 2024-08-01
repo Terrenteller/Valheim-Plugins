@@ -13,41 +13,58 @@ namespace MouseTweaks
 		{
 			// Used to skip a very specific sequence that causes RMB to reset the drag
 			private static bool IgnoreUpdateItemDragRightMouseReset = false;
+			// Hide() is called at a bad time by a code path ILSpy is not revealing.
+			// This causes UpdatePostfix() to cache soon-to-be stale buttons immediately after HidePostfix()
+			// clears them, preventing fresh buttons from being cached when the GUI is shown next.
+			private static bool SkipNextUpdate = false;
+			private static bool DroppedOne = false;
 			private static IInventoryGuiMouseContext MouseContext = null;
-			private static MousePressContextEnum MousePressContext;
 			private static VanillaDragState LastDragState = null;
 			private static VanillaDragState CurrentDragState = new VanillaDragState();
+			private static InventoryGrid PlayerGrid = null; // Only use to track invalidation!
+			private static InventoryGrid ContainerGrid = null; // Only use to track invalidation!
 			private static List< InventoryButton > PlayerButtons = new List< InventoryButton >();
 			private static List< InventoryButton > ContainerButtons = new List< InventoryButton >();
 			private static InventoryButton CurrentButton = null;
-			private static bool DroppedOne = false;
-
-			private enum MousePressContextEnum
-			{
-				None,
-				Invalid,
-				Select,
-				Left,
-				// LeftSameStackMove? (ctrl drag)
-				LeftStackMove,
-				LeftSplit,
-				Right,
-				RightSplitDialog,
-				RightSplitImmediate
-			}
 
 			#region Helpers
-			
+
+			internal static void RefreshInventoryButtons( InventoryGrid grid )
+			{
+				System.Console.WriteLine( $"INFO: RefreshInventoryButtons()" );
+
+				if( grid == null )
+				{
+					return;
+				}
+				else if( grid == PlayerGrid )
+				{
+					System.Console.WriteLine( $"INFO: Attempting to refresh PlayerButtons" );
+					CollectInventoryButtons( PlayerGrid , PlayerButtons );
+					System.Console.WriteLine( $"INFO: Refreshed {PlayerButtons.Count} player buttons" );
+				}
+				else if( grid == ContainerGrid )
+				{
+					System.Console.WriteLine( $"INFO: Attempting to refresh ContainerButtons" );
+					CollectInventoryButtons( ContainerGrid , ContainerButtons );
+					System.Console.WriteLine( $"INFO: Refreshed {ContainerButtons.Count} container buttons" );
+				}
+				else if( grid == null )
+				{
+					System.Console.WriteLine( $"INFO: Cannot refresh untracked InventoryGrid" );
+					return;
+				}
+			}
+
 			private static void CollectInventoryButtons( InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
-				if( PlayerButtons.Count == 0 )
+				if( PlayerButtons.Count == 0 && ContainerButtons.Count == 0 )
 				{
+					System.Console.WriteLine( $"INFO: Attempting to index PlayerButtons" );
 					CollectInventoryButtons( playerGrid , PlayerButtons );
 					System.Console.WriteLine( $"INFO: Indexed {PlayerButtons.Count} player buttons" );
-				}
 
-				if( ContainerButtons.Count == 0 )
-				{
+					System.Console.WriteLine( $"INFO: Attempting to index ContainerButtons" );
 					CollectInventoryButtons( containerGrid , ContainerButtons );
 					System.Console.WriteLine( $"INFO: Indexed {ContainerButtons.Count} container buttons" );
 				}
@@ -56,28 +73,33 @@ namespace MouseTweaks
 			private static void CollectInventoryButtons( InventoryGrid grid , List< InventoryButton > buttons )
 			{
 				buttons.Clear();
-				if( grid == null )
+
+				Inventory inv = grid?.GetInventory();
+				if( inv == null )
 					return;
 
-				Inventory inv = grid.GetInventory();
-				UIInputHandler[] handlers = grid.GetComponentsInChildren< UIInputHandler >();
-				buttons.Resize( handlers.Length );
-				int width = InventoryGridPatch.Width( grid );
+				int width = inv.GetWidth();
+				int height = inv.GetHeight();
+				if( width <= 0 || height <= 0 )
+					return;
 
-				// TODO: This news up a bunch of stuff every time. Use a pool.
-				foreach( UIInputHandler button in handlers )
+				// EVIL: If the object argument is not specified, it news ONE up, and sets ALL new indices to it
+				buttons.Resize( width * height , null );
+				foreach( UIInputHandler inputHandler in grid.GetComponentsInChildren< UIInputHandler >() )
 				{
-					Vector2i gridPos = InventoryGridPatch.GetButtonPos( grid , button );
-					ItemDrop.ItemData otherItem = inv.GetItemAt( gridPos.x , gridPos.y );
+					Vector2i gridPos = InventoryGridPatch.GetButtonPos( grid , inputHandler );
+					if( gridPos.x == -1 || gridPos.y == -1 )
+						continue; // UnityEngine.Object.Destroy() does not destroy on the same frame
+
 					int gridIndex = gridPos.x + ( gridPos.y * width );
 					buttons[ gridIndex ] = new InventoryButton
 					{
-						button = button,
+						button = inputHandler,
 						grid = grid,
 						gridPos = gridPos,
 						gridIndex = gridIndex, // FIXME: This doesn't appear to be the actual index...
 						considerForDrag = true,
-						representsExistingItem = otherItem != null
+						representsExistingItem = inv.GetItemAt( gridPos.x , gridPos.y ) != null
 					};
 				}
 			}
@@ -85,9 +107,9 @@ namespace MouseTweaks
 			internal static InventoryButton GetHoveredButton( InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
 				if( playerGrid != null && playerGrid.gameObject.activeInHierarchy && Common.IsCursorOver( playerGrid.gameObject ) )
-					return PlayerButtons.Where( x => x != null && Common.IsCursorOver( x.button.gameObject ) ).FirstOrDefault();
+					return PlayerButtons.Where( x => Common.IsCursorOver( x.button.gameObject ) ).FirstOrDefault();
 				else if( containerGrid != null && containerGrid.gameObject.activeInHierarchy && Common.IsCursorOver( containerGrid.gameObject ) )
-					return ContainerButtons.Where( x => x != null && Common.IsCursorOver( x.button.gameObject ) ).FirstOrDefault();
+					return ContainerButtons.Where( x => Common.IsCursorOver( x.button.gameObject ) ).FirstOrDefault();
 
 				return null;
 			}
@@ -98,7 +120,7 @@ namespace MouseTweaks
 
 			private static void UpdateMouseWheel( InventoryGui instance , InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
-				if( MouseContext != null || MousePressContext != MousePressContextEnum.None )
+				if( MouseContext != null )
 					return;
 
 				Player player = Player.m_localPlayer;
@@ -189,6 +211,7 @@ namespace MouseTweaks
 						{
 							System.Console.WriteLine( $"PULL: One item" );
 							item.m_stack++;
+							InventoryPatch.Changed( owningInv );
 							return;
 						}
 					}
@@ -213,6 +236,7 @@ namespace MouseTweaks
 						{
 							System.Console.WriteLine( $"PULL: One item" );
 							item.m_stack++;
+							InventoryPatch.Changed( otherInv );
 							return;
 						}
 					}
@@ -250,7 +274,8 @@ namespace MouseTweaks
 						{
 							System.Console.WriteLine( $"PUSH: One item to sibling" );
 							otherItem.m_stack++;
-							owningInv.RemoveOneItem( item );
+							InventoryPatch.Changed( otherInv );
+							owningInv.RemoveOneItem( item ); // TODO: What if this fails?
 							if( item.m_stack < 1 )
 								UITooltip.HideTooltip();
 
@@ -313,7 +338,7 @@ namespace MouseTweaks
 					int transfer = Mathf.Min( item.m_shared.m_maxStackSize - item.m_stack , equivalent.m_stack );
 					System.Console.WriteLine( $"DBLC: Moving {transfer}" );
 					if( inv.RemoveItem( equivalent , transfer ) )
-						item.m_stack += transfer;
+						item.m_stack += transfer; // FIXME: Does not update player weight
 				}
 
 				return item.m_stack < item.m_shared.m_maxStackSize;
@@ -334,70 +359,35 @@ namespace MouseTweaks
 				else if( FrameInputs.Current.successiveClicks > 1 )
 				{
 					// Don't end the drag on successive clicks to not interfere with a double-click
-					if( MousePressContext != MousePressContextEnum.None )
-					{
-						System.Console.WriteLine( $"DRAG: Setting Invalid" );
-						MousePressContext = MousePressContextEnum.Invalid;
-					}
-
 					return;
 				}
-
-				// TODO: If Done or Invalid, should the context be the thing that finalizes itself?
-				if( MouseContext is BlockingLeftMouseContext || MouseContext is BlockingRightMouseContext )
+				else if( MouseContext != null )
 				{
+					// TODO: We need to block somehow when a context becomes invalid until it can be freed
 					switch( MouseContext.Think( CurrentDragState ) )
 					{
 						case IInventoryGuiMouseContext.State.NoChange:
 						case IInventoryGuiMouseContext.State.OK:
 							return;
 						case IInventoryGuiMouseContext.State.Done:
-							MouseContext.End();
-							EndDrag( false );
-							MouseContext = null;
-							return;
 						case IInventoryGuiMouseContext.State.Invalid:
-							// We need to block somehow when a context becomes invalid until it can be freed
-							MouseContext.End();
 							EndDrag( true );
-							MouseContext = null;
 							return;
 					}
 				}
-				else if( MouseContext is InventoryButtonTrackingContext )
-				{
-					switch( MouseContext.Think( CurrentDragState ) )
-					{
-						case IInventoryGuiMouseContext.State.NoChange:
-						case IInventoryGuiMouseContext.State.OK:
-							return;
-						case IInventoryGuiMouseContext.State.Done:
-							MouseContext.End();
-							EndDrag( true );
-							MouseContext = null;
-							return;
-						case IInventoryGuiMouseContext.State.Invalid:
-							//MouseContext.End(); // Do not call... FIXME: Check for invalid state
-							EndDrag( true );
-							MouseContext = null;
-							return;
-					}
-				}
-
-				MousePressContext = MousePressContextEnum.None;
 			}
 
-			private static void EndDrag( bool clearDrag )
+			private static void EndDrag( bool clearContext )
 			{
-				System.Console.WriteLine( $"DRAG: Ending {MousePressContext}" );
-
 				PlayerButtons.ForEach( x => x.considerForDrag = false );
 				ContainerButtons.ForEach( x => x.considerForDrag = false );
-				MousePressContext = MousePressContextEnum.None;
-				//MouseContext = null;
 
-				if( clearDrag )
-					VanillaDragState.ClearDrag();
+				// TODO: If Done or Invalid, should the context be the thing that finalizes itself?
+				if( clearContext )
+				{
+					MouseContext?.End();
+					MouseContext = null;
+				}
 			}
 
 			#endregion
@@ -406,11 +396,7 @@ namespace MouseTweaks
 
 			public static void UpdateDropOne( InventoryGrid m_playerGrid , InventoryGrid m_containerGrid )
 			{
-				if( !IsEnabled.Value
-					|| MouseContext != null
-					|| MousePressContext != MousePressContextEnum.None
-					|| CurrentDragState.isValid
-					|| FrameInputs.Current.Any )
+				if( !IsEnabled.Value || MouseContext != null || CurrentDragState.isValid || FrameInputs.Current.Any )
 				{
 					return;
 				}
@@ -430,7 +416,7 @@ namespace MouseTweaks
 
 			public static bool DropOne( Inventory inv , ItemDrop.ItemData item )
 			{
-				if( !IsEnabled.Value || MouseContext != null || MousePressContext != MousePressContextEnum.None )
+				if( !IsEnabled.Value || MouseContext != null )
 				{
 					return false;
 				}
@@ -542,11 +528,27 @@ namespace MouseTweaks
 			[HarmonyPostfix]
 			private static void HidePostfix()
 			{
+				MouseContext?.End();
+				VanillaDragState.ClearDrag();
 				EndDrag( true );
-				PlayerButtons.Clear();
-				ContainerButtons.Clear();
+				OnDestroyPrefix();
 			}
-			
+
+			[HarmonyPatch( "OnDestroy" )]
+			[HarmonyPrefix]
+			private static void OnDestroyPrefix()
+			{
+				IgnoreUpdateItemDragRightMouseReset = false;
+				SkipNextUpdate = true;
+				DroppedOne = false;
+				MouseContext = null;
+				PlayerGrid = null;
+				PlayerButtons.Clear();
+				ContainerGrid = null;
+				ContainerButtons.Clear();
+				CurrentButton = null;
+			}
+
 			[HarmonyPatch( "OnRightClickItem" )]
 			[HarmonyPrefix]
 			private static bool OnRightClickItemPrefix(
@@ -563,9 +565,7 @@ namespace MouseTweaks
 				}
 				else if( VanillaDragState.IsValid() )
 				{
-					System.Console.WriteLine( $"INFO: Setting Right" );
-					CollectInventoryButtons( ___m_playerGrid , ___m_containerGrid );
-					MousePressContext = MousePressContextEnum.Right;
+					System.Console.WriteLine( $"INFO: Start RightDragContext" );
 					MouseContext = new RightDragContext( __instance , ___m_playerGrid , PlayerButtons , ___m_containerGrid , ContainerButtons , null );
 					return false; // Block all right-click logic while an item is on the cursor
 				}
@@ -578,8 +578,7 @@ namespace MouseTweaks
 					int amount = Mathf.CeilToInt( item.m_stack / 2.0f );
 					SetupDragItem( __instance , item , grid.GetInventory() , amount );
 
-					System.Console.WriteLine( $"INFO: Setting RightSplitImmediate" );
-					MousePressContext = MousePressContextEnum.RightSplitImmediate;
+					System.Console.WriteLine( $"INFO: Start BlockingRightMouseContext" );
 					MouseContext = new BlockingRightMouseContext();
 					return false;
 				}
@@ -587,9 +586,9 @@ namespace MouseTweaks
 				{
 					if( item.m_stack == 1 )
 					{
-						// Nothing to split. Mirrors vanilla behaviour.
+						// Nothing to split. Matches vanilla behaviour.
 						SetupDragItem( __instance , item , grid.GetInventory() , 1 );
-						MousePressContext = MousePressContextEnum.RightSplitImmediate;
+						System.Console.WriteLine( $"INFO: Start BlockingRightMouseContext" );
 						MouseContext = new BlockingRightMouseContext();
 						return false;
 					}
@@ -604,8 +603,7 @@ namespace MouseTweaks
 						.Method( "OnSplitSliderChanged" , new[] { typeof( float ) } )
 						.GetValue( amount );
 
-					System.Console.WriteLine( $"INFO: Setting RightSplitDialog" );
-					MousePressContext = MousePressContextEnum.RightSplitDialog;
+					System.Console.WriteLine( $"INFO: Start BlockingRightMouseContext" );
 					MouseContext = new BlockingRightMouseContext();
 					return false;
 				}
@@ -630,58 +628,50 @@ namespace MouseTweaks
 				{
 					return true;
 				}
-				if( FrameInputs.Current.successiveClicks > 0 )
+				else if( FrameInputs.Current.successiveClicks > 0 )
 				{
 					// TODO: Should we start a double-click context here?
 					System.Console.WriteLine( $"INFO: Excessive clicking" );
 					return true;
 				}
-				else if( MousePressContext == MousePressContextEnum.LeftStackMove || MouseContext is ShiftLeftDragContext )
-				{
-					// FIXME: We shouldn't know this context is special
-					System.Console.WriteLine( $"INFO: Allowing LeftMove" );
-					return true;
-				}
 				else if( MouseContext != null )
 				{
-					return false;
-				}
-				else if( MousePressContext != MousePressContextEnum.None )
-				{
-					// TODO: Determine if this should come first...
-					// TODO: This should bail if we have some other active context.
-					System.Console.WriteLine( $"INFO: Setting Invalid (was {MousePressContext})" );
-					MousePressContext = MousePressContextEnum.Invalid;
+					System.Console.WriteLine( $"INFO: Context {MouseContext.GetType()} is active" );
 					return true;
 				}
 				else if( VanillaDragState.IsValid() )
 				{
 					// Allow the item to be put into the slot and invalidate the vanilla drag.
-					// This may fail, so we check again in the postfix.
-					System.Console.WriteLine( $"INFO: Setting Left" );
-					MousePressContext = MousePressContextEnum.Left;
+					// This can fail so we check again in the postfix.
+					System.Console.WriteLine( $"INFO: Start LeftDragContext" );
 					__state = true;
 					return true;
 				}
-				else if( Common.AnyShift() )
+
+				bool shift = Common.AnyShift();
+				bool control = Common.AnyControl();
+				if( shift && control )
 				{
-					// We'll call this method shortly and indirectly from our drag logic
-					System.Console.WriteLine( $"INFO: Setting LeftStackMove" );
-					CollectInventoryButtons( ___m_playerGrid , ___m_containerGrid );
-					MousePressContext = MousePressContextEnum.LeftStackMove;
+					System.Console.WriteLine( $"INFO: Start ShiftCtrlLeftDragContext" );
+					MouseContext = new ShiftCtrlLeftDragContext( null , ___m_playerGrid , PlayerButtons , ___m_containerGrid , ContainerButtons , null );
+					return false;
+				}
+				else if( shift )
+				{
+					// The mouse context will call this method when necessary
+					System.Console.WriteLine( $"INFO: Start ShiftLeftDragContext" );
 					MouseContext = new ShiftLeftDragContext( null , ___m_playerGrid , PlayerButtons , ___m_containerGrid , ContainerButtons , null );
 					return false;
 				}
-				else if( Common.AnyControl() )
+				else if( control )
 				{
-					System.Console.WriteLine( $"INFO: Setting LeftSplit" );
-					MousePressContext = MousePressContextEnum.LeftSplit;
+					// TODO: This is identical to the last case because we're not tracking modifier keys yet
+					System.Console.WriteLine( $"INFO: Start BlockingLeftMouseContext" );
 					MouseContext = new BlockingLeftMouseContext();
 					return true;
 				}
 
-				System.Console.WriteLine( $"INFO: Setting Select" );
-				MousePressContext = MousePressContextEnum.Select;
+				System.Console.WriteLine( $"INFO: Start BlockingLeftMouseContext" );
 				MouseContext = new BlockingLeftMouseContext();
 				return true;
 			}
@@ -704,12 +694,10 @@ namespace MouseTweaks
 				else if( VanillaDragState.IsValid() )
 				{
 					// We were not able to put down the entire stack for some reason
-					System.Console.WriteLine( $"INFO: Setting Left - SYKE" );
-					MousePressContext = MousePressContextEnum.None;
+					System.Console.WriteLine( $"INFO: Start LeftDragContext - SYKE" );
 					return;
 				}
 
-				CollectInventoryButtons( ___m_playerGrid , ___m_containerGrid );
 				MouseContext = new LeftDragContext( null , ___m_playerGrid , PlayerButtons , ___m_containerGrid , ContainerButtons , null );
 			}
 
@@ -733,6 +721,35 @@ namespace MouseTweaks
 				return Common.SwapShiftAndCtrl( instructionsIn );
 			}
 
+			/*
+			[HarmonyPatch( "UpdateContainer" )]
+			[HarmonyPrefix]
+			private static void UpdateContainerPrefix( InventoryGrid ___m_containerGrid )
+			{
+				ContainerGrid = ___m_containerGrid;
+			}
+
+			[HarmonyPatch( "UpdateInventory" )]
+			[HarmonyPrefix]
+			private static void UpdateInventoryPrefix( InventoryGrid ___m_playerGrid )
+			{
+				PlayerGrid = ___m_playerGrid;
+			}
+			*/
+
+			[HarmonyPatch( "Update" )]
+			[HarmonyPostfix]
+			private static void UpdatePostfix( InventoryGui __instance , int ___m_hiddenFrames , InventoryGrid ___m_playerGrid , InventoryGrid ___m_containerGrid )
+			{
+				// InventoryGui.IsVisible() has a logic error (m_hiddenFrames <= 1 vs m_hiddenFrames < 1).
+				// Checking the animator requires linking against yet another library.
+				// Forgo encapsulation and check the value directly.
+				if( ___m_hiddenFrames == 0 && !SkipNextUpdate )
+					CollectInventoryButtons( ___m_playerGrid , ___m_containerGrid );
+
+				SkipNextUpdate = false;
+			}
+			
 			[HarmonyPatch( "UpdateItemDrag" )]
 			[HarmonyPrefix]
 			private static void UpdateItemDragPrefix(

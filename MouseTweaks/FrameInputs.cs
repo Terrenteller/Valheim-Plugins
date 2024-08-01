@@ -21,7 +21,7 @@ namespace MouseTweaks
 			Released
 		}
 
-		// TODO: These here couple other classes too closely to this one.
+		// TODO: These couple other classes too closely to this one.
 		// Tracking successive clicks makes it worse. Can we factor these out?
 		public static FrameInputs Prior = null;
 		public static FrameInputs Current = new FrameInputs( true );

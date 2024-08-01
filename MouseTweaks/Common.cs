@@ -83,7 +83,10 @@ namespace MouseTweaks
 
 		public static bool IsCursorOver( GameObject go )
 		{
-			return RectTransformUtility.RectangleContainsScreenPoint( go.transform as RectTransform , Input.mousePosition );
+			RectTransform rectTransform = go.transform as RectTransform;
+			return rectTransform != null
+				? RectTransformUtility.RectangleContainsScreenPoint( rectTransform , Input.mousePosition )
+				: false;
 		}
 
 		public static IEnumerable< CodeInstruction > SwapShiftAndCtrl( IEnumerable< CodeInstruction > instructionsIn )
