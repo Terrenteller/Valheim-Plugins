@@ -20,10 +20,9 @@ namespace MouseTweaks
 			Disabled
 		}
 
-		public UIInputHandler button;
+		public UIInputHandler inputHandler;
 		public InventoryGrid grid;
 		public Vector2i gridPos;
-		public int gridIndex;
 		public bool representsExistingItem;
 		public bool considerForDrag;
 		public ItemDrop.ItemData curItem => grid != null ? grid.GetInventory().GetItemAt( gridPos.x , gridPos.y ) : null;
@@ -39,7 +38,7 @@ namespace MouseTweaks
 
 		public void SetSelectionState( SelectionState state , bool instant )
 		{	
-			DoStateTransitionMethod.Invoke( button.GetComponent< Button >() , new object[] { (int)state , instant } );
+			DoStateTransitionMethod.Invoke( inputHandler.GetComponent< Button >() , new object[] { (int)state , instant } );
 		}
 	}
 }

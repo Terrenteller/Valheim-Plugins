@@ -6,17 +6,6 @@ namespace MouseTweaks
 {
 	public partial class MouseTweaks
 	{
-		[HarmonyPatch( typeof( Inventory ) )]
-		public class InventoryPatch
-		{
-			public static void Changed( Inventory inv )
-			{
-				Traverse.Create( inv )
-					.Method( "Changed" )
-					.GetValue();
-			}
-		}
-
 		[HarmonyPatch( typeof( InventoryGrid ) )]
 		public class InventoryGridPatch
 		{
@@ -50,31 +39,8 @@ namespace MouseTweaks
 			[HarmonyTranspiler]
 			private static IEnumerable< CodeInstruction > OnLeftClickTranspiler( IEnumerable< CodeInstruction > instructionsIn )
 			{
-				return Common.SwapShiftAndCtrl( instructionsIn );
+				return InitialSwapShiftAndCtrl ? Common.SwapShiftAndCtrl( instructionsIn ) : instructionsIn;
 			}
-
-			/*
-			[HarmonyPatch( "UpdateGui" )]
-			[HarmonyPrefix]
-			private static void UpdateGuiPrefix(
-				Player player,
-				ItemDrop.ItemData dragItem,
-				Inventory ___m_inventory,
-				int ___m_width,
-				int ___m_height,
-				out bool __state )
-			{
-				__state = ___m_width != ___m_inventory.GetWidth() || ___m_height != ___m_inventory.GetHeight();
-			}
-
-			[HarmonyPatch( "UpdateGui" )]
-			[HarmonyPostfix]
-			private static void UpdateGuiPostfix( InventoryGrid __instance , Player player , ItemDrop.ItemData dragItem , ref bool __state )
-			{
-				//if( __state )
-				//	InventoryGuiPatch.RefreshInventoryButtons( __instance );
-			}
-			*/
 		}
 	}
 }

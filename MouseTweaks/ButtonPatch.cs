@@ -7,7 +7,7 @@ namespace MouseTweaks
 {
 	public partial class MouseTweaks
 	{
-		internal class RightClickButtonComponent : MonoBehaviour
+		internal class ButtonRightClickComponent : MonoBehaviour
 		{
 			public Button.ButtonClickedEvent OnRightClick = new Button.ButtonClickedEvent();
 		}
@@ -21,10 +21,10 @@ namespace MouseTweaks
 			{
 				if( eventData.button == PointerEventData.InputButton.Right && __instance.IsActive() && __instance.IsInteractable() )
 				{
-					RightClickButtonComponent component = __instance.GetComponent< RightClickButtonComponent >();
+					ButtonRightClickComponent component = __instance.GetComponent< ButtonRightClickComponent >();
 					if( component != null )
 					{
-						System.Console.WriteLine( $"TEST: Activating RightClickButtonComponent" );
+						Common.DebugMessage( $"RCLK: Activating RightClickButtonComponent" );
 						component.OnRightClick.Invoke();
 					}
 				}

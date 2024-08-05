@@ -23,15 +23,26 @@ namespace MouseTweaks
 			return ZInput.GetKey( KeyCode.LeftShift ) || ZInput.GetKey( KeyCode.RightShift );
 		}
 
-		public static bool CanStackOnto( ItemDrop.ItemData item , ItemDrop.ItemData target )
+		public static bool ItemsAreSimilarButDistinct( ItemDrop.ItemData item , ItemDrop.ItemData other , bool considerQuality )
 		{
 			return item != null
-				&& target != null
-				&& item != target
-				&& item.m_shared.m_name == target.m_shared.m_name
+				&& other != null
+				&& item != other
+				&& item.m_shared.m_name == other.m_shared.m_name
+				&& ( !considerQuality || item.m_quality == other.m_quality );
+		}
+		
+		public static bool CanStackOnto( ItemDrop.ItemData item , ItemDrop.ItemData target )
+		{
+			return ItemsAreSimilarButDistinct( item , target , true )
 				&& target.m_shared.m_maxStackSize > 1
-				&& target.m_stack < target.m_shared.m_maxStackSize
-				&& item.m_quality == target.m_quality;
+				&& target.m_stack < target.m_shared.m_maxStackSize;
+		}
+
+		public static void DebugMessage( string message )
+		{
+			if( MouseTweaks.DebugMessages.Value )
+				Debug.Log( message );
 		}
 
 		public static List< ItemDrop.ItemData > EquivalentStackables( ItemDrop.ItemData item , InventoryGrid grid )
@@ -48,6 +59,7 @@ namespace MouseTweaks
 
 		public static ItemDrop.ItemData FindFirstSimilarItemInInventory( ItemDrop.ItemData item , Inventory inv )
 		{
+			// Some vanilla similarity checks check ItemDrop.ItemData.m_worldLevel. What is this?
 			foreach( ItemDrop.ItemData invItem in inv.GetAllItems() )
 				if( item != invItem && item.m_shared.m_name.Equals( invItem.m_shared.m_name ) && item.m_quality == invItem.m_quality )
 					return invItem;
@@ -61,12 +73,10 @@ namespace MouseTweaks
 			return null;
 		}
 
-		public static ItemDrop.ItemData FindPartialStack( ItemDrop.ItemData item , Inventory inv , bool canReturnSelf )
+		public static ItemDrop.ItemData FindPartialStack( ItemDrop.ItemData item , Inventory inv )
 		{
 			if( item == null )
 				return null;
-			else if( canReturnSelf && item.m_stack < item.m_shared.m_maxStackSize )
-				return item;
 
 			foreach( ItemDrop.ItemData invItem in inv.GetAllItems() )
 			{
@@ -83,10 +93,12 @@ namespace MouseTweaks
 
 		public static bool IsCursorOver( GameObject go )
 		{
-			RectTransform rectTransform = go.transform as RectTransform;
-			return rectTransform != null
-				? RectTransformUtility.RectangleContainsScreenPoint( rectTransform , Input.mousePosition )
-				: false;
+			return IsCursorOver( go?.transform as RectTransform );
+		}
+		
+		public static bool IsCursorOver( RectTransform rectTransform )
+		{
+			return rectTransform != null && RectTransformUtility.RectangleContainsScreenPoint( rectTransform , Input.mousePosition );
 		}
 
 		public static IEnumerable< CodeInstruction > SwapShiftAndCtrl( IEnumerable< CodeInstruction > instructionsIn )
@@ -117,7 +129,7 @@ namespace MouseTweaks
 				// A weird approach, but this doesn't throw unmarked label argument exceptions
 				if( instruction0.opcode == OpCodes.Ldarg_S && instruction2.opcode == OpCodes.Bne_Un )
 				{
-					// Swap InventoryGrid.Modifier.Split and InventoryGrid.Modifier.Move
+					// Swap InventoryGrid.Modifier.Split (1) and InventoryGrid.Modifier.Move (2)
 					CodeInstruction instruction1 = instructions[ index + 1 ];
 					if( instruction1.opcode == OpCodes.Ldc_I4_1 )
 						instruction1.opcode = OpCodes.Ldc_I4_2;

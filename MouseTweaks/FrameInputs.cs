@@ -9,10 +9,6 @@ namespace MouseTweaks
 		public const int RightButton = 1;
 		public const int AllButtons = 2;
 
-		// Arbitrary values. What are good defaults? Make config options?
-		private const double SuccessiveClickWindow = 0.25f;
-		private const int SuccessiveClickRadius = 3;
-
 		public enum ButtonDelta
 		{
 			None,
@@ -21,7 +17,7 @@ namespace MouseTweaks
 			Released
 		}
 
-		// TODO: These couple other classes too closely to this one.
+		// These couple other classes too closely to this one.
 		// Tracking successive clicks makes it worse. Can we factor these out?
 		public static FrameInputs Prior = null;
 		public static FrameInputs Current = new FrameInputs( true );
@@ -75,27 +71,22 @@ namespace MouseTweaks
 					SuccessiveClicksFirstPos = mousePos;
 					SuccessiveClicks++;
 				}
-				else if( ( mousePos - SuccessiveClicksFirstPos ).Magnitude() < SuccessiveClickRadius ) // No MagnitudeSquared()?
+				else if( ( mousePos - SuccessiveClicksFirstPos ).Magnitude() < MouseTweaks.SuccessiveClickRadius.Value ) // No MagnitudeSquared()?
 				{
 					SuccessiveClicks++;
-					System.Console.WriteLine( $"DBLC: SuccessiveClicks {SuccessiveClicks}" );
+					Common.DebugMessage( $"DBLC: SuccessiveClicks {SuccessiveClicks}" );
 				}
 				else
 				{
 					SuccessiveClicksFirstPos = mousePos;
 					SuccessiveClicks = 1;
-					System.Console.WriteLine( $"DBLC: SuccessiveClicks reset (distance)" );
+					Common.DebugMessage( $"DBLC: SuccessiveClicks reset (distance)" );
 				}
-
-				// Don't increment if we're outside the double click radius, but don't reset either.
-				// If this class tracked the validity of actions, leaving the radius should invalid it.
-				// Determining whether the doodad frobulated changed is more difficult.
-				// FIXME: Or maybe we should reset...
 			}
-			else if( LeftDelta == ButtonDelta.None && sinceLastPress > SuccessiveClickWindow && SuccessiveClicks > 0 )
+			else if( LeftDelta == ButtonDelta.None && sinceLastPress > MouseTweaks.SuccessiveClickWindow.Value && SuccessiveClicks > 0 )
 			{
 				SuccessiveClicks = 0;
-				System.Console.WriteLine( $"DBLC: SuccessiveClicks reset (time)" );
+				Common.DebugMessage( $"DBLC: SuccessiveClicks reset (time)" );
 			}
 
 			successiveClicks = SuccessiveClicks;

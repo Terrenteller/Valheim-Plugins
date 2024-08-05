@@ -69,7 +69,7 @@ namespace MouseTweaks
 
 		public bool Decrement()
 		{
-			System.Console.WriteLine( $"TEST: VanillaDragState.Decrement()" );
+			Common.DebugMessage( $"TEST: VanillaDragState.Decrement()" );
 			if( !isValid )
 				return false;
 
@@ -82,7 +82,7 @@ namespace MouseTweaks
 
 		public void UpdateTooltip()
 		{
-			System.Console.WriteLine( $"TEST: VanillaDragState.UpdateTooltip()" );
+			Common.DebugMessage( $"TEST: VanillaDragState.UpdateTooltip()" );
 			if( !isValid )
 				return;
 
@@ -105,7 +105,7 @@ namespace MouseTweaks
 
 		public static void ClearDrag()
 		{
-			System.Console.WriteLine( $"TEST: VanillaDragState.ClearDrag()" );
+			Common.DebugMessage( $"DRAG: VanillaDragState.ClearDrag()" );
 			MouseTweaks.InventoryGuiPatch.SetupDragItem( InventoryGui.instance , null , null , 1 );
 		}
 

@@ -56,6 +56,9 @@
     <Reference Include="BepInEx">
       <HintPath>..\libs\BepInEx.dll</HintPath>
     </Reference>
+    <Reference Include="Jotunn">
+      <HintPath>..\libs\Jotunn.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -90,6 +93,7 @@
     <Compile Include="ButtonPatch.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="InventoryButton.cs" />
+    <Compile Include="InventoryPatch.cs" />
     <Compile Include="MouseContext.cs" />
     <Compile Include="VanillaDragState.cs" />
     <Compile Include="FrameInputs.cs" />

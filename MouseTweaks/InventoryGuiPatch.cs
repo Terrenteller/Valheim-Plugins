@@ -17,56 +17,27 @@ namespace MouseTweaks
 			// This causes UpdatePostfix() to cache soon-to-be stale buttons immediately after HidePostfix()
 			// clears them, preventing fresh buttons from being cached when the GUI is shown next.
 			private static bool SkipNextUpdate = false;
-			private static bool DroppedOne = false;
-			private static IInventoryGuiMouseContext MouseContext = null;
+			private static bool SingleDropCoolDown = false;
+			private static AbstractInventoryGuiCursorContext MouseContext = null;
 			private static VanillaDragState LastDragState = null;
 			private static VanillaDragState CurrentDragState = new VanillaDragState();
-			private static InventoryGrid PlayerGrid = null; // Only use to track invalidation!
-			private static InventoryGrid ContainerGrid = null; // Only use to track invalidation!
 			private static List< InventoryButton > PlayerButtons = new List< InventoryButton >();
 			private static List< InventoryButton > ContainerButtons = new List< InventoryButton >();
 			private static InventoryButton CurrentButton = null;
 
 			#region Helpers
 
-			internal static void RefreshInventoryButtons( InventoryGrid grid )
-			{
-				System.Console.WriteLine( $"INFO: RefreshInventoryButtons()" );
-
-				if( grid == null )
-				{
-					return;
-				}
-				else if( grid == PlayerGrid )
-				{
-					System.Console.WriteLine( $"INFO: Attempting to refresh PlayerButtons" );
-					CollectInventoryButtons( PlayerGrid , PlayerButtons );
-					System.Console.WriteLine( $"INFO: Refreshed {PlayerButtons.Count} player buttons" );
-				}
-				else if( grid == ContainerGrid )
-				{
-					System.Console.WriteLine( $"INFO: Attempting to refresh ContainerButtons" );
-					CollectInventoryButtons( ContainerGrid , ContainerButtons );
-					System.Console.WriteLine( $"INFO: Refreshed {ContainerButtons.Count} container buttons" );
-				}
-				else if( grid == null )
-				{
-					System.Console.WriteLine( $"INFO: Cannot refresh untracked InventoryGrid" );
-					return;
-				}
-			}
-
 			private static void CollectInventoryButtons( InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
 				if( PlayerButtons.Count == 0 && ContainerButtons.Count == 0 )
 				{
-					System.Console.WriteLine( $"INFO: Attempting to index PlayerButtons" );
+					Common.DebugMessage( $"INFO: Attempting to index PlayerButtons" );
 					CollectInventoryButtons( playerGrid , PlayerButtons );
-					System.Console.WriteLine( $"INFO: Indexed {PlayerButtons.Count} player buttons" );
+					Common.DebugMessage( $"INFO: Indexed {PlayerButtons.Count} player buttons" );
 
-					System.Console.WriteLine( $"INFO: Attempting to index ContainerButtons" );
+					Common.DebugMessage( $"INFO: Attempting to index ContainerButtons" );
 					CollectInventoryButtons( containerGrid , ContainerButtons );
-					System.Console.WriteLine( $"INFO: Indexed {ContainerButtons.Count} container buttons" );
+					Common.DebugMessage( $"INFO: Indexed {ContainerButtons.Count} container buttons" );
 				}
 			}
 
@@ -94,10 +65,9 @@ namespace MouseTweaks
 					int gridIndex = gridPos.x + ( gridPos.y * width );
 					buttons[ gridIndex ] = new InventoryButton
 					{
-						button = inputHandler,
+						inputHandler = inputHandler,
 						grid = grid,
 						gridPos = gridPos,
-						gridIndex = gridIndex, // FIXME: This doesn't appear to be the actual index...
 						considerForDrag = true,
 						representsExistingItem = inv.GetItemAt( gridPos.x , gridPos.y ) != null
 					};
@@ -107,9 +77,9 @@ namespace MouseTweaks
 			internal static InventoryButton GetHoveredButton( InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
 				if( playerGrid != null && playerGrid.gameObject.activeInHierarchy && Common.IsCursorOver( playerGrid.gameObject ) )
-					return PlayerButtons.Where( x => Common.IsCursorOver( x.button.gameObject ) ).FirstOrDefault();
+					return PlayerButtons.Where( x => Common.IsCursorOver( x.inputHandler.gameObject ) ).FirstOrDefault();
 				else if( containerGrid != null && containerGrid.gameObject.activeInHierarchy && Common.IsCursorOver( containerGrid.gameObject ) )
-					return ContainerButtons.Where( x => Common.IsCursorOver( x.button.gameObject ) ).FirstOrDefault();
+					return ContainerButtons.Where( x => Common.IsCursorOver( x.inputHandler.gameObject ) ).FirstOrDefault();
 
 				return null;
 			}
@@ -118,14 +88,36 @@ namespace MouseTweaks
 
 			#region MouseWheel
 
-			private static void UpdateMouseWheel( InventoryGui instance , InventoryGrid playerGrid , InventoryGrid containerGrid )
+			private static void UpdateMouseWheel( InventoryGui gui , InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
-				if( MouseContext != null )
+				if( MouseContext != null || CurrentDragState.isValid || FrameInputs.Current.Any )
 					return;
 
 				Player player = Player.m_localPlayer;
 				float scroll = ZInput.GetMouseScrollWheel();
-				if( player == null || scroll == 0.0f || CurrentButton == null || CurrentDragState.isValid )
+				if( player == null || scroll == 0.0f )
+					return;
+
+				GameObject splitPanel = gui.m_splitPanel.gameObject;
+				if( splitPanel.activeInHierarchy )
+				{
+					// The split panel is the full size of the screen
+					if( Common.IsCursorOver( gui.m_splitPanel.Find( "win_bkg" ) as RectTransform ) )
+					{
+						Slider splitSlider = gui.m_splitSlider;
+						splitSlider.value = Mathf.Clamp(
+							splitSlider.value + ( scroll > 0.0f ? 1.0f : -1.0f ),
+							splitSlider.minValue,
+							splitSlider.maxValue );
+
+						Traverse.Create( gui )
+							.Method( "OnSplitSliderChanged" , new[] { typeof( float ) } )
+							.GetValue( Mathf.Clamp( splitSlider.value , splitSlider.minValue , splitSlider.maxValue ) );
+					}
+
+					return;
+				}
+				else if( CurrentButton == null )
 					return;
 
 				Inventory inv = CurrentButton.grid.GetInventory();
@@ -136,18 +128,22 @@ namespace MouseTweaks
 
 				bool itemInContainer = CurrentButton.grid == containerGrid;
 				bool wheelUp = scroll > 0.0f;
-				bool pull = itemInContainer
-					? ( ContainerWheelAction.Value == WheelActionEnum.PullUpPushDown ) == wheelUp
-					: ( PlayerWheelAction.Value == WheelActionEnum.PullUpPushDown ) == wheelUp;
+				WheelActionEnum action = ( itemInContainer ? ContainerWheelAction : PlayerWheelAction ).Value;
+				if( action == WheelActionEnum.None )
+					return;
+
+				bool pull = ( action == WheelActionEnum.PullUpPushDown ) == wheelUp;
 
 				if( itemInContainer )
 					MoveOne( player , pull , item , containerGrid , playerGrid );
-				else if( instance.IsContainerOpen() )
+				else if( gui.IsContainerOpen() )
 					MoveOne( player , pull , item , playerGrid , containerGrid );
 				else
 					MoveOne( player , pull , item , playerGrid , null );
 			}
 
+			// Consider adding multipliers based on modifier keys like Endless Sky.
+			// 2x and 5x are probably fine. We're working with considerably fewer items.
 			private static void MoveOne( Player player , bool pull , ItemDrop.ItemData item , InventoryGrid owningGrid , InventoryGrid otherGrid )
 			{
 				if( otherGrid == owningGrid )
@@ -162,12 +158,12 @@ namespace MouseTweaks
 					{
 						if( otherInv == null )
 						{
-							System.Console.WriteLine( $"PULL: Doesn't make sense" );
+							Common.DebugMessage( $"PULL: Doesn't make sense" );
 							return;
 						}
 						else if( !owningInv.HaveEmptySlot() )
 						{
-							System.Console.WriteLine( $"PULL: No empty slots" );
+							Common.DebugMessage( $"PULL: No empty slots" );
 							return;
 						}
 					}
@@ -175,12 +171,12 @@ namespace MouseTweaks
 					{
 						if( otherInv == null )
 						{
-							System.Console.WriteLine( $"PULL: Doesn't make sense" );
+							Common.DebugMessage( $"PULL: Doesn't make sense" );
 							return;
 						}
-						else if( !owningInv.HaveEmptySlot() && Common.FindPartialStack( item , owningInv , false ) == null )
+						else if( !owningInv.HaveEmptySlot() && Common.FindPartialStack( item , owningInv ) == null )
 						{
-							System.Console.WriteLine( $"PULL: No space" );
+							Common.DebugMessage( $"PULL: No space" );
 							return;
 						}
 					}
@@ -194,22 +190,22 @@ namespace MouseTweaks
 
 						if( otherItem == null || otherItem.m_stack < 1 )
 						{
-							System.Console.WriteLine( $"PULL: No similar item" );
+							Common.DebugMessage( $"PULL: No similar item" );
 						}
 						else if( otherItem == item ) // Actual programming error
 						{
-							System.Console.WriteLine( $"PULL: Found self" );
+							Common.DebugMessage( $"PULL: Found self" );
 							return;
 						}
 						else if( otherItem.m_shared.m_maxStackSize == 1 )
 						{
-							System.Console.WriteLine( $"PULL: Single" );
+							Common.DebugMessage( $"PULL: Single" );
 							owningInv.MoveItemToThis( otherInv , otherItem );
 							return;
 						}
 						else if( otherInv.RemoveOneItem( otherItem ) )
 						{
-							System.Console.WriteLine( $"PULL: One item" );
+							Common.DebugMessage( $"PULL: One item" );
 							item.m_stack++;
 							InventoryPatch.Changed( owningInv );
 							return;
@@ -224,17 +220,17 @@ namespace MouseTweaks
 
 						if( otherItem == null || otherItem.m_stack < 1 )
 						{
-							System.Console.WriteLine( $"PULL: No similar item" );
+							Common.DebugMessage( $"PULL: No similar item" );
 							return;
 						}
 						else if( otherItem == item ) // Actual programming error
 						{
-							System.Console.WriteLine( $"PULL: Found self" );
+							Common.DebugMessage( $"PULL: Found self" );
 							return;
 						}
 						else if( owningInv.RemoveOneItem( otherItem ) )
 						{
-							System.Console.WriteLine( $"PULL: One item" );
+							Common.DebugMessage( $"PULL: One item" );
 							item.m_stack++;
 							InventoryPatch.Changed( otherInv );
 							return;
@@ -247,7 +243,7 @@ namespace MouseTweaks
 					{
 						if( item.m_stack == 1 )
 						{
-							System.Console.WriteLine( $"PUSH: Single or last" );
+							Common.DebugMessage( $"PUSH: Single or last" );
 							player.RemoveEquipAction( item );
 							player.UnequipItem( item );
 							otherInv.MoveItemToThis( owningInv , item ); // ???: WHAT IF IT FAILS?
@@ -256,11 +252,11 @@ namespace MouseTweaks
 						}
 
 						if( item.m_stack == item.m_shared.m_maxStackSize )
-							item = Common.FindPartialStack( item , owningInv , false ) ?? item;
+							item = Common.FindPartialStack( item , owningInv ) ?? item;
 
 						if( otherInv.AddItem( item.m_dropPrefab , 1 ) )
 						{
-							System.Console.WriteLine( $"PUSH: One item" );
+							Common.DebugMessage( $"PUSH: One item" );
 							owningInv.RemoveOneItem( item );
 							return;
 						}
@@ -269,10 +265,10 @@ namespace MouseTweaks
 					}
 					else // Push to self
 					{
-						ItemDrop.ItemData otherItem = Common.FindPartialStack( item , owningInv , false );
+						ItemDrop.ItemData otherItem = Common.FindPartialStack( item , owningInv );
 						if( otherItem != null )
 						{
-							System.Console.WriteLine( $"PUSH: One item to sibling" );
+							Common.DebugMessage( $"PUSH: One item to sibling" );
 							otherItem.m_stack++;
 							InventoryPatch.Changed( otherInv );
 							owningInv.RemoveOneItem( item ); // TODO: What if this fails?
@@ -283,19 +279,19 @@ namespace MouseTweaks
 						}
 						else if( item.m_stack == 1 ) // Only invalid if there's not a partial stack
 						{
-							System.Console.WriteLine( $"PUSH: Doesn't make sense" );
+							Common.DebugMessage( $"PUSH: Doesn't make sense" );
 							return;
 						}
 
 						Vector2i emptySlot = FindEmptySlot( owningInv , TopFirst( owningInv , item ) );
 						if( emptySlot.x < 0 || emptySlot.y < 0 )
 						{
-							System.Console.WriteLine( $"PUSH: No empty slot" );
+							Common.DebugMessage( $"PUSH: No empty slot" );
 							return;
 						}
 						else
 						{
-							System.Console.WriteLine( $"PUSH: One item to empty slot" );
+							Common.DebugMessage( $"PUSH: One item to empty slot" );
 							AddItem( owningInv , item , 1 , emptySlot.x , emptySlot.y ); // Does subtraction
 							return;
 						}
@@ -309,8 +305,14 @@ namespace MouseTweaks
 
 			private static void UpdateDoubleClick( InventoryGui instance , InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
-				if( !( FrameInputs.Current.isDoubleClick && LastDragState.isValid && !CurrentDragState.isValid && CurrentButton != null ) )
+				if( !AllowDoubleClickCollect.Value
+					|| !FrameInputs.Current.isDoubleClick
+					|| !LastDragState.isValid
+					|| CurrentDragState.isValid
+					|| CurrentButton == null )
+				{
 					return;
+				}
 
 				InventoryGrid grid = CurrentButton.grid;
 				Inventory inv = grid.GetInventory();
@@ -320,25 +322,30 @@ namespace MouseTweaks
 					return;
 
 				// Prioritize the grid the item is in
+				InventoryGrid otherGrid = grid == playerGrid ? containerGrid : playerGrid;
 				if( CollectFromInto( grid , item ) )
-					CollectFromInto( grid == playerGrid ? containerGrid : playerGrid , item );
+					CollectFromInto( otherGrid , item );
 
-				// Pick the item back up
+				// FIXME: CollectFromInto() doesn't perfectly update weights because the item and grid args may not align
+				InventoryPatch.Changed( inv );
+				InventoryPatch.Changed( otherGrid.GetInventory() );
+
+				// Pick the item back up since we trigger on a double-click that put the item down
 				SetupDragItem( instance , item , inv , item.m_stack );
 			}
 
 			private static bool CollectFromInto( InventoryGrid grid , ItemDrop.ItemData item )
 			{
 				List< ItemDrop.ItemData > equivalentStackables = Common.EquivalentStackables( item , grid ).ToList();
-				System.Console.WriteLine( $"DBLC: Collecting {item} from {equivalentStackables.Count} equivalent stacks" );
+				Common.DebugMessage( $"DBLC: Collecting {item} from {equivalentStackables.Count} equivalent stacks" );
 				Inventory inv = grid.GetInventory();
 
 				foreach( ItemDrop.ItemData equivalent in equivalentStackables )
 				{
 					int transfer = Mathf.Min( item.m_shared.m_maxStackSize - item.m_stack , equivalent.m_stack );
-					System.Console.WriteLine( $"DBLC: Moving {transfer}" );
+					Common.DebugMessage( $"DBLC: Moving {transfer}" );
 					if( inv.RemoveItem( equivalent , transfer ) )
-						item.m_stack += transfer; // FIXME: Does not update player weight
+						item.m_stack += transfer; // Implementation Detail: We expect the caller to update weights
 				}
 
 				return item.m_stack < item.m_shared.m_maxStackSize;
@@ -346,13 +353,14 @@ namespace MouseTweaks
 
 			#endregion
 
-			#region Drag
+			#region Context
 			
-			private static void UpdateDrag( InventoryGrid playerGrid , InventoryGrid containerGrid )
+			private static void UpdateContext( InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
+				// Consider making a successive click context
 				if( FrameInputs.Current.successiveClicks < FrameInputs.Prior.successiveClicks )
 				{
-					System.Console.WriteLine( $"DRAG: Ending drag because clicking stopped" );
+					Common.DebugMessage( $"CNTX: Ending drag because clicking stopped" );
 					EndDrag( false );
 					return;
 				}
@@ -363,16 +371,17 @@ namespace MouseTweaks
 				}
 				else if( MouseContext != null )
 				{
-					// TODO: We need to block somehow when a context becomes invalid until it can be freed
 					switch( MouseContext.Think( CurrentDragState ) )
 					{
-						case IInventoryGuiMouseContext.State.NoChange:
-						case IInventoryGuiMouseContext.State.OK:
+						case AbstractInventoryGuiCursorContext.State.DoneValid:
+						case AbstractInventoryGuiCursorContext.State.DoneInvalid:
+						{
+							// Lock the context until all mouse buttons are released. Contexts ought to do this instead.
+							if( FrameInputs.Current.None )
+								EndDrag( true );
+
 							return;
-						case IInventoryGuiMouseContext.State.Done:
-						case IInventoryGuiMouseContext.State.Invalid:
-							EndDrag( true );
-							return;
+						}
 					}
 				}
 			}
@@ -382,7 +391,6 @@ namespace MouseTweaks
 				PlayerButtons.ForEach( x => x.considerForDrag = false );
 				ContainerButtons.ForEach( x => x.considerForDrag = false );
 
-				// TODO: If Done or Invalid, should the context be the thing that finalizes itself?
 				if( clearContext )
 				{
 					MouseContext?.End();
@@ -392,23 +400,23 @@ namespace MouseTweaks
 
 			#endregion
 
-			#region DropOne
+			#region SingleDrop
 
-			public static void UpdateDropOne( InventoryGrid m_playerGrid , InventoryGrid m_containerGrid )
+			public static void UpdateSingleDrop( InventoryGrid m_playerGrid , InventoryGrid m_containerGrid )
 			{
-				if( !IsEnabled.Value || MouseContext != null || CurrentDragState.isValid || FrameInputs.Current.Any )
+				if( MouseContext != null || CurrentDragState.isValid || FrameInputs.Current.Any )
 				{
 					return;
 				}
-				else if( !ZInput.GetKey( DropOneKey.Value ) )
+				else if( !ZInput.GetKey( SingleDropKey.Value ) )
 				{
-					DroppedOne = false;
+					SingleDropCoolDown = false;
 					return;
 				}
-				else if( DroppedOne )
+				else if( SingleDropCoolDown )
 					return;
 
-				DroppedOne = true; // Even if the actual drop fails
+				SingleDropCoolDown = true; // Try only once per press regardless of the outcome
 				InventoryButton button = GetHoveredButton( m_playerGrid , m_containerGrid );
 				if( button != null )
 					DropOne( button.grid.GetInventory() , button.curItem );
@@ -416,11 +424,7 @@ namespace MouseTweaks
 
 			public static bool DropOne( Inventory inv , ItemDrop.ItemData item )
 			{
-				if( !IsEnabled.Value || MouseContext != null )
-				{
-					return false;
-				}
-				else if( Player.m_localPlayer.DropItem( inv , item , 1 ) )
+				if( MouseContext == null && Player.m_localPlayer.DropItem( inv , item , 1 ) )
 				{
 					Traverse.Create( InventoryGui.instance )
 						.Field( "m_moveItemEffects" )
@@ -492,16 +496,17 @@ namespace MouseTweaks
 			[HarmonyPostfix]
 			private static void AwakePostfix( Button ___m_dropButton )
 			{
-				___m_dropButton.gameObject.AddComponent< RightClickButtonComponent >().OnRightClick.AddListener( delegate
+				___m_dropButton.gameObject.AddComponent< ButtonRightClickComponent >().OnRightClick.AddListener( delegate
 				{
-					if( !IsEnabled.Value || !DropOneRightClick.Value )
+					if( !IsEnabled.Value || !AllowRightClickDrop.Value )
 						return;
 
 					// FIXME: Does not work if we drop outside the confines of the following RectTransform with SuperUltrawideSupport
 					// _GameMain / LoadingGUI / PixelFix / Scaled 3D Viewport / IngameGui / Inventory_screen / root / dropButton
 					// Should we track "invalid" right clicks as drop single? That doesn't solve the root problem.
+					// Can we attach the right click listener to another HUD object?
 					// TODO: If we wanted to be really cool, raytrace clicks to see if we interact with item stands.
-					System.Console.WriteLine( $"INFO: Trying to drop single item" );
+					Common.DebugMessage( $"INFO: Trying to drop single item" );
 					VanillaDragState dragState = new VanillaDragState();
 					if( dragState.isValid && DropOne( dragState.dragInventory , dragState.dragItem ) && dragState.Decrement() )
 					{
@@ -540,11 +545,9 @@ namespace MouseTweaks
 			{
 				IgnoreUpdateItemDragRightMouseReset = false;
 				SkipNextUpdate = true;
-				DroppedOne = false;
+				SingleDropCoolDown = false;
 				MouseContext = null;
-				PlayerGrid = null;
 				PlayerButtons.Clear();
-				ContainerGrid = null;
 				ContainerButtons.Clear();
 				CurrentButton = null;
 			}
@@ -565,50 +568,51 @@ namespace MouseTweaks
 				}
 				else if( VanillaDragState.IsValid() )
 				{
-					System.Console.WriteLine( $"INFO: Start RightDragContext" );
-					MouseContext = new RightDragContext( __instance , ___m_playerGrid , PlayerButtons , ___m_containerGrid , ContainerButtons , null );
+					Common.DebugMessage( $"INFO: Start SingleSmearContext" );
+					MouseContext = new SingleSmearContext( ___m_playerGrid , PlayerButtons , ___m_containerGrid , ContainerButtons );
 					return false; // Block all right-click logic while an item is on the cursor
 				}
 				else if( item == null || item.m_shared.m_maxStackSize == 1 )
 				{
-					return true; // No special handling
+					// Fall-through. We can't defer to vanilla if InitialSwapShiftAndCtrl is false because we need to track contexts.
 				}
-				else if( Common.AnyShift() )
+				else if( InitialSwapShiftAndCtrl ? Common.AnyShift() : Common.AnyControl() )
 				{
 					int amount = Mathf.CeilToInt( item.m_stack / 2.0f );
 					SetupDragItem( __instance , item , grid.GetInventory() , amount );
 
-					System.Console.WriteLine( $"INFO: Start BlockingRightMouseContext" );
-					MouseContext = new BlockingRightMouseContext();
+					Common.DebugMessage( $"INFO: Start BlockingMouseContext (RMB, split, immediate)" );
+					MouseContext = new BlockingCursorContext( () => InitialSwapShiftAndCtrl ? Common.AnyShift() : Common.AnyControl() );
 					return false;
 				}
-				else if( Common.AnyControl() )
+				else if( InitialSwapShiftAndCtrl ? Common.AnyControl() : Common.AnyShift() )
 				{
 					if( item.m_stack == 1 )
 					{
-						// Nothing to split. Matches vanilla behaviour.
+						// Nothing to split. Do what vanilla does.
 						SetupDragItem( __instance , item , grid.GetInventory() , 1 );
-						System.Console.WriteLine( $"INFO: Start BlockingRightMouseContext" );
-						MouseContext = new BlockingRightMouseContext();
-						return false;
+					}
+					else
+					{
+						int amount = Mathf.CeilToInt( item.m_stack / 2.0f );
+						__instance.m_splitSlider.value = amount;
+
+						Traverse.Create( __instance )
+							.Method( "ShowSplitDialog" , new[] { typeof( ItemDrop.ItemData ) , typeof( Inventory ) } )
+							.GetValue( item , grid.GetInventory() );
+						Traverse.Create( __instance )
+							.Method( "OnSplitSliderChanged" , new[] { typeof( float ) } )
+							.GetValue( amount );
 					}
 
-					int amount = Mathf.CeilToInt( item.m_stack / 2.0f );
-					__instance.m_splitSlider.value = amount;
-
-					Traverse.Create( __instance )
-						.Method( "ShowSplitDialog" , new[] { typeof( ItemDrop.ItemData ) , typeof( Inventory ) } )
-						.GetValue( item , grid.GetInventory() );
-					Traverse.Create( __instance )
-						.Method( "OnSplitSliderChanged" , new[] { typeof( float ) } )
-						.GetValue( amount );
-
-					System.Console.WriteLine( $"INFO: Start BlockingRightMouseContext" );
-					MouseContext = new BlockingRightMouseContext();
+					Common.DebugMessage( $"INFO: Start BlockingMouseContext (RMB, split, dialog)" );
+					MouseContext = new BlockingCursorContext( () => InitialSwapShiftAndCtrl ? Common.AnyControl() : Common.AnyShift() );
 					return false;
 				}
 
-				return true; // No special handling
+				Common.DebugMessage( $"CNTX: Start BlockingMouseContext (RMB)" );
+				MouseContext = new BlockingCursorContext( null );
+				return true;
 			}
 
 			[HarmonyPatch( "OnSelectedItem" )]
@@ -628,51 +632,54 @@ namespace MouseTweaks
 				{
 					return true;
 				}
-				else if( FrameInputs.Current.successiveClicks > 0 )
-				{
-					// TODO: Should we start a double-click context here?
-					System.Console.WriteLine( $"INFO: Excessive clicking" );
-					return true;
-				}
 				else if( MouseContext != null )
 				{
-					System.Console.WriteLine( $"INFO: Context {MouseContext.GetType()} is active" );
+					if( MouseContext.CurrentState == AbstractInventoryGuiCursorContext.State.ActiveValid )
+					{
+						Common.DebugMessage( $"CNTX: Selecting something for {MouseContext.GetType()}" );
+						return true;
+					}
+
+					return false;
+				}
+				else if( FrameInputs.Current.successiveClicks > 0 )
+				{
+					// Clicks lag behind by one here when this runs outside of our updates.
+					// TODO: Should we start a double-click context here?
+					Common.DebugMessage( $"DBLC: Excessive clicking" );
 					return true;
 				}
 				else if( VanillaDragState.IsValid() )
 				{
 					// Allow the item to be put into the slot and invalidate the vanilla drag.
-					// This can fail so we check again in the postfix.
-					System.Console.WriteLine( $"INFO: Start LeftDragContext" );
+					// This can fail, so we check again in the postfix.
 					__state = true;
 					return true;
 				}
 
-				bool shift = Common.AnyShift();
-				bool control = Common.AnyControl();
-				if( shift && control )
+				bool move = InitialSwapShiftAndCtrl ? Common.AnyShift() : Common.AnyControl();
+				bool split = InitialSwapShiftAndCtrl ? Common.AnyControl() : Common.AnyShift();
+				if( move && split )
 				{
-					System.Console.WriteLine( $"INFO: Start ShiftCtrlLeftDragContext" );
-					MouseContext = new ShiftCtrlLeftDragContext( null , ___m_playerGrid , PlayerButtons , ___m_containerGrid , ContainerButtons , null );
+					Common.DebugMessage( $"CNTX: Start FilteredStackMoveContext" );
+					MouseContext = new FilteredStackMoveContext( ___m_playerGrid , PlayerButtons , ___m_containerGrid , ContainerButtons );
 					return false;
 				}
-				else if( shift )
+				else if( move )
 				{
-					// The mouse context will call this method when necessary
-					System.Console.WriteLine( $"INFO: Start ShiftLeftDragContext" );
-					MouseContext = new ShiftLeftDragContext( null , ___m_playerGrid , PlayerButtons , ___m_containerGrid , ContainerButtons , null );
+					Common.DebugMessage( $"CNTX: Start StackMoveContext" );
+					MouseContext = new StackMoveContext( ___m_playerGrid , PlayerButtons , ___m_containerGrid , ContainerButtons );
 					return false;
 				}
-				else if( control )
+				else if( split )
 				{
-					// TODO: This is identical to the last case because we're not tracking modifier keys yet
-					System.Console.WriteLine( $"INFO: Start BlockingLeftMouseContext" );
-					MouseContext = new BlockingLeftMouseContext();
+					Common.DebugMessage( $"CNTX: Start BlockingMouseContext (LMB, split)" );
+					MouseContext = new BlockingCursorContext( () => InitialSwapShiftAndCtrl ? Common.AnyControl() : Common.AnyShift() );
 					return true;
 				}
 
-				System.Console.WriteLine( $"INFO: Start BlockingLeftMouseContext" );
-				MouseContext = new BlockingLeftMouseContext();
+				Common.DebugMessage( $"CNTX: Start BlockingMouseContext (LMB)" );
+				MouseContext = new BlockingCursorContext( null );
 				return true;
 			}
 
@@ -687,18 +694,21 @@ namespace MouseTweaks
 				InventoryGrid ___m_containerGrid,
 				ref bool __state )
 			{
-				if( !IsEnabled.Value || !__state )
+				// Because we require the item to be put down, we can't start a smear on an existing item.
+				// But we can. But it would require some finagling and re-working of StackSmearContext.End().
+				if( IsEnabled.Value && __state && !VanillaDragState.IsValid() )
 				{
-					return;
-				}
-				else if( VanillaDragState.IsValid() )
-				{
-					// We were not able to put down the entire stack for some reason
-					System.Console.WriteLine( $"INFO: Start LeftDragContext - SYKE" );
-					return;
-				}
+					InventoryButton button = GetHoveredButton( ___m_playerGrid , ___m_containerGrid );
+					ItemDrop.ItemData hoveredItem = button?.curItem;
+					if( hoveredItem == null || hoveredItem.m_stack <= 1 )
+					{
+						Common.DebugMessage( $"CNTX: Cannot smear a null, empty, or single item" );
+						return;
+					}
 
-				MouseContext = new LeftDragContext( null , ___m_playerGrid , PlayerButtons , ___m_containerGrid , ContainerButtons , null );
+					Common.DebugMessage( $"CNTX: Start StackSmearContext" );
+					MouseContext = new StackSmearContext( ___m_playerGrid , PlayerButtons , ___m_containerGrid , ContainerButtons );
+				}
 			}
 
 			[HarmonyPatch( "SetupDragItem" )]
@@ -718,32 +728,13 @@ namespace MouseTweaks
 			[HarmonyTranspiler]
 			private static IEnumerable< CodeInstruction > ShowSplitDialogTranspiler( IEnumerable< CodeInstruction > instructionsIn )
 			{
-				return Common.SwapShiftAndCtrl( instructionsIn );
+				return InitialSwapShiftAndCtrl ? Common.SwapShiftAndCtrl( instructionsIn ) : instructionsIn;
 			}
-
-			/*
-			[HarmonyPatch( "UpdateContainer" )]
-			[HarmonyPrefix]
-			private static void UpdateContainerPrefix( InventoryGrid ___m_containerGrid )
-			{
-				ContainerGrid = ___m_containerGrid;
-			}
-
-			[HarmonyPatch( "UpdateInventory" )]
-			[HarmonyPrefix]
-			private static void UpdateInventoryPrefix( InventoryGrid ___m_playerGrid )
-			{
-				PlayerGrid = ___m_playerGrid;
-			}
-			*/
 
 			[HarmonyPatch( "Update" )]
 			[HarmonyPostfix]
-			private static void UpdatePostfix( InventoryGui __instance , int ___m_hiddenFrames , InventoryGrid ___m_playerGrid , InventoryGrid ___m_containerGrid )
+			private static void UpdatePostfix( int ___m_hiddenFrames , InventoryGrid ___m_playerGrid , InventoryGrid ___m_containerGrid )
 			{
-				// InventoryGui.IsVisible() has a logic error (m_hiddenFrames <= 1 vs m_hiddenFrames < 1).
-				// Checking the animator requires linking against yet another library.
-				// Forgo encapsulation and check the value directly.
 				if( ___m_hiddenFrames == 0 && !SkipNextUpdate )
 					CollectInventoryButtons( ___m_playerGrid , ___m_containerGrid );
 
@@ -767,10 +758,11 @@ namespace MouseTweaks
 				CurrentDragState = new VanillaDragState();
 				CurrentButton = GetHoveredButton( ___m_playerGrid , ___m_containerGrid );
 
-				UpdateMouseWheel( __instance , ___m_playerGrid , ___m_containerGrid );
+				// Order is mildly important here to keep multiple things from happening on the same frame
+				UpdateContext( ___m_playerGrid , ___m_containerGrid );
 				UpdateDoubleClick( __instance , ___m_playerGrid , ___m_containerGrid );
-				UpdateDrag( ___m_playerGrid , ___m_containerGrid );
-				UpdateDropOne( ___m_playerGrid , ___m_containerGrid );
+				UpdateSingleDrop( ___m_playerGrid , ___m_containerGrid );
+				UpdateMouseWheel( __instance , ___m_playerGrid , ___m_containerGrid );
 
 				IgnoreUpdateItemDragRightMouseReset = CurrentDragState.isValid;
 			}
