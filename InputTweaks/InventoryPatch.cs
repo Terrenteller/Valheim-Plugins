@@ -1,8 +1,8 @@
 ﻿using HarmonyLib;
 
-namespace MouseTweaks
+namespace InputTweaks
 {
-	public partial class MouseTweaks
+	public partial class InputTweaks
 	{
 		[HarmonyPatch( typeof( Inventory ) )]
 		public class InventoryPatch

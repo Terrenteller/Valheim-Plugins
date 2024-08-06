@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace MouseTweaks
+namespace InputTweaks
 {
-	public partial class MouseTweaks
+	public partial class InputTweaks
 	{
 		[HarmonyPatch( typeof( InventoryGrid ) )]
 		public class InventoryGridPatch

@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace MouseTweaks
+namespace InputTweaks
 {
 	public class VanillaDragState
 	{
@@ -106,7 +106,7 @@ namespace MouseTweaks
 		public static void ClearDrag()
 		{
 			Common.DebugMessage( $"DRAG: VanillaDragState.ClearDrag()" );
-			MouseTweaks.InventoryGuiPatch.SetupDragItem( InventoryGui.instance , null , null , 1 );
+			InputTweaks.InventoryGuiPatch.SetupDragItem( InventoryGui.instance , null , null , 1 );
 		}
 
 		public static bool IsValid()

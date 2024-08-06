@@ -3,9 +3,9 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace MouseTweaks
+namespace InputTweaks
 {
-	public partial class MouseTweaks
+	public partial class InputTweaks
 	{
 		internal class ButtonRightClickComponent : MonoBehaviour
 		{

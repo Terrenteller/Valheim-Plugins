@@ -3,12 +3,12 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
 
-namespace MouseTweaks
+namespace InputTweaks
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.mousetweaks" , "Mouse Tweaks" , "1.1.0" )]
+	[BepInPlugin( "com.riintouge.inputtweaks" , "Input Tweaks" , "1.1.0" )]
 	[BepInProcess( "valheim.exe" )]
-	public partial class MouseTweaks : BaseUnityPlugin
+	public partial class InputTweaks : BaseUnityPlugin
 	{
 		// 0 - Core
 		public static ConfigEntry< bool > IsEnabled;
@@ -52,7 +52,7 @@ namespace MouseTweaks
 		}
 		*/
 
-		private readonly Harmony Harmony = new Harmony( "com.riintouge.mousetweaks" );
+		private readonly Harmony Harmony = new Harmony( "com.riintouge.inputtweaks" );
 
 		private void Awake()
 		{

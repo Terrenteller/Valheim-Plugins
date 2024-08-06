@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace MouseTweaks
+namespace InputTweaks
 {
 	public class FrameInputs
 	{
@@ -71,7 +71,7 @@ namespace MouseTweaks
 					SuccessiveClicksFirstPos = mousePos;
 					SuccessiveClicks++;
 				}
-				else if( ( mousePos - SuccessiveClicksFirstPos ).Magnitude() < MouseTweaks.SuccessiveClickRadius.Value ) // No MagnitudeSquared()?
+				else if( ( mousePos - SuccessiveClicksFirstPos ).Magnitude() < InputTweaks.SuccessiveClickRadius.Value ) // No MagnitudeSquared()?
 				{
 					SuccessiveClicks++;
 					Common.DebugMessage( $"DBLC: SuccessiveClicks {SuccessiveClicks}" );
@@ -83,7 +83,7 @@ namespace MouseTweaks
 					Common.DebugMessage( $"DBLC: SuccessiveClicks reset (distance)" );
 				}
 			}
-			else if( LeftDelta == ButtonDelta.None && sinceLastPress > MouseTweaks.SuccessiveClickWindow.Value && SuccessiveClicks > 0 )
+			else if( LeftDelta == ButtonDelta.None && sinceLastPress > InputTweaks.SuccessiveClickWindow.Value && SuccessiveClicks > 0 )
 			{
 				SuccessiveClicks = 0;
 				Common.DebugMessage( $"DBLC: SuccessiveClicks reset (time)" );

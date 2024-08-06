@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace MouseTweaks
+namespace InputTweaks
 {
 	public struct Lockable< T >
 	{
@@ -155,7 +155,7 @@ namespace MouseTweaks
 			this.playerButtons = playerButtons;
 			this.containerGrid = containerGrid;
 			this.containerButtons = containerButtons;
-			firstButton =  MouseTweaks.InventoryGuiPatch.GetHoveredButton( this.playerGrid , this.containerGrid );
+			firstButton =  InputTweaks.InventoryGuiPatch.GetHoveredButton( this.playerGrid , this.containerGrid );
 			if( firstButton == null )
 			{
 				Common.DebugMessage( $"CNTX: Started on a null button" );
@@ -196,7 +196,7 @@ namespace MouseTweaks
 
 			// Do we need to track whether items in the inventory changed?
 			previousButton = currentButton;
-			currentButton = MouseTweaks.InventoryGuiPatch.GetHoveredButton( playerGrid , containerGrid );
+			currentButton = InputTweaks.InventoryGuiPatch.GetHoveredButton( playerGrid , containerGrid );
 			highlightedButtons.ForEach( x => x.SetSelectionState( InventoryButton.SelectionState.Highlighted , true ) );
 
 			return State.ActiveValid;
@@ -262,7 +262,7 @@ namespace MouseTweaks
 		protected override bool UserInputSatisfied()
 		{
 			return FrameInputs.Current.LeftOnly
-				&& ( MouseTweaks.InitialSwapShiftAndCtrl
+				&& ( InputTweaks.InitialSwapShiftAndCtrl
 					? ( Common.AnyShift() && !Common.AnyControl() )
 					: ( Common.AnyControl() && !Common.AnyShift() ) );
 		}
@@ -438,13 +438,13 @@ namespace MouseTweaks
 
 						Inventory inv = button.grid.GetInventory();
 						Vector2i gridPos = button.gridPos;
-						if( MouseTweaks.InventoryGuiPatch.AddItem( inv , splitItem , perStack , gridPos.x , gridPos.y ) )
+						if( InputTweaks.InventoryGuiPatch.AddItem( inv , splitItem , perStack , gridPos.x , gridPos.y ) )
 							remainder -= perStack;
 					}
 
-					if( MouseTweaks.KeepRemainderOnCursor.Value && remainder > 0 )
+					if( InputTweaks.KeepRemainderOnCursor.Value && remainder > 0 )
 					{
-						MouseTweaks.InventoryGuiPatch.SetupDragItem(
+						InputTweaks.InventoryGuiPatch.SetupDragItem(
 							InventoryGui.instance,
 							splitItem,
 							firstButton.grid.GetInventory(),
@@ -499,7 +499,7 @@ namespace MouseTweaks
 			Inventory inv = currentButton.grid.GetInventory();
 			ItemDrop.ItemData dragItem = dragState.dragItem;
 			Vector2i gridPos = currentButton.gridPos;
-			if( !MouseTweaks.InventoryGuiPatch.AddItem( inv , dragItem , 1 , gridPos.x , gridPos.y ) )
+			if( !InputTweaks.InventoryGuiPatch.AddItem( inv , dragItem , 1 , gridPos.x , gridPos.y ) )
 				return SetState( State.ActiveValid );
 
 			Common.DebugMessage( $"CNTX: Right, into ({gridPos})" );

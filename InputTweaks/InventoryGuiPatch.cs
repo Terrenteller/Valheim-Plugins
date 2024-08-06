@@ -4,9 +4,9 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace MouseTweaks
+namespace InputTweaks
 {
-	public partial class MouseTweaks
+	public partial class InputTweaks
 	{
 		[HarmonyPatch( typeof( InventoryGui ) )]
 		public class InventoryGuiPatch
@@ -696,6 +696,9 @@ namespace MouseTweaks
 			{
 				// Because we require the item to be put down, we can't start a smear on an existing item.
 				// But we can. But it would require some finagling and re-working of StackSmearContext.End().
+				// TODO: Should we pick the item back up here and only actually put it down on button release?
+				// TODO: Should we add long-press contexts? Like, long [LMB] would collect into the pressed item?
+				// Along with another comment about nested contexts, what about contexts that can graduate into others?
 				if( IsEnabled.Value && __state && !VanillaDragState.IsValid() )
 				{
 					InventoryButton button = GetHoveredButton( ___m_playerGrid , ___m_containerGrid );

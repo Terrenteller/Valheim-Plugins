@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using UnityEngine;
 
-namespace MouseTweaks
+namespace InputTweaks
 {
 	public class Common
 	{
@@ -23,15 +23,6 @@ namespace MouseTweaks
 			return ZInput.GetKey( KeyCode.LeftShift ) || ZInput.GetKey( KeyCode.RightShift );
 		}
 
-		public static bool ItemsAreSimilarButDistinct( ItemDrop.ItemData item , ItemDrop.ItemData other , bool considerQuality )
-		{
-			return item != null
-				&& other != null
-				&& item != other
-				&& item.m_shared.m_name == other.m_shared.m_name
-				&& ( !considerQuality || item.m_quality == other.m_quality );
-		}
-		
 		public static bool CanStackOnto( ItemDrop.ItemData item , ItemDrop.ItemData target )
 		{
 			return ItemsAreSimilarButDistinct( item , target , true )
@@ -41,13 +32,13 @@ namespace MouseTweaks
 
 		public static void DebugMessage( string message )
 		{
-			if( MouseTweaks.DebugMessages.Value )
+			if( InputTweaks.DebugMessages.Value )
 				Debug.Log( message );
 		}
 
 		public static List< ItemDrop.ItemData > EquivalentStackables( ItemDrop.ItemData item , InventoryGrid grid )
 		{
-			int width = MouseTweaks.InventoryGridPatch.Width( grid );
+			int width = InputTweaks.InventoryGridPatch.Width( grid );
 			Inventory inv = grid.GetInventory();
 
 			return inv.GetAllItems()
@@ -101,6 +92,15 @@ namespace MouseTweaks
 			return rectTransform != null && RectTransformUtility.RectangleContainsScreenPoint( rectTransform , Input.mousePosition );
 		}
 
+		public static bool ItemsAreSimilarButDistinct( ItemDrop.ItemData item , ItemDrop.ItemData other , bool considerQuality )
+		{
+			return item != null
+				&& other != null
+				&& item != other
+				&& item.m_shared.m_name == other.m_shared.m_name
+				&& ( !considerQuality || item.m_quality == other.m_quality );
+		}
+		
 		public static IEnumerable< CodeInstruction > SwapShiftAndCtrl( IEnumerable< CodeInstruction > instructionsIn )
 		{
 			foreach( CodeInstruction instruction in instructionsIn )

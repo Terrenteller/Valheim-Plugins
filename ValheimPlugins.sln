@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NagMessages", "NagMessages\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template", "Template\Template.csproj", "{3F970A03-CF31-467B-9A5D-8D74E5A2E8C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseTweaks", "MouseTweaks\MouseTweaks.csproj", "{CBD7A961-CDEB-4DB5-AF2C-ADA574C3197F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InputTweaks", "InputTweaks\InputTweaks.csproj", "{CBD7A961-CDEB-4DB5-AF2C-ADA574C3197F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MagneticWishbone", "MagneticWishbone\MagneticWishbone.csproj", "{4533B312-0061-4916-B569-170707A29C8F}"
 EndProject

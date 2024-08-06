@@ -3,7 +3,7 @@ using System;
 using System.Reflection;
 using UnityEngine.UI;
 
-namespace MouseTweaks
+namespace InputTweaks
 {
 	public class InventoryButton
 	{

@@ -7,8 +7,8 @@
     <ProjectGuid>{CBD7A961-CDEB-4DB5-AF2C-ADA574C3197F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MouseTweaks</RootNamespace>
-    <AssemblyName>MouseTweaks</AssemblyName>
+    <RootNamespace>InputTweaks</RootNamespace>
+    <AssemblyName>InputTweaks</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -99,7 +99,7 @@
     <Compile Include="FrameInputs.cs" />
     <Compile Include="InventoryGridPatch.cs" />
     <Compile Include="InventoryGuiPatch.cs" />
-    <Compile Include="MouseTweaks.cs" />
+    <Compile Include="InputTweaks.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
