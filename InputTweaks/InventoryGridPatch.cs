@@ -39,7 +39,7 @@ namespace InputTweaks
 			[HarmonyTranspiler]
 			private static IEnumerable< CodeInstruction > OnLeftClickTranspiler( IEnumerable< CodeInstruction > instructionsIn )
 			{
-				return InitialSwapShiftAndCtrl ? Common.SwapShiftAndCtrl( instructionsIn ) : instructionsIn;
+				return InitialSwapMoveAndSplit ? Common.SwapShiftAndCtrl( instructionsIn ) : instructionsIn;
 			}
 		}
 	}

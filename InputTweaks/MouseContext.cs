@@ -1,36 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace InputTweaks
 {
-	public struct Lockable< T >
-	{
-		public T value;
-
-		public Lockable( bool locked , T value )
-		{
-			Locked = locked;
-			this.value = value;
-		}
-
-		public T Value
-		{
-			get
-			{
-				return value;
-			}
-			set
-			{
-				if( !Locked )
-					this.value = value;
-			}
-		}
-
-		public bool Locked { get; set; }
-	}
-
 	// What if we have a context wrapper (nested contexts?) that deals with input validity?
 	// When the input, major or minor, goes invalid, it finalizes the wrapped context
 	// and blocks/no-ops until the major input becomes invalid.
@@ -81,6 +55,7 @@ namespace InputTweaks
 			return true;
 		}
 
+		// Make the state internal and only return a boolean?
 		public abstract State Think( VanillaDragState dragState );
 
 		protected virtual State SetState( State state )
@@ -99,11 +74,11 @@ namespace InputTweaks
 
 	public class BlockingCursorContext : AbstractInventoryGuiCursorContext
 	{
-		protected Func< bool > dynamicRequirement; // Intended for modifier keys, but we can't enforce that
+		protected Func< bool > blockRequirement; // Intended for modifier keys, but we can't enforce that
 
-		public BlockingCursorContext( Func< bool > dynamicRequirement )
+		public BlockingCursorContext( Func< bool > blockRequirement )
 		{
-			this.dynamicRequirement = dynamicRequirement;
+			this.blockRequirement = blockRequirement;
 		}
 
 		// AbstractInventoryGuiCursorContext overrides
@@ -114,7 +89,7 @@ namespace InputTweaks
 				return CurrentState;
 			else if( FrameInputs.Current.None )
 				return SetState( State.DoneValid );
-			else if( CurrentState == State.ActiveInvalid || ( dynamicRequirement != null && !dynamicRequirement.Invoke() ) )
+			else if( CurrentState == State.ActiveInvalid || ( blockRequirement != null && !blockRequirement.Invoke() ) )
 				return SetState( State.ActiveInvalid );
 
 			return SetState( State.ActiveValid );
@@ -125,7 +100,7 @@ namespace InputTweaks
 			Common.DebugMessage( $"CNTX: Ending BlockingCursorContext" );
 		}
 	}
-
+	
 	public abstract class InventoryButtonTrackingContext : AbstractInventoryGuiCursorContext
 	{
 		protected InventoryGrid playerGrid = null;
@@ -209,6 +184,93 @@ namespace InputTweaks
 		}
 	}
 
+	public class MultiClickContext : InventoryButtonTrackingContext
+	{
+		protected bool collected = false;
+
+		public MultiClickContext(
+			InventoryGrid playerGrid,
+			List< InventoryButton > playerButtons,
+			InventoryGrid containerGrid,
+			List< InventoryButton > containerButtons )
+			: base( playerGrid , playerButtons , containerGrid , containerButtons )
+		{
+			if( CurrentState == State.ActiveValid && firstButton == null )
+				SetState( State.ActiveInvalid );
+		}
+		
+		protected bool CollectFromInto( InventoryGrid grid , ItemDrop.ItemData item )
+		{
+			List< ItemDrop.ItemData > equivalentStackables = Common.EquivalentStackables( item , grid ).ToList();
+			Common.DebugMessage( $"DBLC: Collecting {item} from {equivalentStackables.Count} equivalent stacks" );
+			Inventory inv = grid.GetInventory();
+
+			foreach( ItemDrop.ItemData equivalent in equivalentStackables )
+			{
+				int transfer = Mathf.Min( item.m_shared.m_maxStackSize - item.m_stack , equivalent.m_stack );
+				Common.DebugMessage( $"DBLC: Moving {transfer} item(s)" );
+				if( inv.RemoveItem( equivalent , transfer ) )
+					item.m_stack += transfer; // Implementation Detail: We expect the caller to update weights
+			}
+
+			return item.m_stack < item.m_shared.m_maxStackSize;
+		}
+
+		// InventoryButtonTrackingContext overrides
+
+		public override State Think( VanillaDragState dragState )
+		{
+			base.Think( dragState );
+
+			if( CurrentState == State.DoneValid || CurrentState == State.DoneInvalid )
+				return CurrentState;
+			else if( FrameInputs.Current.successiveClicks == 0 )
+				return SetState( CurrentState == State.ActiveValid ? State.DoneValid : State.DoneInvalid );
+			else if( CurrentState == State.ActiveInvalid || !UserInputSatisfied() || currentButton != firstButton )
+				return SetState( State.ActiveInvalid );
+			else if( collected )
+				return SetState( State.ActiveValid );
+
+			InventoryGrid grid = currentButton.grid;
+			Inventory inv = grid.GetInventory();
+			Vector2i gridPos = currentButton.gridPos;
+			ItemDrop.ItemData item = inv.GetItemAt( gridPos.x , gridPos.y );
+			if( item == null )
+			{
+				return SetState( State.DoneInvalid );
+			}
+			else if( item.m_stack < item.m_shared.m_maxStackSize )
+			{
+				// Prioritize the grid the item is in
+				InventoryGrid otherGrid = grid == playerGrid ? containerGrid : playerGrid;
+				if( CollectFromInto( grid , item ) )
+					CollectFromInto( otherGrid , item );
+
+				// FIXME: CollectFromInto() doesn't perfectly update weights because the item and grid args may not align
+				InputTweaks.InventoryPatch.Changed( inv );
+				InputTweaks.InventoryPatch.Changed( otherGrid.GetInventory() );
+			}
+
+			// Pick the item back up since we trigger on a double-click that put the item down
+			InputTweaks.InventoryGuiPatch.SetupDragItem( InventoryGui.instance , item , inv , item.m_stack );
+			collected = true;
+
+			return SetState( State.ActiveValid );
+		}
+
+		public override void End()
+		{
+			Common.DebugMessage( $"CNTX: Ending MultiClickContext" );
+		}
+
+		// AbstractInventoryGuiCursorContext overrides
+
+		protected override bool UserInputSatisfied()
+		{
+			return FrameInputs.Current.successiveClicks > 0 && Common.CheckModifier( InputTweaks.ModifierKeyEnum.None );
+		}
+	}
+
 	public class StackMoveContext : InventoryButtonTrackingContext
 	{
 		public StackMoveContext(
@@ -262,9 +324,8 @@ namespace InputTweaks
 		protected override bool UserInputSatisfied()
 		{
 			return FrameInputs.Current.LeftOnly
-				&& ( InputTweaks.InitialSwapShiftAndCtrl
-					? ( Common.AnyShift() && !Common.AnyControl() )
-					: ( Common.AnyControl() && !Common.AnyShift() ) );
+				&& Common.CheckModifier( InputTweaks.ModifierKeyEnum.Move )
+				&& !Common.CheckModifier( InputTweaks.ModifierKeyEnum.Split );
 		}
 	}
 
@@ -328,19 +389,23 @@ namespace InputTweaks
 
 		protected override bool UserInputSatisfied()
 		{
-			return FrameInputs.Current.LeftOnly && Common.AnyShift() && Common.AnyControl();
+			return FrameInputs.Current.LeftOnly && Common.AnyShift() && Common.AnyCtrl();
 		}
 	}
 	
 	public class StackSmearContext : InventoryButtonTrackingContext
 	{
 		protected List< InventoryButton > smearedButtons = new List< InventoryButton >();
+		protected Inventory swappedInv;
+		protected Vector2i swappedPos;
 
 		public StackSmearContext(
 			InventoryGrid playerGrid,
 			List< InventoryButton > playerButtons,
 			InventoryGrid containerGrid,
-			List< InventoryButton > containerButtons )
+			List< InventoryButton > containerButtons,
+			Inventory swappedInv,
+			Vector2i swappedPos )
 			: base( playerGrid , playerButtons , containerGrid , containerButtons )
 		{
 			if( CurrentState == State.DoneInvalid || VanillaDragState.IsValid() )
@@ -351,6 +416,11 @@ namespace InputTweaks
 
 			firstButton.considerForDrag = false;
 			smearedButtons.Add( firstButton );
+			this.swappedInv = swappedInv;
+			this.swappedPos = swappedPos;
+
+			if( ( firstButton.curItem?.m_stack ?? 0 ) <= 1 )
+				CurrentState = State.DoneValid;
 		}
 
 		// InventoryButtonTrackingContext overrides
@@ -394,63 +464,92 @@ namespace InputTweaks
 
 			bool clearDrag = true;
 
-			if( CurrentState == State.DoneValid && smearedButtons.Count > 1 )
+			if( CurrentState == State.DoneValid )
 			{
-				ItemDrop.ItemData splitItem = firstButton?.curItem;
-				if( splitItem != null )
+				if( smearedButtons.Count == 1 )
 				{
-					// Don't think we should balance existing stack... Might make a good config option though.
-					// What to do with the remainder though?
-					/*
-					int total = splitItem.m_stack;
-					List< InventoryButton > matchingButtons = new List< InventoryButton >();
-					matchingButtons.Add( firstButton );
-
-					foreach( InventoryButton smearedButton in smearedButtons )
+					// TODO: This does not belong here. It has nothing to do with a smear.
+					// We do not have a context framework refined enough to smoothly transition from one to another,
+					// much less one that doesn't require contexts to know about each other.
+					// Ideally, selected items go into a transient inventory slot. How do other inventory plugins do this?
+					if( InputTweaks.SelectSwappedItem.Value && swappedInv != null && firstButton.gridPos != swappedPos )
 					{
-						ItemDrop.ItemData buttonItem = smearedButton.curItem;
-						if( buttonItem == null || Common.ItemsAreSimilarButDistinct( splitItem , buttonItem ) )
+						// Because this is the wrong place for this logic, we have to check whether a partial stack
+						// on the cursor was merely added to our stack. We only swap different or unstackable items.
+						ItemDrop.ItemData smearItem = firstButton.curItem;
+						ItemDrop.ItemData swappedItem = swappedInv.GetItemAt( swappedPos.x , swappedPos.y );
+						if( swappedItem != null && !Common.CanStackOnto( smearItem , swappedItem ) )
 						{
-							total += buttonItem.m_stack;
-							matchingButtons.Add( smearedButton );
+							Common.DebugMessage( $"INFO: Selecting swapped item" );
+
+							InputTweaks.InventoryGuiPatch.SetupDragItem(
+								InventoryGui.instance,
+								swappedItem,
+								swappedInv,
+								swappedItem.m_stack );
+							
+							clearDrag = false;
 						}
 					}
-
-					int balancedValue = Mathf.Max( 1 , Mathf.FloorToInt( total / (float)matchingButtons.Count ) );
-					foreach( InventoryButton matchingButton in matchingButtons )
+				}
+				else
+				{
+					ItemDrop.ItemData splitItem = firstButton?.curItem;
+					if( splitItem != null )
 					{
-						Inventory inv = matchingButton.grid.GetInventory();
-						Vector2i gridPos = matchingButton.gridPos;
+						// Don't think we should balance existing stacks... Might make a good config option though.
+						// What to do with the remainder though?
+						/*
+						int total = splitItem.m_stack;
+						List< InventoryButton > matchingButtons = new List< InventoryButton >();
+						matchingButtons.Add( firstButton );
 
-						// TODO
-					}
-					*/
+						foreach( InventoryButton smearedButton in smearedButtons )
+						{
+							ItemDrop.ItemData buttonItem = smearedButton.curItem;
+							if( buttonItem == null || Common.ItemsAreSimilarButDistinct( splitItem , buttonItem ) )
+							{
+								total += buttonItem.m_stack;
+								matchingButtons.Add( smearedButton );
+							}
+						}
 
-					int perStack = Mathf.Max( 1 , Mathf.FloorToInt( splitItem.m_stack / (float)smearedButtons.Count ) );
-					int remainder = splitItem.m_stack - perStack; // Subtract the source stack's share
+						int balancedValue = Mathf.Max( 1 , Mathf.FloorToInt( total / (float)matchingButtons.Count ) );
+						foreach( InventoryButton matchingButton in matchingButtons )
+						{
+							Inventory inv = matchingButton.grid.GetInventory();
+							Vector2i gridPos = matchingButton.gridPos;
 
-					foreach( InventoryButton button in smearedButtons )
-					{
-						if( button == firstButton )
-							continue;
-						else if( splitItem.m_stack < ( 2 * perStack ) )
-							break;
+							// TODO
+						}
+						*/
 
-						Inventory inv = button.grid.GetInventory();
-						Vector2i gridPos = button.gridPos;
-						if( InputTweaks.InventoryGuiPatch.AddItem( inv , splitItem , perStack , gridPos.x , gridPos.y ) )
-							remainder -= perStack;
-					}
+						int perStack = Mathf.Max( 1 , Mathf.FloorToInt( splitItem.m_stack / (float)smearedButtons.Count ) );
+						int remainder = splitItem.m_stack - perStack; // Subtract the source stack's share
 
-					if( InputTweaks.KeepRemainderOnCursor.Value && remainder > 0 )
-					{
-						InputTweaks.InventoryGuiPatch.SetupDragItem(
-							InventoryGui.instance,
-							splitItem,
-							firstButton.grid.GetInventory(),
-							remainder );
+						foreach( InventoryButton button in smearedButtons )
+						{
+							if( button == firstButton )
+								continue;
+							else if( splitItem.m_stack < ( 2 * perStack ) )
+								break;
 
-						clearDrag = false;
+							Inventory inv = button.grid.GetInventory();
+							Vector2i gridPos = button.gridPos;
+							if( InputTweaks.InventoryGuiPatch.AddItem( inv , splitItem , perStack , gridPos.x , gridPos.y ) )
+								remainder -= perStack;
+						}
+
+						if( InputTweaks.KeepRemainderOnCursor.Value && remainder > 0 )
+						{
+							InputTweaks.InventoryGuiPatch.SetupDragItem(
+								InventoryGui.instance,
+								splitItem,
+								firstButton.grid.GetInventory(),
+								remainder );
+
+							clearDrag = false;
+						}
 					}
 				}
 			}
@@ -464,7 +563,84 @@ namespace InputTweaks
 
 		protected override bool UserInputSatisfied()
 		{
-			return FrameInputs.Current.LeftOnly && !Common.AnyShift() && !Common.AnyControl();
+			return FrameInputs.Current.LeftOnly && Common.CheckModifier( InputTweaks.ModifierKeyEnum.None );
+		}
+	}
+	
+	public class StackCollectContext : InventoryButtonTrackingContext
+	{
+		public StackCollectContext(
+			InventoryGrid playerGrid,
+			List< InventoryButton > playerButtons,
+			InventoryGrid containerGrid,
+			List< InventoryButton > containerButtons )
+			: base( playerGrid , playerButtons , containerGrid , containerButtons )
+		{
+			if( CurrentState == State.DoneInvalid || !VanillaDragState.IsValid() )
+				CurrentState = State.DoneInvalid;
+		}
+
+		// InventoryButtonTrackingContext overrides
+
+		public override State Think( VanillaDragState dragState )
+		{
+			base.Think( dragState );
+
+			if( CurrentState == State.DoneValid || CurrentState == State.DoneInvalid )
+				return CurrentState;
+			else if( FrameInputs.Current.None )
+				return SetState( State.DoneValid );
+			else if( !dragState.isValid )
+				return SetState( State.DoneInvalid );
+			else if( CurrentState == State.ActiveInvalid || !UserInputSatisfied() )
+				return SetState( State.ActiveInvalid );
+			else if( currentButton == null || currentButton == previousButton || currentButton == firstButton )
+				return SetState( State.ActiveValid );
+
+			ItemDrop.ItemData sourceItem = currentButton.curItem;
+			ItemDrop.ItemData targetItem = firstButton.curItem;
+			if( Common.CanStackOnto( sourceItem , targetItem ) )
+			{
+				Common.DebugMessage( $"CNTX: Left, from ({currentButton.gridPos})" );
+
+				Inventory sourceInv = currentButton.grid.GetInventory();
+				Inventory targetInv = firstButton.grid.GetInventory();
+				int transfer = Mathf.Min( targetItem.m_shared.m_maxStackSize - targetItem.m_stack , sourceItem.m_stack );
+				Common.DebugMessage( $"CNTX: Moving {transfer} item(s)" );
+				if( sourceInv.RemoveItem( sourceItem , transfer ) )
+				{
+					targetItem.m_stack += transfer;
+					if( dragState.Increment( transfer ) )
+					{
+						dragState = new VanillaDragState();
+						dragState.UpdateTooltip();
+						UITooltip.HideTooltip(); // This is the item description tooltip, which overlaps
+					}
+
+					if( targetInv != sourceInv )
+						InputTweaks.InventoryPatch.Changed( targetInv );
+				}
+			}
+			else
+			{
+				Common.DebugMessage( $"CNTX: Cannot stack {sourceItem} onto {targetItem}" );
+			}
+
+			return SetState( State.ActiveValid );
+		}
+
+		public override void End()
+		{
+			Common.DebugMessage( $"CNTX: Ending StackCollectContext" );
+
+			base.End();
+		}
+
+		// AbstractInventoryGuiCursorContext overrides
+
+		protected override bool UserInputSatisfied()
+		{
+			return FrameInputs.Current.LeftOnly && Common.CheckModifier( InputTweaks.ModifierKeyEnum.None );
 		}
 	}
 
@@ -515,7 +691,7 @@ namespace InputTweaks
 				owningInv.RemoveItem( dragItem );
 			}
 
-			if( dragState.Decrement() && VanillaDragState.IsValid() )
+			if( dragState.Decrement() )
 				( new VanillaDragState() ).UpdateTooltip();
 
 			// We're not really done until buttons are released 
@@ -533,7 +709,7 @@ namespace InputTweaks
 
 		protected override bool UserInputSatisfied()
 		{
-			return FrameInputs.Current.RightOnly && !Common.AnyShift() && !Common.AnyControl();
+			return FrameInputs.Current.RightOnly && Common.CheckModifier( InputTweaks.ModifierKeyEnum.None );
 		}
 	}
 }

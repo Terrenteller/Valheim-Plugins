@@ -67,22 +67,35 @@ namespace InputTweaks
 			return new VanillaDragState( dragObject , dragInventory , dragItem , dragAmount , isValid );
 		}
 
-		public bool Decrement()
+		public bool Increment( int count = 1 )
 		{
-			Common.DebugMessage( $"TEST: VanillaDragState.Decrement()" );
+			Common.DebugMessage( $"INFO: VanillaDragState.Increment()" );
 			if( !isValid )
 				return false;
 
 			Traverse.Create( InventoryGui.instance )
 				.Field( "m_dragAmount" )
-				.SetValue( dragAmount - 1 );
+				.SetValue( dragAmount + count );
+
+			return true;
+		}
+		
+		public bool Decrement( int count = 1 )
+		{
+			Common.DebugMessage( $"INFO: VanillaDragState.Decrement()" );
+			if( !isValid )
+				return false;
+
+			Traverse.Create( InventoryGui.instance )
+				.Field( "m_dragAmount" )
+				.SetValue( dragAmount - count );
 
 			return true;
 		}
 
 		public void UpdateTooltip()
 		{
-			Common.DebugMessage( $"TEST: VanillaDragState.UpdateTooltip()" );
+			Common.DebugMessage( $"INFO: VanillaDragState.UpdateTooltip()" );
 			if( !isValid )
 				return;
 

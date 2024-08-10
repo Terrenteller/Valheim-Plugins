@@ -18,9 +18,10 @@ namespace InputTweaks
 		}
 
 		// These couple other classes too closely to this one.
-		// Tracking successive clicks makes it worse. Can we factor these out?
+		// Tracking successive clicks makes it worse. Can we factor these out? FrameInputBuffer?
 		public static FrameInputs Prior = null;
 		public static FrameInputs Current = new FrameInputs( true );
+		public static double FrameTimeOfLastUpdate = 0.0;
 
 		private static double LeftDownLast;
 		private static Vector2i SuccessiveClicksFirstPos;
@@ -113,10 +114,16 @@ namespace InputTweaks
 
 		// Statics
 
-		public static void Update()
+		public static bool Update()
 		{
+			double now = Time.timeAsDouble;
+			if( now == FrameTimeOfLastUpdate )
+				return false;
+
 			Prior = Current;
 			Current = new FrameInputs( false );
+			FrameTimeOfLastUpdate = now;
+			return true;
 		}
 	}
 }

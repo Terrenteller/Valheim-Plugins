@@ -13,7 +13,17 @@ namespace InputTweaks
 		public const int LeftShiftInt = (int)KeyCode.LeftShift;
 		public const int RightShiftInt = (int)KeyCode.RightShift;
 
-		public static bool AnyControl()
+		public static bool AnyAlt()
+		{
+			return ZInput.GetKey( KeyCode.LeftAlt ) || ZInput.GetKey( KeyCode.RightAlt );
+		}
+
+		public static bool AnyCommand()
+		{
+			return ZInput.GetKey( KeyCode.LeftCommand ) || ZInput.GetKey( KeyCode.RightCommand );
+		}
+		
+		public static bool AnyCtrl()
 		{
 			return ZInput.GetKey( KeyCode.LeftControl ) || ZInput.GetKey( KeyCode.RightControl );
 		}
@@ -28,6 +38,27 @@ namespace InputTweaks
 			return ItemsAreSimilarButDistinct( item , target , true )
 				&& target.m_shared.m_maxStackSize > 1
 				&& target.m_stack < target.m_shared.m_maxStackSize;
+		}
+
+		public static bool CheckModifier( InputTweaks.ModifierKeyEnum modifier )
+		{
+			switch( modifier )
+			{
+				case InputTweaks.ModifierKeyEnum.Alt:
+					return AnyAlt();
+				case InputTweaks.ModifierKeyEnum.Command:
+					return AnyCommand();
+				case InputTweaks.ModifierKeyEnum.Ctrl:
+					return AnyCtrl();
+				case InputTweaks.ModifierKeyEnum.Move:
+					return InputTweaks.InitialSwapMoveAndSplit ? AnyShift() : AnyCtrl();
+				case InputTweaks.ModifierKeyEnum.Split:
+					return InputTweaks.InitialSwapMoveAndSplit ? AnyCtrl() : AnyShift();
+				case InputTweaks.ModifierKeyEnum.Shift:
+					return AnyShift();
+			}
+
+			return !AnyAlt() && !AnyCommand() && !AnyCtrl() && !AnyShift();
 		}
 
 		public static void DebugMessage( string message )
@@ -50,7 +81,7 @@ namespace InputTweaks
 
 		public static ItemDrop.ItemData FindFirstSimilarItemInInventory( ItemDrop.ItemData item , Inventory inv )
 		{
-			// Some vanilla similarity checks check ItemDrop.ItemData.m_worldLevel. What is this?
+			// Some vanilla similarity checks check ItemDrop.ItemData.m_worldLevel. What is that?
 			foreach( ItemDrop.ItemData invItem in inv.GetAllItems() )
 				if( item != invItem && item.m_shared.m_name.Equals( invItem.m_shared.m_name ) && item.m_quality == invItem.m_quality )
 					return invItem;

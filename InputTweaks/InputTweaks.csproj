@@ -94,6 +94,7 @@
     <Compile Include="Common.cs" />
     <Compile Include="InventoryButton.cs" />
     <Compile Include="InventoryPatch.cs" />
+    <Compile Include="Lockable.cs" />
     <Compile Include="MouseContext.cs" />
     <Compile Include="VanillaDragState.cs" />
     <Compile Include="FrameInputs.cs" />

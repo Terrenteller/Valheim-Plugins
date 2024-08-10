@@ -15,23 +15,27 @@ namespace InputTweaks
 		public static ConfigEntry< bool > LoadOnStart;
 		// 1 - General
 		public static ConfigEntry< bool > DebugMessages;
-		//public static ConfigEntry< InsertionPriorityEnum > InsertionPriority;
-		public static ConfigEntry< bool > SwapShiftAndCtrl; // SwapMoveAndSplit instead?
-		public static bool InitialSwapShiftAndCtrl; // Transpiled code, "live" code, and descriptions need to stay in sync
+		//public static ConfigEntry< InsertionPriorityEnum > InsertionPriority; // FIXME
+		public static ConfigEntry< bool > SelectSwappedItem;
+		public static ConfigEntry< bool > SplitRoundsUp;
+		public static ConfigEntry< bool > SwapMoveAndSplit;
+		public static bool InitialSwapMoveAndSplit; // Transpiled code, "live" code, and descriptions need to stay in sync
 		// 2 - Cursor Context
-		public static ConfigEntry< bool > AllowFilteredStackMove;
-		public static ConfigEntry< bool > AllowImmediateSplit;
-		public static ConfigEntry< bool > AllowSingleSmear;
-		public static ConfigEntry< bool > AllowStackMove;
-		public static ConfigEntry< bool > AllowStackSmear;
+		// Why disable any of these? A better option is to change the required input.
+		//public static ConfigEntry< bool > AllowFilteredStackMove;
+		//public static ConfigEntry< bool > AllowImmediateSplit;
+		//public static ConfigEntry< bool > AllowSingleSmear;
+		//public static ConfigEntry< bool > AllowStackMove;
+		//public static ConfigEntry< bool > AllowStackSmear;
 		public static ConfigEntry< bool > KeepRemainderOnCursor;
 		// 3 - Double-click
 		public static ConfigEntry< bool > AllowDoubleClickCollect;
 		public static ConfigEntry< int > SuccessiveClickRadius;
 		public static ConfigEntry< float > SuccessiveClickWindow;
-		// 4 - Single Drop
+		// 4 - Drop Shortcuts
 		public static ConfigEntry< bool > AllowRightClickDrop;
 		public static ConfigEntry< KeyCode > SingleDropKey;
+		public static ConfigEntry< ModifierKeyEnum > StackDropModifier;
 		// 5 - Mouse Wheel
 		public static ConfigEntry< WheelActionEnum > ContainerWheelAction;
 		public static ConfigEntry< WheelActionEnum > PlayerWheelAction;
@@ -41,6 +45,17 @@ namespace InputTweaks
 			None,
 			PullUpPushDown,
 			PushUpPullDown
+		}
+		
+		public enum ModifierKeyEnum
+		{
+			None,
+			Alt,
+			Command,
+			Ctrl,
+			Move,
+			Shift,
+			Split
 		}
 		
 		/*
@@ -68,28 +83,32 @@ namespace InputTweaks
 				true,
 				"Whether this plugin loads on game start." );
 
-			// FIXME: Doesn't seem to work
-			/*
-			InsertionPriority = Config.Bind(
-				"1 - General",
-				"InsertionPriority",
-				InsertionPriorityEnum.Default,
-				"TODO" );
-			*/
-
 			DebugMessages = Config.Bind(
 				"1 - General",
 				"DebugMessages",
 				false,
 				"Whether to print plugin-specific trace/debug/warning/error messages." );
 
-			SwapShiftAndCtrl = Config.Bind(
+			SelectSwappedItem = Config.Bind(
 				"1 - General",
-				"SwapShiftAndCtrl",
+				"SelectSwappedItem",
+				false,
+				"Whether selecting a second item with an item already selected will automatically select the second item after the swap. This mimics Minecraft's transient cursor item slot." );
+			
+			SplitRoundsUp = Config.Bind(
+				"1 - General",
+				"SplitRoundsUp",
 				true,
-				"Whether [SHIFT] (split) and [CTRL] (move) swap behavior. Changes will not apply until the game is restarted." );
-			InitialSwapShiftAndCtrl = SwapShiftAndCtrl.Value;
+				"Whether stack splits round up when the stack has an odd number of items." );
 
+			SwapMoveAndSplit = Config.Bind(
+				"1 - General",
+				"SwapMoveAndSplit",
+				true,
+				"Whether [SHIFT] as split and [CTRL] as move swap behavior. Changes will not apply until the game is restarted." );
+			InitialSwapMoveAndSplit = SwapMoveAndSplit.Value;
+
+			/*
 			AllowFilteredStackMove = Config.Bind(
 				"2 - Cursor Context",
 				"AllowFilteredStackMove",
@@ -100,7 +119,7 @@ namespace InputTweaks
 				"2 - Cursor Context",
 				"AllowImmediateSplit",
 				true,
-				$"Whether [{( InitialSwapShiftAndCtrl ? "SHIFT" : "CTRL" )}] + [RMB] immediately splits the stack, rounding up." );
+				$"Whether [{( InitialSwapMoveAndSplit ? "SHIFT" : "CTRL" )}] + [RMB] immediately splits the stack, rounding up." );
 
 			AllowSingleSmear = Config.Bind(
 				"2 - Cursor Context",
@@ -111,20 +130,21 @@ namespace InputTweaks
 			AllowStackMove = Config.Bind(
 				"2 - Cursor Context",
 				"AllowStackMove",
-				true ,
-				$"Whether dragging with [{( InitialSwapShiftAndCtrl ? "SHIFT" : "CTRL" )}] + [LMB] moves stacks." );
+				true,
+				$"Whether dragging with [{( InitialSwapMoveAndSplit ? "SHIFT" : "CTRL" )}] + [LMB] moves stacks." );
 
 			AllowStackSmear = Config.Bind(
 				"2 - Cursor Context",
 				"AllowStackSmear",
 				true,
 				"Whether dragging with [LMB] will divide the stack into applicable slots." );
+			*/
 
 			KeepRemainderOnCursor = Config.Bind(
 				"2 - Cursor Context",
 				"KeepRemainderOnCursor",
 				false,
-				"Whether an uneven stack smear leaves the remainder on the cursor for further action." );
+				"Whether an unbalanced stack smear leaves the remainder on the cursor for further action." );
 
 			AllowDoubleClickCollect = Config.Bind(
 				"3 - Double-click",
@@ -148,17 +168,24 @@ namespace InputTweaks
 					"The interval, in seconds, in which a click may count as the successor to the previous click in the series.",
 					new AcceptableValueRange< float >( 0.05f , 1.0f ) ) ); // 0.05f so configuration managers don't treat it as a percentage
 
+			// FIXME: Disabling this doesn't restore vanilla behaviour because we don't remove the listener (or component)
 			AllowRightClickDrop = Config.Bind(
-				"4 - Single Drop",
+				"4 - Drop Shortcuts",
 				"AllowRightClickDrop",
 				true,
 				"Whether right-clicking with a stack outside of the inventory drops a single item from the stack." );
 
 			SingleDropKey = Config.Bind(
-				"4 - Single Drop",
+				"4 - Drop Shortcuts",
 				"SingleDropKey",
-				KeyCode.Q, // Fortunately, "None" is the first Configuration Manager list item and there's a "Reset" button
+				KeyCode.Q, // Conflicts OOTB, but "None" is the first Configuration Manager list item and there's a "Reset" button
 				"Drop one item from the stack below the cursor when this key is pressed. Conflicts with auto-run by default." );
+
+			StackDropModifier = Config.Bind(
+				"4 - Drop Shortcuts",
+				"StackDropModifier",
+				ModifierKeyEnum.Move,
+				"Drop the entire stack below the cursor when this modifier is pressed when SingleDropKey is pressed." );
 
 			// Unfortunate this is first alphabetically and second visually
 			ContainerWheelAction = Config.Bind(
@@ -175,7 +202,7 @@ namespace InputTweaks
 
 			if( LoadOnStart.Value )
 			{
-				InitialSwapShiftAndCtrl = SwapShiftAndCtrl.Value;
+				InitialSwapMoveAndSplit = SwapMoveAndSplit.Value;
 				Harmony.PatchAll();
 			}
 		}
