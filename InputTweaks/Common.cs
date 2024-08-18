@@ -95,22 +95,34 @@ namespace InputTweaks
 			return null;
 		}
 
-		public static ItemDrop.ItemData FindPartialStack( ItemDrop.ItemData item , Inventory inv )
+		public static ItemDrop.ItemData FindLargestPartialStack( ItemDrop.ItemData item , InventoryGrid grid )
 		{
-			if( item == null )
+			if( item.m_shared.m_maxStackSize == 1 )
 				return null;
 
-			foreach( ItemDrop.ItemData invItem in inv.GetAllItems() )
-			{
-				if( invItem != item
-					&& invItem.m_shared.m_name.Equals( item.m_shared.m_name )
-					&& invItem.m_stack < invItem.m_shared.m_maxStackSize )
-				{
-					return invItem;
-				}
-			}
+			int width = InputTweaks.InventoryGridPatch.Width( grid );
+			Inventory inv = grid.GetInventory();
 
-			return null;
+			return inv.GetAllItems()
+			   .Where( x => ItemsAreSimilarButDistinct( item , x , true ) )
+			   .OrderByDescending( x => x.m_stack )
+			   .ThenBy( x => x.m_gridPos.x + ( x.m_gridPos.y * width ) )
+			   .FirstOrDefault( x => x.m_stack < x.m_shared.m_maxStackSize );
+		}
+
+		public static ItemDrop.ItemData FindSmallestPartialStack( ItemDrop.ItemData item , InventoryGrid grid )
+		{
+			if( item.m_shared.m_maxStackSize == 1 )
+				return null;
+
+			int width = InputTweaks.InventoryGridPatch.Width( grid );
+			Inventory inv = grid.GetInventory();
+
+			return inv.GetAllItems()
+			   .Where( x => ItemsAreSimilarButDistinct( item , x , true ) )
+			   .OrderBy( x => x.m_stack )
+			   .ThenBy( x => x.m_gridPos.x + ( x.m_gridPos.y * width ) )
+			   .FirstOrDefault( x => x.m_stack < x.m_shared.m_maxStackSize );
 		}
 
 		public static bool IsCursorOver( GameObject go )

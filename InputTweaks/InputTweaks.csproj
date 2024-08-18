@@ -81,6 +81,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\libs\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\libs\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\libs\UnityEngine.UI.dll</HintPath>
@@ -90,8 +94,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArmorStandPatch.cs" />
     <Compile Include="ButtonPatch.cs" />
     <Compile Include="Common.cs" />
+    <Compile Include="HudPatch.cs" />
     <Compile Include="InventoryButton.cs" />
     <Compile Include="InventoryPatch.cs" />
     <Compile Include="Lockable.cs" />

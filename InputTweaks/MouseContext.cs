@@ -675,8 +675,15 @@ namespace InputTweaks
 			Inventory inv = currentButton.grid.GetInventory();
 			ItemDrop.ItemData dragItem = dragState.dragItem;
 			Vector2i gridPos = currentButton.gridPos;
+			bool selfStartFullStackSpecialCase = false;
 			if( !InputTweaks.InventoryGuiPatch.AddItem( inv , dragItem , 1 , gridPos.x , gridPos.y ) )
-				return SetState( State.ActiveValid );
+			{
+				// AddItem() will fail when the smear starts on itself and the stack is full
+				if( currentButton.curItem == dragItem )
+					selfStartFullStackSpecialCase = true;
+				else 
+					return SetState( State.ActiveValid );
+			}
 
 			Common.DebugMessage( $"CNTX: Right, into ({gridPos})" );
 			currentButton.SetSelectionState( InventoryButton.SelectionState.Highlighted , true );
@@ -684,7 +691,7 @@ namespace InputTweaks
 			highlightedButtons.Add( currentButton );
 
 			// AddItem() modifies the input stack size
-			if( dragState.dragItem.m_stack <= 0 )
+			if( !selfStartFullStackSpecialCase && dragState.dragItem.m_stack <= 0 )
 			{
 				Inventory playerInv = playerGrid.GetInventory();
 				Inventory owningInv = playerInv.ContainsItem( dragItem ) ? playerInv : containerGrid.GetInventory();

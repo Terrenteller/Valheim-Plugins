@@ -118,7 +118,8 @@ namespace InputTweaks
 
 		public static void ClearDrag()
 		{
-			Common.DebugMessage( $"DRAG: VanillaDragState.ClearDrag()" );
+			// Even for a debug message this gets printed a lot
+			//Common.DebugMessage( $"DRAG: VanillaDragState.ClearDrag()" );
 			InputTweaks.InventoryGuiPatch.SetupDragItem( InventoryGui.instance , null , null , 1 );
 		}
 

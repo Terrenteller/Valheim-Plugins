@@ -8,7 +8,9 @@ Allows items to be equipped in custom slots defined by other plugins or a config
 
 This is an update and drop-in replacement of [CustomSlotItemLib](https://thunderstore.io/c/valheim/p/nearbear/CustomSlotItemLib/) originally written by [nearbear](https://github.com/nearbear/ValheimBepinexMods/tree/main/CustomSlotItemLib). It was broken by an unknown game update and appears to be abandoned. More information can be found in the original [README](https://github.com/nearbear/ValheimBepinexMods/blob/main/CustomSlotItemLib/Package/README.md).
 
-WARNING: Addons made for the original plugin, like [WishboneSlot](https://thunderstore.io/c/valheim/p/nearbear/WishboneSlot/) by [nearbear](https://github.com/nearbear/ValheimBepinexMods/tree/main/WishboneSlot) and [WisplightSlot](https://thunderstore.io/c/valheim/p/ValheimAddicts/WisplightSlot/) by [ValheimAddicts](https://github.com/DerNap/ValheimAddicts/tree/main/WisplightSlot), are compatible with this one, BUT ARE NOT COMPATIBLE THROUGH MOD MANAGERS DUE TO THEIR THUNDERSTORE DEPENDENCY ON THE ORIGINAL PLUGIN. The functionality of these two is provided by default to account for this.
+### InputTweaks | [Settings](InputTweaks/InputTweaks.cs)
+
+InputTweaks is a Valheim clone of Mouse Wheelie, a re-make of InventoryTweaks, and a dash of default Minecraft controls.
 
 ### Longer Pet Names | [Settings](LongerPetNames/LongerPetNames.cs)
 
@@ -31,10 +33,6 @@ Known to be compatible with AzuAreaRepair. An in-game configuration editor is st
 ### Memories | [Settings](Memories/Memories.cs)
 
 Have a strong preference for how zoomed in or out your camera is when on foot, piloting a ship, or in a saddle? This plugin will remember.
-
-### MouseTweaks | [Settings](MouseTweaks/MouseTweaks.cs)
-
-TODO
 
 ### Nag Messages | [Settings](NagMessages/NagMessages.cs)
 

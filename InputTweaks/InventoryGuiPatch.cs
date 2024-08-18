@@ -22,22 +22,35 @@ namespace InputTweaks
 			private static AbstractInventoryGuiCursorContext MouseContext = null;
 			private static VanillaDragState CurrentDragState = new VanillaDragState();
 			private static List< InventoryButton > PlayerButtons = new List< InventoryButton >();
+			private static bool ForceContainerButtonUpdate = false;
 			private static List< InventoryButton > ContainerButtons = new List< InventoryButton >();
 			private static InventoryButton CurrentButton = null;
+			private static Component LastWorldComponent = null;
+			private static Component CurrentWorldComponent = null;
+			private static GameObject WorldInteractionPreviewDragObject = null;
 
 			#region Helpers
 
 			private static void CollectInventoryButtons( InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
-				if( PlayerButtons.Count == 0 && ContainerButtons.Count == 0 )
+				// Valid player buttons prevent unnecessary attempts at caching container buttons.
+				// With the addition of "world interactions", containers can be opened and closed at any time.
+				bool standardInitialization = PlayerButtons.Count == 0 && ContainerButtons.Count == 0;
+
+				if( standardInitialization )
 				{
 					Common.DebugMessage( $"INFO: Attempting to index PlayerButtons" );
 					CollectInventoryButtons( playerGrid , PlayerButtons );
 					Common.DebugMessage( $"INFO: Indexed {PlayerButtons.Count} player buttons" );
+				}
 
+				if( standardInitialization || ForceContainerButtonUpdate )
+				{
 					Common.DebugMessage( $"INFO: Attempting to index ContainerButtons" );
 					CollectInventoryButtons( containerGrid , ContainerButtons );
 					Common.DebugMessage( $"INFO: Indexed {ContainerButtons.Count} container buttons" );
+						
+					ForceContainerButtonUpdate = false;
 				}
 			}
 
@@ -169,7 +182,7 @@ namespace InputTweaks
 
 			#region MouseWheel
 
-			private static void UpdateMouseWheel( InventoryGui gui , InventoryGrid playerGrid , InventoryGrid containerGrid )
+			private static void UpdateMouseWheel( InventoryGui inventoryGui , InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
 				if( MouseContext != null || CurrentDragState.isValid || FrameInputs.Current.Any )
 					return;
@@ -179,19 +192,19 @@ namespace InputTweaks
 				if( player == null || scroll == 0.0f )
 					return;
 
-				GameObject splitPanel = gui.m_splitPanel.gameObject;
+				GameObject splitPanel = inventoryGui.m_splitPanel.gameObject;
 				if( splitPanel.activeInHierarchy )
 				{
 					// The split panel is the full size of the screen
-					if( Common.IsCursorOver( gui.m_splitPanel.Find( "win_bkg" ) as RectTransform ) )
+					if( Common.IsCursorOver( inventoryGui.m_splitPanel.Find( "win_bkg" ) as RectTransform ) )
 					{
-						Slider splitSlider = gui.m_splitSlider;
+						Slider splitSlider = inventoryGui.m_splitSlider;
 						splitSlider.value = Mathf.Clamp(
 							splitSlider.value + ( scroll > 0.0f ? 1.0f : -1.0f ),
 							splitSlider.minValue,
 							splitSlider.maxValue );
 
-						Traverse.Create( gui )
+						Traverse.Create( inventoryGui )
 							.Method( "OnSplitSliderChanged" , new[] { typeof( float ) } )
 							.GetValue( Mathf.Clamp( splitSlider.value , splitSlider.minValue , splitSlider.maxValue ) );
 					}
@@ -216,7 +229,7 @@ namespace InputTweaks
 
 				if( itemInContainer )
 					MoveOne( player , pull , item , containerGrid , playerGrid );
-				else if( gui.IsContainerOpen() )
+				else if( inventoryGui.IsContainerOpen() )
 					MoveOne( player , pull , item , playerGrid , containerGrid );
 				else
 					MoveOne( player , pull , item , playerGrid , null );
@@ -254,11 +267,18 @@ namespace InputTweaks
 							Common.DebugMessage( $"PULL: Doesn't make sense" );
 							return;
 						}
-						else if( !owningInv.HaveEmptySlot() && Common.FindPartialStack( item , owningInv ) == null )
+
+						ItemDrop.ItemData partialItem = Common.FindLargestPartialStack( item , owningGrid );
+						if( partialItem == null )
 						{
-							Common.DebugMessage( $"PULL: No space" );
-							return;
+							if( !owningInv.HaveEmptySlot() )
+							{
+								Common.DebugMessage( $"PULL: No space" );
+								return;
+							}
 						}
+						else
+							item = partialItem;
 					}
 
 					// These are annoyingly similar
@@ -268,7 +288,17 @@ namespace InputTweaks
 							? Common.EquivalentStackables( item , otherGrid ).FirstOrDefault()
 							: Common.FindFirstSimilarItemInInventory( item , otherInv );
 
-						if( otherItem == null || otherItem.m_stack < 1 )
+						if( otherItem == null && item.m_stack == item.m_shared.m_maxStackSize && item.m_shared.m_maxStackSize > 1 )
+						{
+							ItemDrop.ItemData otherPartialItem = Common.FindSmallestPartialStack( item , otherGrid );
+							if( otherPartialItem != null && owningInv.AddItem( item.m_dropPrefab , 1 ) )
+							{
+								Common.DebugMessage( $"PULL: One item" );
+								otherInv.RemoveOneItem( otherPartialItem );
+								return;
+							}
+						}
+						else if( otherItem == null || otherItem.m_stack < 1 )
 						{
 							Common.DebugMessage( $"PULL: No similar item" );
 						}
@@ -332,7 +362,7 @@ namespace InputTweaks
 						}
 
 						if( item.m_stack == item.m_shared.m_maxStackSize )
-							item = Common.FindPartialStack( item , owningInv ) ?? item;
+							item = Common.FindSmallestPartialStack( item , owningGrid ) ?? item;
 
 						if( otherInv.AddItem( item.m_dropPrefab , 1 ) )
 						{
@@ -345,7 +375,7 @@ namespace InputTweaks
 					}
 					else // Push to self
 					{
-						ItemDrop.ItemData otherItem = Common.FindPartialStack( item , owningInv );
+						ItemDrop.ItemData otherItem = Common.FindLargestPartialStack( item , owningGrid );
 						if( otherItem != null )
 						{
 							Common.DebugMessage( $"PUSH: One item to sibling" );
@@ -375,6 +405,272 @@ namespace InputTweaks
 							AddItem( owningInv , item , 1 , emptySlot.x , emptySlot.y ); // Does subtraction
 							return;
 						}
+					}
+				}
+			}
+
+			#endregion
+
+			#region WorldInteractions
+
+			private static void UpdateWorldInteractionDragPreview( InventoryGui inventoryGui , Button dropButton )
+			{
+				// Cycle regardless so we don't hold stale data
+				LastWorldComponent = CurrentWorldComponent;
+				CurrentWorldComponent = null;
+
+				VanillaDragState dragState = new VanillaDragState();
+				if( dragState.dragObject != null && dragState.dragObject != WorldInteractionPreviewDragObject )
+					return;
+
+				// Interactables underneath GUI components should not be considered
+				Transform dropButtonTransform = dropButton.transform;
+				Transform rootTransform = dropButtonTransform.parent.transform;
+				for( int index = 0 ; index < rootTransform.childCount ; index++ )
+				{
+					RectTransform child = rootTransform.GetChild( index ) as RectTransform;
+					if( child != dropButtonTransform && child.gameObject.activeInHierarchy && Common.IsCursorOver( child ) )
+					{
+						ClearWorldInteractionDragPreview();
+						return;
+					}
+				}
+
+				CurrentWorldComponent = RaycastComponentForWorldInteraction< Piece >( out RaycastHit hit );
+				if( CurrentWorldComponent != LastWorldComponent )
+					VanillaDragState.ClearDrag();
+
+				string prefabName = GetHoverPrefabName( CurrentWorldComponent , hit );
+				if( prefabName == null )
+				{
+					ClearWorldInteractionDragPreview();
+					return;
+				}
+
+				ItemDrop.ItemData item = ObjectDB.instance
+					.GetItemPrefab( prefabName )
+					?.GetComponent< ItemDrop >()
+					?.m_itemData;
+
+				if( item != null )
+					SetWorldInteractionDragPreview( inventoryGui , item );
+				else
+					ClearWorldInteractionDragPreview();
+			}
+			
+			private static T RaycastComponentForWorldInteraction< T >( out RaycastHit hit ) where T : Component
+			{
+				Ray cursorRay = GameCamera.instance.GetComponent< Camera >().ScreenPointToRay( Input.mousePosition );
+				Player player = Player.m_localPlayer;
+				int interactMask = Traverse.Create( player )
+					.Field( "m_interactMask" )
+					.GetValue< int >();
+
+				if( !Physics.Raycast( cursorRay , out hit , 50.0f , interactMask ) )
+					return null;
+				else if( Vector3.Distance( hit.point , player.m_eye.position ) > player.m_maxInteractDistance )
+					return null;
+
+				return hit.collider.GetComponentInParent< T >();
+			}
+
+			private static string GetHoverPrefabName( Component component , RaycastHit hit )
+			{
+				if( component == null )
+					return null;
+
+				if( InteractWithArmorStands.Value )
+				{
+					ArmorStand armorStand = component.GetComponentInParent< ArmorStand >();
+					if( armorStand != null )
+					{
+						ItemDrop.ItemData.ItemType itemType = ItemTypeForArmorStandPoint( hit );
+
+						for( int index = 0 ; index < armorStand.m_slots.Count ; index++ )
+						{
+							ArmorStand.ArmorStandSlot slot = armorStand.m_slots[ index ];
+							if( slot.m_supportedTypes.Count != 0 && !slot.m_supportedTypes.Contains( itemType ) )
+								continue;
+							else if( !armorStand.HaveAttachment( index ) )
+								return null;
+						
+							return Traverse.Create( armorStand )
+								.Field( "m_nview" )
+								.GetValue< ZNetView >()
+								.GetZDO()
+								.GetString( index + "_item" );
+						}
+
+						return null;
+					}
+				}
+
+				if( InteractWithItemStands.Value )
+				{
+					ItemStand itemStand = component.GetComponentInParent< ItemStand >();
+					if( itemStand != null )
+					{
+						return Traverse.Create( itemStand )
+							.Field( "m_visualName" )
+							.GetValue< string >();
+					}
+				}
+
+				return null;
+			}
+
+			private static void SetWorldInteractionDragPreview( InventoryGui inventoryGui , ItemDrop.ItemData item )
+			{
+				// We can't cache a hover-drag object because drag objects get destroyed when replaced,
+				// and calling SetupDragItem() every frame spams a clicking noise (m_moveItemEffects).
+				VanillaDragState vanillaDragState = new VanillaDragState();
+				if( vanillaDragState.dragObject != null && vanillaDragState.dragObject == WorldInteractionPreviewDragObject )
+				{
+					if( Common.ItemsAreSimilarButDistinct( vanillaDragState.dragItem , item , true ) )
+						return;
+
+					Traverse.Create( inventoryGui )
+						.Field( "m_dragInventory" )
+						.SetValue( null );
+					Traverse.Create( inventoryGui )
+						.Field( "m_dragItem" )
+						.SetValue( item );
+					Traverse.Create( inventoryGui )
+						.Field( "m_dragAmount" )
+						.SetValue( 0 );
+				}
+				else
+				{
+					SetupDragItem( inventoryGui , item , null , 0 );
+					WorldInteractionPreviewDragObject = ( new VanillaDragState() ).dragObject;
+				}
+			}
+			
+			private static void ClearWorldInteractionDragPreview()
+			{
+				if( WorldInteractionPreviewDragObject != null && ( new VanillaDragState() ).dragObject == WorldInteractionPreviewDragObject )
+				{
+					WorldInteractionPreviewDragObject = null;
+					VanillaDragState.ClearDrag();
+				}
+			}
+
+			private static void InteractWithArmorStand( RaycastHit hit , ArmorStand armorStand )
+			{
+				Player player = Player.m_localPlayer;
+				VanillaDragState dragState = new VanillaDragState();
+
+				if( dragState.isValid )
+				{
+					for( int index = 0 ; index < armorStand.m_slots.Count ; index++ )
+					{
+						ItemDrop.ItemData item = dragState.dragItem;
+						ArmorStand.ArmorStandSlot slot = armorStand.m_slots[ index ];
+
+						if( armorStand.HaveAttachment( index ) )
+						{
+							if( ArmorStandPatch.CanAttach( armorStand , slot , item ) )
+							{
+								ArmorStandPatch.RPC_DropItem( armorStand , index );
+								return;
+							}
+						}
+						else if( slot.m_switch.UseItem( player , dragState.dragItem ) )
+						{
+							// Checking the pending item and slot is insufficient for some reason
+							VanillaDragState.ClearDrag();
+							return;
+						}
+					}
+				}
+				else
+				{
+					ItemDrop.ItemData.ItemType itemType = ItemTypeForArmorStandPoint( hit );
+
+					for( int index = 0 ; index < armorStand.m_slots.Count ; index++ )
+					{
+						ArmorStand.ArmorStandSlot slot = armorStand.m_slots[ index ];
+						if( slot.m_supportedTypes.Count != 0 && !slot.m_supportedTypes.Contains( itemType ) )
+							continue;
+
+						if( armorStand.HaveAttachment( index ) )
+							ArmorStandPatch.RPC_DropItem( armorStand , index );
+
+						return;
+					}
+				}
+			}
+
+			private static ItemDrop.ItemData.ItemType ItemTypeForArmorStandPoint( RaycastHit hit )
+			{
+				Bounds bounds = hit.collider.bounds;
+				float colliderHeight = bounds.max.y - bounds.min.y;
+				float collisionHeight = hit.point.y - bounds.min.y;
+				float normalizedHeight = collisionHeight / colliderHeight;
+
+				// Prefabs don't have a collider, bounds, or anything obvious that we can test,
+				// so we estimate the item based on its position in a way that makes sufficient sense.
+				// Even if we could, it would make it difficult to get items from the back of the stand.
+				// TODO: It would be cool to represent main/off hand items as the vertical edges.
+				// Those can be detected by treating the bounds as a cylinder, not a box.
+				const float oneSixtheenth = 1.0f / 16.0f;
+
+				if( normalizedHeight >= 15 * oneSixtheenth )
+					return ItemDrop.ItemData.ItemType.Helmet;
+				else if( normalizedHeight >= 14 * oneSixtheenth )
+					return ItemDrop.ItemData.ItemType.Shoulder;
+				else if( normalizedHeight >= 12 * oneSixtheenth )
+					return ItemDrop.ItemData.ItemType.Chest;
+				else if( normalizedHeight >= 10 * oneSixtheenth )
+					return ItemDrop.ItemData.ItemType.Utility; // What, if not the belt?
+				else if( normalizedHeight >= 8 * oneSixtheenth )
+					return ItemDrop.ItemData.ItemType.OneHandedWeapon; // Matches the "weapon" slot
+				else if( normalizedHeight >= 6 * oneSixtheenth )
+					return ItemDrop.ItemData.ItemType.Shield;
+				else
+					return ItemDrop.ItemData.ItemType.Legs;
+			}
+
+			private static void InteractWithContainer( Container container , InventoryGui inventoryGui )
+			{
+				Container currentContainer = Traverse.Create( inventoryGui )
+					.Field( "m_currentContainer" )
+					.GetValue< Container >();
+				Traverse.Create( inventoryGui )
+					.Method( "CloseContainer" )
+					.GetValue();
+
+				if( container != currentContainer )
+					container.Interact( Player.m_localPlayer , false , false );
+			}
+
+			private static void InteractWithItemStand( ItemStand itemStand )
+			{
+				Player player = Player.m_localPlayer;
+
+				if( itemStand.HaveAttachment() )
+				{
+					itemStand.Interact( player , false , false );
+				}
+				else if( PrivateArea.CheckAccess( itemStand.transform.position ) )
+				{
+					VanillaDragState dragState = new VanillaDragState();
+					// ItemStand.UseItem() only returns false if the stand already has an item attached.
+					// Otherwise, the item stand will remove the item from the player when the RPC runs.
+					// We explicitly check for access first because we're bypassing ItemStand.Interact().
+					itemStand.UseItem( player , dragState.dragItem );
+					ItemDrop.ItemData queuedItem = Traverse.Create( itemStand )
+						.Field( "m_queuedItem" )
+						.GetValue< ItemDrop.ItemData >();
+
+					if( dragState.dragItem == queuedItem && ( new VanillaDragState() ).Decrement() )
+					{
+						// Move into decrement/increment? This is duplicated code.
+						dragState = new VanillaDragState();
+						if( dragState.isValid )
+							dragState.UpdateTooltip();
+						else
+							VanillaDragState.ClearDrag();
 					}
 				}
 			}
@@ -430,7 +726,7 @@ namespace InputTweaks
 			{
 				___m_dropButton.gameObject.AddComponent< ButtonRightClickComponent >().OnRightClick.AddListener( delegate
 				{
-					if( !IsEnabled.Value)
+					if( !IsEnabled.Value )
 					{
 						return;
 					}
@@ -488,6 +784,53 @@ namespace InputTweaks
 				PlayerButtons.Clear();
 				ContainerButtons.Clear();
 				CurrentButton = null;
+			}
+
+			[HarmonyPatch( "OnDropOutside" )]
+			[HarmonyPrefix]
+			private static bool OnDropOutsidePrefix( InventoryGui __instance )
+			{
+				Piece piece = RaycastComponentForWorldInteraction< Piece >( out RaycastHit hit );
+				if( piece == null )
+				{
+					ClearWorldInteractionDragPreview();
+					return true;
+				}
+
+				if( InteractWithArmorStands.Value )
+				{
+					ArmorStand armorStand = piece.GetComponentInParent< ArmorStand >();
+					if( armorStand != null )
+					{
+						Common.DebugMessage( $"INTR: Hit ArmorStand" );
+						InteractWithArmorStand( hit , armorStand );
+						return false;
+					}
+				}
+
+				if( InteractWithContainers.Value )
+				{
+					Container container = piece.GetComponentInParent< Container >();
+					if( container != null )
+					{
+						Common.DebugMessage( $"INTR: Hit Container" );
+						InteractWithContainer( container , __instance );
+						return false;
+					}
+				}
+
+				if( InteractWithItemStands.Value )
+				{
+					ItemStand itemStand = piece.GetComponentInParent< ItemStand >();
+					if( itemStand != null )
+					{
+						Common.DebugMessage( $"INTR: Hit ItemStand" );
+						InteractWithItemStand( itemStand );
+						return false;
+					}
+				}
+
+				return true;
 			}
 
 			[HarmonyPatch( "OnRightClickItem" )]
@@ -714,7 +1057,14 @@ namespace InputTweaks
 
 				return true;
 			}
-			
+
+			[HarmonyPatch( "Show" )]
+			[HarmonyPostfix]
+			private static void ShowPostfix( Container container , int activeGroup = 1 )
+			{
+				ForceContainerButtonUpdate = true;
+			}
+
 			[HarmonyPatch( "ShowSplitDialog" )]
 			[HarmonyTranspiler]
 			private static IEnumerable< CodeInstruction > ShowSplitDialogTranspiler( IEnumerable< CodeInstruction > instructionsIn )
@@ -737,7 +1087,8 @@ namespace InputTweaks
 			private static void UpdateItemDragPrefix(
 				InventoryGui __instance,
 				InventoryGrid ___m_playerGrid,
-				InventoryGrid ___m_containerGrid )
+				InventoryGrid ___m_containerGrid,
+				Button ___m_dropButton )
 			{
 				// Tracking states even if the plugin is disabled is more correct, but the user is not expected
 				// to perform frame-perfect actions to end up in an invalid state with stale information
@@ -752,7 +1103,9 @@ namespace InputTweaks
 				UpdateContext( ___m_playerGrid , ___m_containerGrid );
 				UpdateSingleDrop( ___m_playerGrid , ___m_containerGrid );
 				UpdateMouseWheel( __instance , ___m_playerGrid , ___m_containerGrid );
+				UpdateWorldInteractionDragPreview( __instance , ___m_dropButton );
 
+				// FIXME: It's probably not safe to cache the stateful version of VanillaDragState
 				IgnoreUpdateItemDragRightMouseReset = CurrentDragState.isValid;
 			}
 		}

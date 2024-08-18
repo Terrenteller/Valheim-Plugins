@@ -6,7 +6,7 @@ using UnityEngine;
 namespace InputTweaks
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.inputtweaks" , "Input Tweaks" , "1.1.0" )]
+	[BepInPlugin( "com.riintouge.inputtweaks" , "Input Tweaks" , "1.1.1" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class InputTweaks : BaseUnityPlugin
 	{
@@ -20,6 +20,7 @@ namespace InputTweaks
 		public static ConfigEntry< bool > SplitRoundsUp;
 		public static ConfigEntry< bool > SwapMoveAndSplit;
 		public static bool InitialSwapMoveAndSplit; // Transpiled code, "live" code, and descriptions need to stay in sync
+		public static ConfigEntry< KeyCode > ToggleHudKey;
 		// 2 - Cursor Context
 		// Why disable any of these? A better option is to change the required input.
 		//public static ConfigEntry< bool > AllowFilteredStackMove;
@@ -39,6 +40,10 @@ namespace InputTweaks
 		// 5 - Mouse Wheel
 		public static ConfigEntry< WheelActionEnum > ContainerWheelAction;
 		public static ConfigEntry< WheelActionEnum > PlayerWheelAction;
+		// 6 - World Interactions
+		public static ConfigEntry< bool > InteractWithArmorStands;
+		public static ConfigEntry< bool > InteractWithContainers;
+		public static ConfigEntry< bool > InteractWithItemStands;
 
 		public enum WheelActionEnum
 		{
@@ -107,6 +112,12 @@ namespace InputTweaks
 				true,
 				"Whether [SHIFT] as split and [CTRL] as move swap behavior. Changes will not apply until the game is restarted." );
 			InitialSwapMoveAndSplit = SwapMoveAndSplit.Value;
+			
+			ToggleHudKey = Config.Bind(
+				"1 - General",
+				"ToggleHudKey",
+				KeyCode.None,
+				"Toggle the HUD when pressed. Unset by default as [F1], Minecraft's default, conflicts with configuration managers. For reference, vanilla's default is [CTRL] + [F3]." );
 
 			/*
 			AllowFilteredStackMove = Config.Bind(
@@ -200,6 +211,24 @@ namespace InputTweaks
 				WheelActionEnum.PullUpPushDown,
 				"How items in the player's inventory will be moved when the mouse wheel is turned." );
 
+			InteractWithArmorStands = Config.Bind(
+				"6 - World Interactions",
+				"InteractWithArmorStands",
+				true,
+				"Whether armor stands can be interacted with while the inventory GUI is open." );
+			
+			InteractWithContainers = Config.Bind(
+				"6 - World Interactions",
+				"InteractWithContainers",
+				true,
+				"Whether containers can be interacted with while the inventory GUI is open." );
+
+			InteractWithItemStands = Config.Bind(
+				"6 - World Interactions",
+				"InteractWithItemStands",
+				true,
+				"Whether item stands can be interacted with while the inventory GUI is open." );
+			
 			if( LoadOnStart.Value )
 			{
 				InitialSwapMoveAndSplit = SwapMoveAndSplit.Value;
