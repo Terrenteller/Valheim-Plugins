@@ -1,6 +1,12 @@
 # At a Glance
 
-Each plugin in this repo is briefly described below. Please refer to settings as defined in source for up-to-date configuration information.
+Each plugin in this repo is briefly described below. Please refer to settings as defined in source for up-to-date configuration information or Thunderstore for full descriptions.
+
+### Borderless Windowed | [Settings](BorderlessWindowed/BorderlessWindowed.cs)
+
+Removes the border from the game window when not fullscreen.
+
+Off by default, but toggleable at any time.
 
 ### Custom Slot Item Lib | [Settings](CustomSlotItemLib/CustomSlotItemLib.cs)
 
