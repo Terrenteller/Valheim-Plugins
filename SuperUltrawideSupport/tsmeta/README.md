@@ -2,6 +2,10 @@ Do your monitors fulfill the Manifest Destiny of your desk? Does your cursor acc
 
 ## Changelog
 
+1.1.2
+
+- Keep the inventory GUI background drop button full-screen
+
 1.1.1
 
 - Make work for side-scrolling notification messages

@@ -12,7 +12,6 @@ namespace SuperUltrawideSupport
 		{
 			private static HashSet< string > TransformNames = new HashSet< string >();
 
-			// TODO: Should we apply this pattern elsewhere?
 			private static void Reset()
 			{
 				foreach( string name in TransformNames )

@@ -161,10 +161,10 @@ namespace SuperUltrawideSupport
 					if( enabled )
 					{
 						rectTransform.anchorMin = new Vector2(
-							Mathf.Lerp( xBufferNormalized , 1.0f - xBufferNormalized , original.minX ) ,
+							Mathf.Lerp( xBufferNormalized , 1.0f - xBufferNormalized , original.minX ),
 							Mathf.Lerp( yBufferNormalized , 1.0f - yBufferNormalized , original.minY ) );
 						rectTransform.anchorMax = new Vector2(
-							Mathf.Lerp( xBufferNormalized , 1.0f - xBufferNormalized , original.maxX ) ,
+							Mathf.Lerp( xBufferNormalized , 1.0f - xBufferNormalized , original.maxX ),
 							Mathf.Lerp( yBufferNormalized , 1.0f - yBufferNormalized , original.maxY ) );
 					}
 					else
@@ -204,14 +204,14 @@ namespace SuperUltrawideSupport
 				if( !enabled )
 					return;
 
-				float hOverflow = xBufferNormalized / ( 1.0f - ( xBufferNormalized * 2.0f ) );
+				float xOverflow = xBufferNormalized / ( 1.0f - ( xBufferNormalized * 2.0f ) );
 				float yOverflow = yBufferNormalized / ( 1.0f - ( yBufferNormalized * 2.0f ) );
 
 				rectTransform.anchorMin = new Vector2(
-					rectTransform.anchorMin.x - hOverflow,
+					rectTransform.anchorMin.x - xOverflow,
 					rectTransform.anchorMin.y - yOverflow );
 				rectTransform.anchorMax = new Vector2(
-					rectTransform.anchorMax.x + hOverflow,
+					rectTransform.anchorMax.x + xOverflow,
 					rectTransform.anchorMax.y + yOverflow );
 			}
 		}

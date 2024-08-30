@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using HarmonyLib;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SuperUltrawideSupport
@@ -9,15 +10,33 @@ namespace SuperUltrawideSupport
 		[HarmonyPatch( typeof( InventoryGui ) )]
 		private class InventoryGuiPatch
 		{
+			private static HashSet< string > TransformNames = new HashSet< string >();
+
+			private static void Reset()
+			{
+				foreach( string name in TransformNames )
+					Lerper.Unregister( name );
+
+				TransformNames.Clear();
+			}
+
 			[HarmonyPatch( "Awake" )]
 			[HarmonyPostfix]
 			private static void AwakePostfix( ref InventoryGui __instance )
 			{
-				RectTransform rectTransform = Common.FindParentOrSelf( __instance.m_inventoryRoot , "Inventory_screen" ) as RectTransform;
-				if( rectTransform != null )
+				Reset();
+
+				for( int index = 0 ; index < __instance.m_inventoryRoot.childCount ; index++ )
 				{
-					Lerper.Register( rectTransform );
-					Lerper.Update();
+					// It would be much nicer to do what we did before,
+					// but AspectLerper wasn't designed to single out specific children
+					RectTransform child = __instance.m_inventoryRoot.GetChild( index ) as RectTransform;
+					if( child != null && child.name != "dropButton" )
+					{
+						TransformNames.Add( child.name );
+						Lerper.Register( child );
+						Lerper.Lerp( child );
+					}
 				}
 			}
 
@@ -25,7 +44,7 @@ namespace SuperUltrawideSupport
 			[HarmonyPrefix]
 			private static void OnDestroyPrefix( ref InventoryGui __instance )
 			{
-				Lerper.Unregister( "Inventory_screen" );
+				Reset();
 			}
 		}
 	}

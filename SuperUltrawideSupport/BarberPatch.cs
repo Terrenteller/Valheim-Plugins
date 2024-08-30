@@ -13,11 +13,11 @@ namespace SuperUltrawideSupport
 			[HarmonyPostfix]
 			private static void InteractPostfix( ref Barber __instance )
 			{
-				// The original method never returns true
-				if( PlayerCustomizaton.m_barberInstance.m_rootPanel.gameObject.activeInHierarchy )
+				// The original Interact() never returns true
+				GameObject barberRootPanel = PlayerCustomizaton.m_barberInstance.m_rootPanel.gameObject;
+				if( barberRootPanel.activeInHierarchy )
 				{
-					Transform transform = PlayerCustomizaton.m_barberInstance.m_rootPanel.gameObject.transform;
-					RectTransform rectTransform = Common.FindParentOrSelf( transform , "BarberGui" ) as RectTransform;
+					RectTransform rectTransform = Common.FindParentOrSelf( barberRootPanel.transform , "BarberGui" ) as RectTransform;
 					if( rectTransform != null )
 					{
 						Lerper.Register( rectTransform );
