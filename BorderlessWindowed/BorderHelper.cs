@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using UnityEngine;
@@ -15,8 +16,10 @@ namespace BorderlessWindowed
 		// The game resolution does not include the borders.
 		// Determining these values on the fly is too much trouble.
 		// Cache them at the first opportunity so toggling the border is stable.
-		private WindowRect? outerBorderExtra = null;
-		private WindowRect? innerBorderExtra = null;
+		// The game is expected to start with a border to derive the outer and one of the inner thickness from.
+		private WindowRect? outerBorderThickness = null;
+		private WindowRect? innerWindowedBorderThickness = null;
+		private WindowRect? innerMaximizedBorderThickness = null;
 
 		public IEnumerator UpdateBorder( bool enable )
 		{
@@ -54,17 +57,15 @@ namespace BorderlessWindowed
 			if( enable == hasBorder )
 				yield break;
 
-			RectTransform rootRect = GameObject.Find( "GuiRoot" )?.transform as RectTransform;
-			if( rootRect == null )
-				yield break;
-
 			DebugMessage( $">>> BEGIN" );
 			DebugMessage( $"SetGameWindowBorder({enable})" );
 
 			// Grab these before we start messing with the window
-			int desiredWidth = Screen.width;
-			int desiredHeight = Screen.height;
-			DebugMessage( $"Scene extents: {Screen.width}x{Screen.height}" );
+			bool isMaximized = IsZoomed( hWnd );
+			bool isResolutionPreset = Screen.resolutions.Any( x => Screen.width == x.width && Screen.height == x.height );
+			int sceneWidth = Screen.width;
+			int sceneHeight = Screen.height;
+			DebugMessage( $"Scene extents, {( isMaximized ? "maximized" : "windowed" )}: {Screen.width}x{Screen.height} ({( isResolutionPreset ? "" : "not " )}a preset)" );
 
 			WindowRect outerInitial;
 			WindowRect innerInitial;
@@ -72,29 +73,28 @@ namespace BorderlessWindowed
 			DebugMessage( $"Outer, initial: ({outerInitial.Left},{outerInitial.Top}) to ({outerInitial.Right},{outerInitial.Bottom})" );
 			DebugMessage( $"Inner, initial: ({innerInitial.Left},{innerInitial.Top}) to ({innerInitial.Right},{innerInitial.Bottom})" );
 
-			if( outerBorderExtra == null && innerBorderExtra == null )
+			if( outerBorderThickness == null )
 			{
-				// The game is expected to start with a border to derive values from
 				if( !hasBorder )
 					yield break;
 
-				// Default initialization is to make C# happy about the assignment at the end of this block
-				WindowRect outerExtra = default( WindowRect );
-				outerExtra.Left = ( ( outerInitial.Right - outerInitial.Left ) - desiredWidth ) / 2;
-				// Top seems to be stable...
-				outerExtra.Right = outerExtra.Left;
-				outerExtra.Bottom = ( outerInitial.Bottom - outerInitial.Top ) - desiredHeight;
-				DebugMessage( $"OuterBorderExtra: LR {outerExtra.Left},{outerExtra.Right} to TB {outerExtra.Top},{outerExtra.Bottom}" );
-				outerBorderExtra = outerExtra;
+				outerBorderThickness = ComputeBorderThickness( outerInitial , sceneWidth , sceneHeight );
+			}
 
-				// Default initialization is to make C# happy about the assignment at the end of this block
-				WindowRect innerExtra = default( WindowRect );
-				innerExtra.Left = ( ( innerInitial.Right - innerInitial.Left ) - desiredWidth ) / 2;
-				// Top seems to be stable...
-				innerExtra.Right = innerExtra.Left;
-				innerExtra.Bottom = ( innerInitial.Bottom - innerInitial.Top ) - desiredHeight;
-				DebugMessage( $"InnerBorderExtra: LR {innerExtra.Left},{innerExtra.Right} to TB {innerExtra.Top},{innerExtra.Bottom}" );
-				innerBorderExtra = innerExtra;
+			if( !isMaximized && innerWindowedBorderThickness == null )
+			{
+				if( !hasBorder )
+					yield break;
+
+				innerWindowedBorderThickness = ComputeBorderThickness( innerInitial , sceneWidth , sceneHeight );
+			}
+
+			if( isMaximized && innerMaximizedBorderThickness == null )
+			{
+				if( !hasBorder )
+					yield break;
+
+				innerMaximizedBorderThickness = ComputeBorderThickness( innerInitial , sceneWidth , sceneHeight );
 			}
 
 			SetGameWindowBorder( hWnd , enable );
@@ -108,43 +108,85 @@ namespace BorderlessWindowed
 			DebugMessage( $"Inner, after border change: ({innerAfter.Left},{innerAfter.Top}) to ({innerAfter.Right},{innerAfter.Bottom})" );
 #endif
 
-			int targetWidth = desiredWidth;
-			int targetHeight = desiredHeight;
 			int left = innerInitial.Left;
 			int top = innerInitial.Top;
+			int width = sceneWidth;
+			int height = sceneHeight;
 
 			if( enable )
 			{
 				// Adding the border causes the border to expand into content space
-				WindowRect extra = outerBorderExtra.Value;
-				targetWidth = desiredWidth + extra.Left + extra.Right;
-				targetHeight = desiredHeight + extra.Top + extra.Bottom;
-				left -= extra.Left;
-				top -= extra.Top;
+				WindowRect outerThickness = outerBorderThickness.Value;
+				left -= outerThickness.Left;
+				top -= outerThickness.Top;
+				width = sceneWidth + outerThickness.Left + outerThickness.Right;
+
+				if( isResolutionPreset )
+				{
+					height += outerThickness.Top + outerThickness.Bottom;
+				}
+				else if( !isMaximized )
+				{
+					WindowRect innerThickness = innerWindowedBorderThickness.Value;
+					height += ( outerThickness.Top - innerThickness.Top ) + ( outerThickness.Bottom - innerThickness.Bottom ); 
+				}
 			}
 			else
 			{
-				// Removing the border causes contents to expand into border space
-				WindowRect extra = innerBorderExtra.Value;
-				left += extra.Left;
-				top += extra.Top;
+				// Removing the border causes the content to expand into border space
+				WindowRect innerThickness = isMaximized ? innerMaximizedBorderThickness.Value : innerWindowedBorderThickness.Value;
+				left += innerThickness.Left;
+				top += innerThickness.Top;
 
+				// The game always starts with a border. If it exits without a border, it ends up offset slightly.
+				// Further complicating things, a maximized window is persisted as if it was a normal window.
+				// Fortunately, the size persisted without a border ends up being what we want.
+				// FIXME: If the user disables the border while the game is not running, we won't get the right height.
 				if( gameIsStarting )
 					left -= 1;
+				else if( !isResolutionPreset )
+					height += innerThickness.Top + innerThickness.Bottom;
+
+				// FIXME: The window height ends up one too short if we:
+				// 1. Maximize the game
+				// 2. Toggle the border off
+				// 3. Quit the game
+				// 4. Start the game
+				// 5. Toggle the border on
+				// The workaround is to maximize the window like it was supposed to be in the first place
 			}
 
 			UInt32 setWindowPosFlags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
-			DebugMessage( $"SetWindowPos( hWnd , IntPtr.Zero , {left} , {top} , {targetWidth} , {targetHeight} , setWindowPosFlags );" );
-			SetWindowPos( hWnd , IntPtr.Zero , left , top , targetWidth , targetHeight , setWindowPosFlags );
+			DebugMessage( $"SetWindowPos( ... , {left} , {top} , {width} , {height} , ... );" );
+			if( height == sceneHeight && width != sceneWidth )
+			{
+				// HACK: Prod the scene to resize. Only height changes work.
+				SetWindowPos( hWnd , IntPtr.Zero , left , top , width , height - 1 , setWindowPosFlags );
+			}
+			SetWindowPos( hWnd , IntPtr.Zero , left , top , width , height , setWindowPosFlags );
+			yield return null;
 			DebugMessage( $"<<< END\n" );
 		}
 
 		// Statics
 
+		private WindowRect ComputeBorderThickness( WindowRect outer , int width , int height )
+		{
+			// Default initialization is to make C# happy about the assignment at the end of this block.
+			WindowRect thickness = default( WindowRect );
+			thickness.Left = ( ( outer.Right - outer.Left ) - width ) / 2;
+			thickness.Right = thickness.Left;
+			// The height difference ends up entirely as bottom thickness.
+			// This causes the window to move and down unpleasantly, but does keep the top consistent.
+			thickness.Bottom = ( outer.Bottom - outer.Top ) - height;
+			DebugMessage( $"Computed border thickness: LR {thickness.Left},{thickness.Right} to TB {thickness.Top},{thickness.Bottom}" );
+			return thickness;
+		}
+
 		private static void DebugMessage( string message )
 		{
 #if !PACKAGE
-			Debug.Log( message );
+			UnityEngine.Debug.Log( message );
 #endif
 		}
 

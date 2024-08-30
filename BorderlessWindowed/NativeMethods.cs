@@ -21,14 +21,6 @@ namespace BorderlessWindowed
 
 		public delegate bool EnumDesktopWindowsDelegate( IntPtr hwnd , Int32 lParam );
 
-		// IsWindowVisible
-
-		[DllImport( "user32.dll" )]
-		[return: MarshalAs( UnmanagedType.Bool )]
-		public static extern bool IsWindowVisible( IntPtr hWnd );
-
-		public const Int32 SW_MAXIMIZE = 3;
-
 		// GetWindowLong, SetWindowLong
 
 		[DllImport( "user32.dll" , SetLastError = true )]
@@ -45,6 +37,18 @@ namespace BorderlessWindowed
 		public const UInt32 WS_SYSMENU = 0x00080000;
 		public const UInt32 WS_DLGFRAME = 0x00400000;
 		public const UInt32 WS_BORDER = 0x00800000;
+
+		// IsWindowVisible
+
+		[DllImport( "user32.dll" )]
+		[return: MarshalAs( UnmanagedType.Bool )]
+		public static extern bool IsWindowVisible( IntPtr hWnd );
+
+		// IsZoomed
+
+		[DllImport( "user32.dll" )]
+		[return: MarshalAs( UnmanagedType.Bool )]
+		public static extern bool IsZoomed( IntPtr hWnd );
 
 		// SetWindowPos
 
