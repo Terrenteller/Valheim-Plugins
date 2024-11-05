@@ -25,9 +25,9 @@ namespace MagneticWishbone
 				MagneticWishboneRecipe.Instance.Value = null;
 			}
 
-			[HarmonyPatch( "UpdateItemHashes" )]
+			[HarmonyPatch( "UpdateRegisters" )]
 			[HarmonyPostfix]
-			private static void UpdateItemHashesPostfix()
+			private static void UpdateRegistersPostfix()
 			{
 				// This needs to be done ASAP. It's unclear how "shared" ItemDrop.ItemData.SharedData is,
 				// or even what "shared" truly means. If the recipe tries to set this at a later time,

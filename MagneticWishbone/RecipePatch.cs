@@ -19,7 +19,7 @@ namespace MagneticWishbone
 
 				return true;
 			}
-			
+
 			[HarmonyPatch( "GetRequiredStationLevel" )]
 			[HarmonyPrefix]
 			private static bool GetRequiredStationLevelPrefix( ref int __result , ref Recipe __instance , ref int quality )

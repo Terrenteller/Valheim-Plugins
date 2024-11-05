@@ -6,7 +6,7 @@ using Jotunn.Managers;
 namespace MagneticWishbone
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.magneticwishbone", "Magnetic Wishbone", "1.1.0" )]
+	[BepInPlugin( "com.riintouge.magneticwishbone", "Magnetic Wishbone", "1.1.1" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class MagneticWishbone : BaseUnityPlugin
 	{
@@ -40,7 +40,8 @@ namespace MagneticWishbone
 				"0 - Core",
 				"Enable",
 				true,
-				new ConfigDescription( "Whether this plugin has any effect when loaded.",
+				new ConfigDescription(
+					"Whether this plugin has any effect when loaded.",
 					null,
 					AdminOnlyAttribute ) );
 
@@ -48,7 +49,8 @@ namespace MagneticWishbone
 				"2 - Basic",
 				"AllowTier2",
 				true,
-				new ConfigDescription( "Whether the Wishbone can be upgraded to quality level 2, and functions as such.",
+				new ConfigDescription(
+					"Whether the Wishbone can be upgraded to quality level 2, and functions as such.",
 					null,
 					AdminOnlyAttribute ) );
 
@@ -56,7 +58,8 @@ namespace MagneticWishbone
 				"2 - Basic",
 				"Tier2CraftingStation",
 				"$piece_forge,1",
-				new ConfigDescription( "A string of the form \"UnlocalizedName,StationLevel\".",
+				new ConfigDescription(
+					"A string of the form \"UnlocalizedName,StationLevel\".",
 					null,
 					AdminOnlyAttribute ) );
 
@@ -64,7 +67,8 @@ namespace MagneticWishbone
 				"2 - Basic",
 				"Tier2Ingredients",
 				"IronScrap,20;Root,5",
-				new ConfigDescription( "A string of the form \"ItemName1,Amount;...;ItemNameN,Amount\".",
+				new ConfigDescription(
+					"A string of the form \"ItemName1,Amount;...;ItemNameN,Amount\".",
 					null,
 					AdminOnlyAttribute ) );
 
@@ -72,15 +76,17 @@ namespace MagneticWishbone
 				"2 - Basic",
 				"Tier2PickupRadius",
 				Common.DefaultMaxInteractDistance,
-				new ConfigDescription( "The auto-pickup range of the player, in meters, when a once-upgraded Wishbone is equipped.",
-					new AcceptableValueRange< float >( Common.DefaultMaxAutoPickupDistance, Common.MaxAutoPickupDistance ),
+				new ConfigDescription(
+					"The auto-pickup range of the player, in meters, when a once-upgraded Wishbone is equipped.",
+					new AcceptableValueRange< float >( Common.DefaultMaxAutoPickupDistance , Common.MaxAutoPickupDistance ),
 					AdminOnlyAttribute ) );
-			
+
 			AllowTier3 = Config.Bind(
 				"3 - Improved",
 				"AllowTier3",
 				true,
-				new ConfigDescription( "Whether the Wishbone can be upgraded to quality level 3, and functions as such.",
+				new ConfigDescription(
+					"Whether the Wishbone can be upgraded to quality level 3, and functions as such.",
 					null,
 					AdminOnlyAttribute ) );
 
@@ -88,7 +94,8 @@ namespace MagneticWishbone
 				"3 - Improved",
 				"Tier3CraftingStation",
 				"$piece_artisanstation,1",
-				new ConfigDescription( "A string of the form \"UnlocalizedName,StationLevel\".",
+				new ConfigDescription(
+					"A string of the form \"UnlocalizedName,StationLevel\".",
 					null,
 					AdminOnlyAttribute ) );
 
@@ -96,7 +103,8 @@ namespace MagneticWishbone
 				"3 - Improved",
 				"Tier3Ingredients",
 				"MechanicalSpring,1;Thunderstone,1;Resin,5",
-				new ConfigDescription( "A string of the form \"ItemName1,Amount;...;ItemNameN,Amount\".",
+				new ConfigDescription(
+					"A string of the form \"ItemName1,Amount;...;ItemNameN,Amount\".",
 					null,
 					AdminOnlyAttribute ) );
 
@@ -104,15 +112,17 @@ namespace MagneticWishbone
 				"3 - Improved",
 				"Tier3PickupRadius",
 				10.0f,
-				new ConfigDescription( "The auto-pickup range of the player, in meters, when a twice-upgraded Wishbone is equipped.",
-					new AcceptableValueRange< float >( Common.DefaultMaxAutoPickupDistance, Common.MaxAutoPickupDistance ),
+				new ConfigDescription(
+					"The auto-pickup range of the player, in meters, when a twice-upgraded Wishbone is equipped.",
+					new AcceptableValueRange< float >( Common.DefaultMaxAutoPickupDistance , Common.MaxAutoPickupDistance ),
 					AdminOnlyAttribute ) );
-			
+
 			AllowTier4 = Config.Bind(
 				"4 - Advanced",
 				"AllowTier4",
 				false, // Placeholder
-				new ConfigDescription( "Whether the Wishbone can be upgraded to quality level 4, and functions as such.",
+				new ConfigDescription(
+					"Whether the Wishbone can be upgraded to quality level 4, and functions as such.",
 					null,
 					AdminOnlyAttribute ) );
 
@@ -120,7 +130,8 @@ namespace MagneticWishbone
 				"4 - Advanced",
 				"Tier4CraftingStation",
 				"$piece_magetable,4",
-				new ConfigDescription( "A string of the form \"UnlocalizedName,StationLevel\".",
+				new ConfigDescription(
+					"A string of the form \"UnlocalizedName,StationLevel\".",
 					null,
 					AdminOnlyAttribute ) );
 
@@ -128,7 +139,8 @@ namespace MagneticWishbone
 				"4 - Advanced",
 				"Tier4Ingredients",
 				"DarkCore,1;Wisp,1;SilverNecklace,1;LinenThread,5",
-				new ConfigDescription( "A string of the form \"ItemName1,Amount;...;ItemNameN,Amount\".",
+				new ConfigDescription(
+					"A string of the form \"ItemName1,Amount;...;ItemNameN,Amount\".",
 					null,
 					AdminOnlyAttribute ) );
 
@@ -136,8 +148,9 @@ namespace MagneticWishbone
 				"4 - Advanced",
 				"Tier4PickupRadius",
 				15.0f,
-				new ConfigDescription( "The auto-pickup range of the player, in meters, when a thrice-upgraded Wishbone is equipped.",
-					new AcceptableValueRange< float >( Common.DefaultMaxAutoPickupDistance, Common.MaxAutoPickupDistance ),
+				new ConfigDescription(
+					"The auto-pickup range of the player, in meters, when a thrice-upgraded Wishbone is equipped.",
+					new AcceptableValueRange< float >( Common.DefaultMaxAutoPickupDistance , Common.MaxAutoPickupDistance ),
 					AdminOnlyAttribute ) );
 
 			Harmony.PatchAll();

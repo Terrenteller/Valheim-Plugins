@@ -8,6 +8,10 @@ Don't want to make the tough decision between an upgraded Wishbone and other uti
 
 ## Changelog
 
+1.1.1
+
+- Update for 0.219.14
+
 1.1.0
 
 - Initial release
