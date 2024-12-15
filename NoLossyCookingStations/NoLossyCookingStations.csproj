@@ -69,6 +69,7 @@
     <Compile Include="CookingStationPatch.cs" />
     <Compile Include="FermenterPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SmelterPatch.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
