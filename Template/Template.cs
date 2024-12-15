@@ -6,13 +6,14 @@ using HarmonyLib;
 // 1. Duplicate the top-level "Template" directory outside of Visual Studio
 // 2. Generate a new GUID in .../Properties/AssemblyInfo.cs
 // 3. Add the new project to the solution
-// 4. Replace all instances of "Template" with a real name, minding capitalization and spaces
-// 5. Add a listing to the main README
+// 4. Template -> FooBar (minding capitalization) except for BepInPlugin( ... , "Foo Bar" , ... )
+// 5. Remove unused library references
+// 6. Add a listing to the main README
 
 namespace Template
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.template" , "Template" , "1.0.0" )]
+	[BepInPlugin( "com.riintouge.template" , "Template" , "0.0.0" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class Template : BaseUnityPlugin
 	{
