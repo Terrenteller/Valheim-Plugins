@@ -11,6 +11,10 @@ PingTweaks is client-side but works better when all clients have it.
 
 ## Changelog
 
+1.0.4
+
+- Update for 0.220.3 (Bog Witch)
+
 1.0.3
 
 - Update for 0.217.46 (pre-Ashlands)

@@ -28,7 +28,6 @@ namespace PingTweaks
 				float originalY = position.y;
 				UserInfo userInfo = parameters[ 2 ] as UserInfo;
 				string text = parameters[ 3 ] as string;
-				string senderAccountId = parameters[ 4 ] as string;
 
 				Minimap minimap = Minimap.instance;
 				float zoomFactor = Traverse.Create( minimap )
@@ -55,8 +54,7 @@ namespace PingTweaks
 				if( PingBroadcastModifier.Value != KeyCode.None
 					&& !Input.GetKey( PingBroadcastModifier.Value )
 					&& userInfo != null
-					&& text != null
-					&& senderAccountId != null )
+					&& text != null )
 				{
 					Chat.instance.OnNewChatMessage(
 						null,
@@ -64,8 +62,7 @@ namespace PingTweaks
 						position,
 						Talker.Type.Ping,
 						userInfo,
-						text,
-						senderAccountId );
+						text );
 
 					// No need to send anything, even to ourself
 					return false;
