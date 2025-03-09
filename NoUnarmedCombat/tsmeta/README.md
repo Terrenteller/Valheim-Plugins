@@ -10,7 +10,7 @@ Vikings may love to fight and throwing hands is a great way to start a brawl, bu
 1.0.1
 
 - Allow punching and kicking by default when the player has no weapon to equip
-- Fixed incompatibility with BowPlugin
+- Fix incompatibility with BowPlugin
 
 1.0.0
 

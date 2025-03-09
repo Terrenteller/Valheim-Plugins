@@ -5,7 +5,7 @@ using HarmonyLib;
 namespace NoLossyCookingStations
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.nolossycookingstations" , "No Lossy Cooking Stations" , "1.0.1" )]
+	[BepInPlugin( "com.riintouge.nolossycookingstations" , "No Lossy Cooking Stations" , "1.1.0" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class NoLossyCookingStations : BaseUnityPlugin
 	{
