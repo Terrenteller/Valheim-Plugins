@@ -86,12 +86,12 @@ namespace NagMessages
 				NagAboutPower();
 			}
 		}
-		
+
 		public void NagAboutHunger()
 		{
 			NagAboutHunger( HungerNagFrequency.Value * 60.0f , false );
 		}
-		
+
 		public void NagAboutHunger( double delay , bool force )
 		{
 			NagArgs args = new NagArgs { delay = delay , force = force };

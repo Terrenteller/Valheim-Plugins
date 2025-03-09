@@ -14,7 +14,7 @@ namespace CustomSlotItemLib
 		{
 			customSlotItemData[ humanoid ] = new Dictionary< string , ItemDrop.ItemData >();
 		}
-		
+
 		public static void Unregister( Humanoid humanoid )
 		{
 			customSlotItemData.Remove( humanoid );
@@ -52,7 +52,7 @@ namespace CustomSlotItemLib
 			var slots = slotName != null ? GetCustomSlots( humanoid ) : null;
 			return slots != null && slots.ContainsKey( slotName ) ? slots[ slotName ] : null;
 		}
-		
+
 		public static void SetSlotItem( Humanoid humanoid , string slotName , ItemDrop.ItemData item )
 		{
 			if( humanoid == null || slotName == null )

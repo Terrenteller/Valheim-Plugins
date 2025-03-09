@@ -49,7 +49,7 @@ namespace InputTweaks
 					Common.DebugMessage( $"INFO: Attempting to index ContainerButtons" );
 					CollectInventoryButtons( containerGrid , ContainerButtons );
 					Common.DebugMessage( $"INFO: Indexed {ContainerButtons.Count} container buttons" );
-						
+
 					ForceContainerButtonUpdate = false;
 				}
 			}
@@ -100,7 +100,7 @@ namespace InputTweaks
 			#endregion
 
 			#region Context
-			
+
 			private static void UpdateContext( InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
 				if( MouseContext == null )
@@ -457,7 +457,7 @@ namespace InputTweaks
 				else
 					ClearWorldInteractionDragPreview();
 			}
-			
+
 			private static T RaycastComponentForWorldInteraction< T >( out RaycastHit hit ) where T : Component
 			{
 				Ray cursorRay = GameCamera.instance.GetComponent< Camera >().ScreenPointToRay( Input.mousePosition );
@@ -493,7 +493,7 @@ namespace InputTweaks
 								continue;
 							else if( !armorStand.HaveAttachment( index ) )
 								return null;
-						
+
 							return Traverse.Create( armorStand )
 								.Field( "m_nview" )
 								.GetValue< ZNetView >()
@@ -545,7 +545,7 @@ namespace InputTweaks
 					WorldInteractionPreviewDragObject = ( new VanillaDragState() ).dragObject;
 				}
 			}
-			
+
 			private static void ClearWorldInteractionDragPreview()
 			{
 				if( WorldInteractionPreviewDragObject != null && ( new VanillaDragState() ).dragObject == WorldInteractionPreviewDragObject )
@@ -710,7 +710,7 @@ namespace InputTweaks
 					.Method( "TopFirst" , new[] { typeof( ItemDrop.ItemData ) } )
 					.GetValue< bool >( item );
 			}
-		
+
 			public static void UpdateCraftingPanel( InventoryGui instance , bool focusView = false )
 			{
 				Traverse.Create( instance )
@@ -1081,7 +1081,7 @@ namespace InputTweaks
 
 				SkipNextUpdate = false;
 			}
-			
+
 			[HarmonyPatch( "UpdateItemDrag" )]
 			[HarmonyPrefix]
 			private static void UpdateItemDragPrefix(

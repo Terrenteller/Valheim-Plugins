@@ -57,7 +57,7 @@ namespace SuperUltrawideSupport
 
 			//System.Console.WriteLine( $"Target HUD size: {TargetWidth} x {TargetHeight}" );
 		}
-		
+
 		public void Update()
 		{
 			lock( originals )
@@ -121,7 +121,7 @@ namespace SuperUltrawideSupport
 				originals.Remove( name );
 			}
 		}
-		
+
 		public void Unregister( RectTransform rectTransform )
 		{
 			lock( originals )
@@ -130,7 +130,7 @@ namespace SuperUltrawideSupport
 					Unregister( rectTransform.name , rectTransform , original );
 			}
 		}
-		
+
 		public void Unregister( string name )
 		{
 			lock( originals )

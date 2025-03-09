@@ -26,7 +26,7 @@ namespace CustomSlotItemLib
 
 			return keyValue;
 		}
-		
+
 		[HarmonyPatch( typeof( ZNetScene ) )]
 		[HarmonyPriority( Priority.High )]
 		public class ZNetScenePatch

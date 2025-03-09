@@ -13,7 +13,7 @@ namespace MagneticWishbone
 		public const string NoneCraftingStationName = "NoneCraftingStation";
 		public const float DefaultMaxAutoPickupDistance = 2.0f;
 		public const float DefaultMaxInteractDistance = 5.0f;
-		public const float MaxAutoPickupDistance = 50.0f; 
+		public const float MaxAutoPickupDistance = 50.0f;
 
 		public static InvalidatableLazy< CraftingStation > NoneCraftingStation = new InvalidatableLazy< CraftingStation >( () =>
 		{

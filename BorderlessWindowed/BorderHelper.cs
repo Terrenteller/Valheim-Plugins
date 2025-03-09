@@ -128,7 +128,7 @@ namespace BorderlessWindowed
 				else if( !isMaximized )
 				{
 					WindowRect innerThickness = innerWindowedBorderThickness.Value;
-					height += ( outerThickness.Top - innerThickness.Top ) + ( outerThickness.Bottom - innerThickness.Bottom ); 
+					height += ( outerThickness.Top - innerThickness.Top ) + ( outerThickness.Bottom - innerThickness.Bottom );
 				}
 			}
 			else

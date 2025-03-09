@@ -51,7 +51,7 @@ namespace InputTweaks
 			PullUpPushDown,
 			PushUpPullDown
 		}
-		
+
 		public enum ModifierKeyEnum
 		{
 			None,
@@ -62,7 +62,7 @@ namespace InputTweaks
 			Shift,
 			Split
 		}
-		
+
 		/*
 		public enum InsertionPriorityEnum
 		{
@@ -99,7 +99,7 @@ namespace InputTweaks
 				"SelectSwappedItem",
 				false,
 				"Whether selecting a second item with an item already selected will automatically select the second item after the swap. This mimics Minecraft's transient cursor item slot." );
-			
+
 			SplitRoundsUp = Config.Bind(
 				"1 - General",
 				"SplitRoundsUp",
@@ -112,7 +112,7 @@ namespace InputTweaks
 				true,
 				"Whether [SHIFT] as split and [CTRL] as move swap behavior. Changes will not apply until the game is restarted." );
 			InitialSwapMoveAndSplit = SwapMoveAndSplit.Value;
-			
+
 			ToggleHudKey = Config.Bind(
 				"1 - General",
 				"ToggleHudKey",
@@ -204,7 +204,7 @@ namespace InputTweaks
 				"ContainerWheelAction",
 				WheelActionEnum.PushUpPullDown,
 				"How items in a container will be moved when the mouse wheel is turned." );
-			
+
 			PlayerWheelAction = Config.Bind(
 				"5 - Mouse Wheel",
 				"PlayerWheelAction",
@@ -216,7 +216,7 @@ namespace InputTweaks
 				"InteractWithArmorStands",
 				true,
 				"Whether armor stands can be interacted with while the inventory GUI is open." );
-			
+
 			InteractWithContainers = Config.Bind(
 				"6 - World Interactions",
 				"InteractWithContainers",
@@ -228,7 +228,7 @@ namespace InputTweaks
 				"InteractWithItemStands",
 				true,
 				"Whether item stands can be interacted with while the inventory GUI is open." );
-			
+
 			if( LoadOnStart.Value )
 			{
 				InitialSwapMoveAndSplit = SwapMoveAndSplit.Value;

@@ -78,7 +78,7 @@ namespace Memories
 				"InterpolationType",
 				InterpolationTypeEnum.Decelerate,
 				"How the camera moves when repositioning." );
-			
+
 			if( LoadOnStart.Value )
 			{
 				Harmony.PatchAll();

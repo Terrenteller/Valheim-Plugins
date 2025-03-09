@@ -37,7 +37,7 @@ namespace InputTweaks
 		}
 
 		public void SetSelectionState( SelectionState state , bool instant )
-		{	
+		{
 			DoStateTransitionMethod.Invoke( inputHandler.GetComponent< Button >() , new object[] { (int)state , instant } );
 		}
 	}

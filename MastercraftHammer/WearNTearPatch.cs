@@ -87,21 +87,21 @@ namespace MastercraftHammer
 				if( IsEnabled.Value && RandomizeStateOnPlacement.Value )
 					RandomizeHealth( __instance , ___m_nview , true );
 			}
-			
+
 			[HarmonyPatch( "Remove" )]
 			[HarmonyPrefix]
 			private static void RemovePrefix( ref WearNTear __instance , ref ZNetView ___m_nview , out uint __state )
 			{
 				__state = ___m_nview.GetZDO().m_uid.ID;
 			}
-			
+
 			[HarmonyPatch( "Remove" )]
 			[HarmonyPostfix]
 			private static void RemovePostfix( ref WearNTear __instance , ref ZNetView ___m_nview , ref uint __state )
 			{
 				WornNTorn.Remove( __state );
 			}
-			
+
 			[HarmonyPatch( "Repair" )]
 			[HarmonyTranspiler]
 			private static IEnumerable< CodeInstruction > RepairTranspiler( IEnumerable< CodeInstruction > instructionsIn )

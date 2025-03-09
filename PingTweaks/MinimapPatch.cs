@@ -55,7 +55,7 @@ namespace PingTweaks
 						Heightmap.GetHeight( __result , out __result.y );
 				}
 			}
-			
+
 			[HarmonyPatch( "OnMapDblClick" )]
 			[HarmonyPrefix]
 			private static bool OnMapDblClickPrefix(

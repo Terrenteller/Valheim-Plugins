@@ -22,12 +22,12 @@ namespace InputTweaks
 		{
 			return ZInput.GetKey( KeyCode.LeftCommand ) || ZInput.GetKey( KeyCode.RightCommand );
 		}
-		
+
 		public static bool AnyCtrl()
 		{
 			return ZInput.GetKey( KeyCode.LeftControl ) || ZInput.GetKey( KeyCode.RightControl );
 		}
-		
+
 		public static bool AnyShift()
 		{
 			return ZInput.GetKey( KeyCode.LeftShift ) || ZInput.GetKey( KeyCode.RightShift );
@@ -129,7 +129,7 @@ namespace InputTweaks
 		{
 			return IsCursorOver( go?.transform as RectTransform );
 		}
-		
+
 		public static bool IsCursorOver( RectTransform rectTransform )
 		{
 			return rectTransform != null && RectTransformUtility.RectangleContainsScreenPoint( rectTransform , Input.mousePosition );
@@ -143,7 +143,7 @@ namespace InputTweaks
 				&& item.m_shared.m_name == other.m_shared.m_name
 				&& ( !considerQuality || item.m_quality == other.m_quality );
 		}
-		
+
 		public static IEnumerable< CodeInstruction > SwapShiftAndCtrl( IEnumerable< CodeInstruction > instructionsIn )
 		{
 			foreach( CodeInstruction instruction in instructionsIn )

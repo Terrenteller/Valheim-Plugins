@@ -46,7 +46,7 @@ namespace NoUnarmedCombat
 			{
 				return itemData?.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield;
 			}
-			
+
 			private static void ShowHandItems( ref Humanoid __instance )
 			{
 				// Protected for some reason when it wasn't before
@@ -155,7 +155,7 @@ namespace NoUnarmedCombat
 					chosenMainHandItem = ___m_hiddenRightItem;
 					chosenOffHandItem = ___m_hiddenLeftItem;
 				}
-				
+
 				if( ToolbarEquipOnPunch.Value && ( chosenMainHandItem == null || chosenOffHandItem == null ) )
 				{
 					ItemDrop.ItemData[] weaponsAndShield = GetToolbarWeaponsAndShield( __instance );

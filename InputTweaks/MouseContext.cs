@@ -100,7 +100,7 @@ namespace InputTweaks
 			Common.DebugMessage( $"CNTX: Ending BlockingCursorContext" );
 		}
 	}
-	
+
 	public abstract class InventoryButtonTrackingContext : AbstractInventoryGuiCursorContext
 	{
 		protected InventoryGrid playerGrid = null;
@@ -198,7 +198,7 @@ namespace InputTweaks
 			if( CurrentState == State.ActiveValid && firstButton == null )
 				SetState( State.ActiveInvalid );
 		}
-		
+
 		protected bool CollectFromInto( InventoryGrid grid , ItemDrop.ItemData item )
 		{
 			List< ItemDrop.ItemData > equivalentStackables = Common.EquivalentStackables( item , grid ).ToList();
@@ -392,7 +392,7 @@ namespace InputTweaks
 			return FrameInputs.Current.LeftOnly && Common.AnyShift() && Common.AnyCtrl();
 		}
 	}
-	
+
 	public class StackSmearContext : InventoryButtonTrackingContext
 	{
 		protected List< InventoryButton > smearedButtons = new List< InventoryButton >();
@@ -487,7 +487,7 @@ namespace InputTweaks
 								swappedItem,
 								swappedInv,
 								swappedItem.m_stack );
-							
+
 							clearDrag = false;
 						}
 					}
@@ -566,7 +566,7 @@ namespace InputTweaks
 			return FrameInputs.Current.LeftOnly && Common.CheckModifier( InputTweaks.ModifierKeyEnum.None );
 		}
 	}
-	
+
 	public class StackCollectContext : InventoryButtonTrackingContext
 	{
 		public StackCollectContext(
@@ -681,7 +681,7 @@ namespace InputTweaks
 				// AddItem() will fail when the smear starts on itself and the stack is full
 				if( currentButton.curItem == dragItem )
 					selfStartFullStackSpecialCase = true;
-				else 
+				else
 					return SetState( State.ActiveValid );
 			}
 
@@ -701,7 +701,7 @@ namespace InputTweaks
 			if( dragState.Decrement() )
 				( new VanillaDragState() ).UpdateTooltip();
 
-			// We're not really done until buttons are released 
+			// We're not really done until buttons are released
 			return SetState( State.ActiveValid );
 		}
 

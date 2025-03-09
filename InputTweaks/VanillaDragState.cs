@@ -47,7 +47,7 @@ namespace InputTweaks
 				&& dragAmount > 0
 				&& dragInventory.ContainsItem( dragItem );
 		}
-		
+
 		protected VanillaDragState(
 			GameObject dragObject,
 			Inventory dragInventory,
@@ -79,7 +79,7 @@ namespace InputTweaks
 
 			return true;
 		}
-		
+
 		public bool Decrement( int count = 1 )
 		{
 			Common.DebugMessage( $"INFO: VanillaDragState.Decrement()" );

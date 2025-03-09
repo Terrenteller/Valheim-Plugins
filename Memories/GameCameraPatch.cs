@@ -127,7 +127,7 @@ namespace Memories
 			{
 				FrameInitialCameraDistance = ___m_distance;
 			}
-			
+
 			[HarmonyPatch( "UpdateCamera" )]
 			[HarmonyPostfix]
 			private static void UpdateCameraPostfix(
