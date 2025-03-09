@@ -1,0 +1,80 @@
+#!/bin/bash
+
+ISSUES=0
+
+reportIssue() {
+	if [ $ISSUES -gt 0 ] ; then
+		echo ""
+	fi
+
+	ISSUES=$(( $ISSUES + 1 ))
+
+	if [ -z "$1" ] ; then
+		echo "Issue #$ISSUES"
+	else
+		echo "Issue #$ISSUES: $1"
+	fi
+}
+
+cd "$( git rev-parse --show-toplevel )"
+
+for DIR in $( find . -maxdepth 1 -type d | grep -Ev "^.$|\./\..*|libs.*" ) ; do
+	PLUGIN=$( basename $DIR )
+	BEPIN_VERSION=$( grep -E "^\W+\[BepInPlugin" "$DIR/$PLUGIN.cs" | grep -Eo "[0-9.]{5}" )
+	MANIFEST_VERSION=$( grep "version_number" $DIR/tsmeta/manifest.json | grep -Eo "[0-9.]{5}" )
+	README_VERSION=$( grep -E -m 1 "^[0-9.]{5}$" $DIR/tsmeta/README.md )
+	ASSEMBLY_VERSION=$( grep -E "AssemblyVersion" $DIR/Properties/AssemblyInfo.cs | grep -Eo "[0-9.]{5}\.0" | sed -E 's/.0$//g' )
+	ASSEMBLY_FILE_VERSION=$( grep -E "AssemblyVersion" $DIR/Properties/AssemblyInfo.cs | grep -Eo "[0-9.]{5}\.0" | sed -E 's/.0$//g' )
+
+	if [ -z "$BEPIN_VERSION" ] ; then
+		reportIssue "[$PLUGIN] No BepIn version for \"$DIR/$PLUGIN.cs\"! Is it a plugin directory?"
+	elif [ -n "$( sed -E "s/$BEPIN_VERSION//g" <<< "$MANIFEST_VERSION;$README_VERSION;$ASSEMBLY_VERSION;$ASSEMBLY_FILE_VERSION" | tr -d ';' )" ] ; then
+		reportIssue "[$PLUGIN] Version mismatch!"
+		echo "BEPIN_VERSION: '$BEPIN_VERSION'"
+		echo "MANIFEST_VERSION: '$MANIFEST_VERSION'"
+		echo "README_VERSION: '$README_VERSION'"
+		echo "ASSEMBLY_VERSION: '$ASSEMBLY_VERSION'"
+		echo "ASSEMBLY_FILE_VERSION: '$ASSEMBLY_FILE_VERSION'"
+	fi
+
+	BEPIN_GUID=$( grep -E "^\W+\[BepInPlugin" "$DIR/$PLUGIN.cs" | grep -Eo 'com.riintouge.[^"]+' )
+	HARMONY_ID=$( grep "new Harmony" "$DIR/$PLUGIN.cs" | grep -Eo 'com.riintouge.[^"]+' )
+	if [ "${BEPIN_GUID,,}" != "$HARMONY_ID" ] || [ "$BEPIN_GUID" != "${HARMONY_ID,,}" ] ; then
+		reportIssue "[$PLUGIN] BepIn GUID does not match Harmony ID!"
+		echo "BEPIN_GUID: '$BEPIN_GUID'"
+		echo "HARMONY_ID: '$HARMONY_ID'"
+	fi
+
+	ASSEMBLY_TITLE=$( grep -E "AssemblyTitle" $DIR/Properties/AssemblyInfo.cs | grep -Eo '"[^"]+"' | tr -d '"' )
+	ASSEMBLY_PRODUCT=$( grep -E "AssemblyProduct" $DIR/Properties/AssemblyInfo.cs | grep -Eo '"[^"]+"' | tr -d '"' )
+	if [ "$ASSEMBLY_TITLE" != "$ASSEMBLY_PRODUCT" ] ; then
+		reportIssue "[$PLUGIN] Assembly product and title do not match!"
+		echo "ASSEMBLY_TITLE: '$ASSEMBLY_TITLE'"
+		echo "ASSEMBLY_PRODUCT: '$ASSEMBLY_PRODUCT'"
+	fi
+
+	BEPIN_NAME=$( grep -E "^\W+\[BepInPlugin" "$DIR/$PLUGIN.cs" | grep -Eo ',.+,' | tr -d ' ,"' )
+	if [ "$ASSEMBLY_TITLE" != "$BEPIN_NAME" ] ; then
+		reportIssue "[$PLUGIN] Plugin name (without spaces) does not match assembly name!"
+		echo "BEPIN_NAME: '$BEPIN_NAME'"
+		echo "ASSEMBLY_TITLE: '$ASSEMBLY_TITLE'"
+	fi
+
+	if [ "${BEPIN_GUID,,}" != "com.riintouge.${ASSEMBLY_PRODUCT,,}" ] ; then
+		reportIssue "[$PLUGIN] Inconsistent naming!"
+		echo "BEPIN_NAME: '$BEPIN_NAME'"
+		echo "BEPIN_GUID: '$BEPIN_GUID'"
+		echo "HARMONY_ID: '$HARMONY_ID'"
+		echo "ASSEMBLY_TITLE: '$ASSEMBLY_TITLE'"
+		echo "ASSEMBLY_PRODUCT: '$ASSEMBLY_PRODUCT'"
+	fi
+done
+
+if [ $ISSUES -gt 0 ] ; then
+	echo ""
+	echo "Sanity check failed!"
+	exit 1
+fi
+
+# TODO: Compare README contents?
+exit 0

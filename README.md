@@ -10,7 +10,7 @@ Does not remove the border by default. It should be toggled with an in-game conf
 
 ### Custom Slot Item Lib | [Settings](CustomSlotItemLib/CustomSlotItemLib.cs)
 
-Allows items to be equipped in custom slots defined by other plugins or a configuration value.
+Allows items to be equipped in custom slots defined.
 
 This is an update and drop-in replacement of [CustomSlotItemLib](https://thunderstore.io/c/valheim/p/nearbear/CustomSlotItemLib/) originally written by [nearbear](https://github.com/nearbear/ValheimBepinexMods/tree/main/CustomSlotItemLib). It was broken by an unknown game update and appears to be abandoned. More information can be found in the original [README](https://github.com/nearbear/ValheimBepinexMods/blob/main/CustomSlotItemLib/Package/README.md).
 
@@ -24,11 +24,11 @@ Increases the tamed animal name input length limit from 10 to 100 characters.
 
 ### Magnetic Wishbone | [Settings](MagneticWishbone/MagneticWishbone.cs)
 
+Turns the Wishbone into an item magnet via upgrades.
+
 Think the Wishbone looks a bit like a horseshoe magnet? Think no-cost auto-pickup range-extending plugins are too OP? Want that feeling of pride and accomplishment hogging another precious inventory slot?
 
 MagneticWishbone adds three highly-configurable levels of item magnet upgrades to the Wishbone. The first upgrade, meant to be a basic magnet, is made at a forge and increases the auto-pickup radius to that of the normal maximum interaction distance (five meters). The second upgrade, meant to be an electromagnet, is made at an artisan table and increases the radius to ten meters. The third upgrade, meant to be a magical magnet, is a placeholder and disabled by default. The Wishbone must be equipped, of course.
-
-Because this plugin does not add new assets it is perfectly safe to use in a multiplayer environment. Clients without this plugin receive no benefits from equipping an upgraded Wishbone. Servers with this plugin will enforce recipes and radii.
 
 ### Mastercraft Hammer | [Settings](MastercraftHammer/MastercraftHammer.cs)
 
@@ -42,6 +42,8 @@ Have a strong preference for how zoomed in or out your camera is when on foot, p
 
 ### Nag Messages | [Settings](NagMessages/NagMessages.cs)
 
+Notifies the player about things they may not be paying attention to.
+
 Nags the player to change their Forsaken Power if their current power is not preferred and to eat if their stomach is empty. The player can also be notified when food benefits are wearing off before they wear off completely.
 
 ### No Lossy Cooking Stations | [Settings](NoLossyCookingStations/NoLossyCookingStations.cs)
@@ -51,15 +53,17 @@ Helps prevent cooking station and fermenter network lag from eating your food by
 2. Limiting the rate at which items can be added
 3. Dumping overflow back into the world
 
-Also works for "Smelter" interactables like blast furnaces and windmills. Clients which do not have this plugin will still benefit from it when the network owner of an interactable object does have this plguin.
+Also works for "Smelter" interactables like blast furnaces and windmills. Clients which do not have this plugin will still benefit from it when the network owner of an interactable object does have this plugin.
 
 ### No Unarmed Combat | [Settings](NoUnarmedCombat/NoUnarmedCombat.cs)
+
+Tries to replace the air in your fists with sharper things.
 
 Vikings may love to fight and throwing hands is a great way to start a brawl, but actual weapons are considerably more effective at getting the point across. Rather than punching, sheathed equipment will be withdrawn and gear from the toolbar will be equipped instead of trying to cast fist like magic missile.
 
 ### Ping Tweaks | [Settings](PingTweaks/PingTweaks.cs)
 
-PingTweaks improves the appearance and behavior of pings.
+Improves the appearance and behavior of pings.
 
 - Pings are not broadcast to other players without a modifier key
 - Map marker pings show the marker text
@@ -67,8 +71,6 @@ PingTweaks improves the appearance and behavior of pings.
 - Pings show distance in meters
 - In-world ping text color may be changed
 - Pings from other players may be pinned by double-clicking on them (persistence optional)
-
-PingTweaks is client-side but works better when all clients have it.
 
 ### Restful Arrival | [Settings](RestfulArrival/RestfulArrival.cs)
 

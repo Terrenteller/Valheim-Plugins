@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription( "" )]
 [assembly: AssemblyConfiguration( "" )]
 [assembly: AssemblyCompany( "Riintouge" )]
-[assembly: AssemblyProduct( "No Unarmed Combat" )]
+[assembly: AssemblyProduct( "NoUnarmedCombat" )]
 [assembly: AssemblyCopyright( "Copyright © 2023" )]
 [assembly: AssemblyTrademark( "" )]
 [assembly: AssemblyCulture( "" )]
