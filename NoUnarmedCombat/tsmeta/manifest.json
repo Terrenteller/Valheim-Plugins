@@ -1,6 +1,6 @@
 {
 	"name": "NoUnarmedCombat",
-	"version_number": "1.0.2",
+	"version_number": "1.0.3",
 	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
 	"description": "Tries to replace the air in your fists with sharper things.",
 	"dependencies": [

@@ -47,12 +47,12 @@ namespace NoUnarmedCombat
 				return itemData?.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield;
 			}
 
-			private static void ShowHandItems( ref Humanoid __instance )
+			private static void ShowHandItems( ref Humanoid __instance , bool onlyRightHand = false , bool animation = true )
 			{
 				// Protected for some reason when it wasn't before
 				Traverse.Create( __instance )
-					.Method( "ShowHandItems" )
-					.GetValue();
+					.Method( "ShowHandItems" , new[] { typeof( bool ) , typeof( bool ) } )
+					.GetValue( onlyRightHand , animation );
 			}
 
 			[HarmonyPatch( "GetCurrentWeapon" )]
