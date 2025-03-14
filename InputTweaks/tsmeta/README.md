@@ -11,21 +11,30 @@ Enabled by default (or hardcoded):
 - [RMB] with an item on the cursor outside of the inventory will drop a single item
 - [Q] will drop a single item from the stack beneath the cursor
 	- This conflicts with auto-run out-of-the-box
-	- [SHIFT], in addition, will drop the entire stack 
+	- [SHIFT], in addition, will drop the entire stack
 - Mouse scroll will pull/push items under the cursor and increment/decrement the split dialog
 - [LMB] will put/take items on/from item/armor stands
 - [LMB] will open/close containers
+- [F3] will toggle the HUD
+	- [CTRL] + [F3] is the game default and is not changed
+	- [F1] would conflict with configuration managers
 
 Disabled by default:
 - Swapped items stay selected (à la Minecraft)
 - Stack splits round down
 - Unbalanced stack smear remainders stay selected
-- A key to toggle the HUD
-	- [F1] would conflict with configuration managers
 
 Other plugins that deal with the inventory and modifier keys may require configuration to be compatible with InputTweaks, such as SmartContainers' route-on-move feature. Please check configuration options if you encounter input conflicts.
 
 ## Changelog
+
+1.1.2
+
+- Update for 0.220.3 (Bog Witch)
+- Player characters no longer block world interactions
+- Allow items in the world to be picked up from the inventory GUI
+- Play interaction animations when appropriate
+- Default HUD toggle key to F3 to align with the vanilla default
 
 1.1.1
 

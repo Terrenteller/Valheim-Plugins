@@ -6,7 +6,7 @@ using UnityEngine;
 namespace InputTweaks
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.inputtweaks" , "Input Tweaks" , "1.1.1" )]
+	[BepInPlugin( "com.riintouge.inputtweaks" , "Input Tweaks" , "1.1.2" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class InputTweaks : BaseUnityPlugin
 	{
@@ -44,6 +44,7 @@ namespace InputTweaks
 		public static ConfigEntry< bool > InteractWithArmorStands;
 		public static ConfigEntry< bool > InteractWithContainers;
 		public static ConfigEntry< bool > InteractWithItemStands;
+		public static ConfigEntry< bool > InteractWithWorldItems;
 
 		public enum WheelActionEnum
 		{
@@ -116,8 +117,8 @@ namespace InputTweaks
 			ToggleHudKey = Config.Bind(
 				"1 - General",
 				"ToggleHudKey",
-				KeyCode.None,
-				"Toggle the HUD when pressed. Unset by default as [F1], Minecraft's default, conflicts with configuration managers. For reference, vanilla's default is [CTRL] + [F3]." );
+				KeyCode.F3,
+				"Toggle the HUD when pressed. Vanilla's default is [CTRL] + [F3] and cannot be changed in-game. Minecraft's default of [F1] conflicts with configuration managers." );
 
 			/*
 			AllowFilteredStackMove = Config.Bind(
@@ -228,6 +229,12 @@ namespace InputTweaks
 				"InteractWithItemStands",
 				true,
 				"Whether item stands can be interacted with while the inventory GUI is open." );
+
+			InteractWithWorldItems = Config.Bind(
+				"6 - World Interactions",
+				"InteractWithWorldItems",
+				true,
+				"Whether items in the world may be picked up while the inventory GUI is open." );
 
 			if( LoadOnStart.Value )
 			{

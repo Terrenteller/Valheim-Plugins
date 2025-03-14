@@ -31,15 +31,10 @@ namespace InputTweaks
 
 			// TODO: Multiple states may be new'd up every frame.
 			// Expose these more directly. Consider making a mutable version of this class.
-			dragInventory = Traverse.Create( inventoryGui )
-				.Field( "m_dragInventory" )
-				.GetValue< Inventory >();
-			dragItem = Traverse.Create( inventoryGui )
-				.Field( "m_dragItem" )
-				.GetValue< ItemDrop.ItemData >();
-			dragAmount = Traverse.Create( inventoryGui )
-				.Field( "m_dragAmount" )
-				.GetValue< int >();
+			Traverse inventoryGuiTraversal = Traverse.Create( inventoryGui );
+			dragInventory = inventoryGuiTraversal.Field( "m_dragInventory" ).GetValue< Inventory >();
+			dragItem = inventoryGuiTraversal.Field( "m_dragItem" ).GetValue< ItemDrop.ItemData >();
+			dragAmount = inventoryGuiTraversal.Field( "m_dragAmount" ).GetValue< int >();
 
 			isValid = dragObject != null
 				&& dragInventory != null

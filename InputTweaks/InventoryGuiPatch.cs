@@ -429,6 +429,16 @@ namespace InputTweaks
 				for( int index = 0 ; index < rootTransform.childCount ; index++ )
 				{
 					RectTransform child = rootTransform.GetChild( index ) as RectTransform;
+					// TODO: What were we doing here? Was this a workaround for the SuperUltrawideSupport bug?
+					//if( child == dropButtonTransform )
+					//{
+					//	if( !child.gameObject.activeInHierarchy || !Common.IsCursorOver( child ) )
+					//	{
+					//		ClearWorldInteractionDragPreview();
+					//		return;
+					//	}
+					//}
+					//else if( child.gameObject.activeInHierarchy && Common.IsCursorOver( child ) )
 					if( child != dropButtonTransform && child.gameObject.activeInHierarchy && Common.IsCursorOver( child ) )
 					{
 						ClearWorldInteractionDragPreview();
@@ -436,7 +446,7 @@ namespace InputTweaks
 					}
 				}
 
-				CurrentWorldComponent = RaycastComponentForWorldInteraction< Piece >( out RaycastHit hit );
+				CurrentWorldComponent = RaycastComponentForWorldInteraction( out RaycastHit hit );
 				if( CurrentWorldComponent != LastWorldComponent )
 					VanillaDragState.ClearDrag();
 
@@ -458,7 +468,7 @@ namespace InputTweaks
 					ClearWorldInteractionDragPreview();
 			}
 
-			private static T RaycastComponentForWorldInteraction< T >( out RaycastHit hit ) where T : Component
+			private static Component RaycastComponentForWorldInteraction( out RaycastHit hit )
 			{
 				Ray cursorRay = GameCamera.instance.GetComponent< Camera >().ScreenPointToRay( Input.mousePosition );
 				Player player = Player.m_localPlayer;
@@ -466,12 +476,13 @@ namespace InputTweaks
 					.Field( "m_interactMask" )
 					.GetValue< int >();
 
-				if( !Physics.Raycast( cursorRay , out hit , 50.0f , interactMask ) )
+				// Ignore players, especially the player's own character. May ignore NPCs, too.
+				if( !Physics.Raycast( cursorRay , out hit , 50.0f , interactMask & ~( 1 << 9 ) ) )
 					return null;
 				else if( Vector3.Distance( hit.point , player.m_eye.position ) > player.m_maxInteractDistance )
 					return null;
 
-				return hit.collider.GetComponentInParent< T >();
+				return hit.collider.GetComponentInParent< Component >();
 			}
 
 			private static string GetHoverPrefabName( Component component , RaycastHit hit )
@@ -484,15 +495,15 @@ namespace InputTweaks
 					ArmorStand armorStand = component.GetComponentInParent< ArmorStand >();
 					if( armorStand != null )
 					{
-						ItemDrop.ItemData.ItemType itemType = ItemTypeForArmorStandPoint( hit );
+						ItemDrop.ItemData.ItemType searchItemType = ItemTypeForArmorStandPoint( hit );
 
 						for( int index = 0 ; index < armorStand.m_slots.Count ; index++ )
 						{
 							ArmorStand.ArmorStandSlot slot = armorStand.m_slots[ index ];
-							if( slot.m_supportedTypes.Count != 0 && !slot.m_supportedTypes.Contains( itemType ) )
+							if( slot.m_supportedTypes.Count != 0 && !slot.m_supportedTypes.Contains( searchItemType ) )
 								continue;
 							else if( !armorStand.HaveAttachment( index ) )
-								return null;
+								break;
 
 							return Traverse.Create( armorStand )
 								.Field( "m_nview" )
@@ -516,12 +527,19 @@ namespace InputTweaks
 					}
 				}
 
+				if( InteractWithWorldItems.Value )
+				{
+					ItemDrop item = component.GetComponentInParent< ItemDrop >();
+					if( item != null )
+						return item.m_itemData.m_dropPrefab.name;
+				}
+
 				return null;
 			}
 
 			private static void SetWorldInteractionDragPreview( InventoryGui inventoryGui , ItemDrop.ItemData item )
 			{
-				// We can't cache a hover-drag object because drag objects get destroyed when replaced,
+				// We can't cache a hover-drag object because drag objects get destroyed when replaced
 				// and calling SetupDragItem() every frame spams a clicking noise (m_moveItemEffects).
 				VanillaDragState vanillaDragState = new VanillaDragState();
 				if( vanillaDragState.dragObject != null && vanillaDragState.dragObject == WorldInteractionPreviewDragObject )
@@ -529,15 +547,10 @@ namespace InputTweaks
 					if( Common.ItemsAreSimilarButDistinct( vanillaDragState.dragItem , item , true ) )
 						return;
 
-					Traverse.Create( inventoryGui )
-						.Field( "m_dragInventory" )
-						.SetValue( null );
-					Traverse.Create( inventoryGui )
-						.Field( "m_dragItem" )
-						.SetValue( item );
-					Traverse.Create( inventoryGui )
-						.Field( "m_dragAmount" )
-						.SetValue( 0 );
+					Traverse inventoryGuiTraversal = Traverse.Create( inventoryGui );
+					inventoryGuiTraversal.Field( "m_dragInventory" ).SetValue( null );
+					inventoryGuiTraversal.Field( "m_dragItem" ).SetValue( item );
+					inventoryGuiTraversal.Field( "m_dragAmount" ).SetValue( 0 );
 				}
 				else
 				{
@@ -572,6 +585,7 @@ namespace InputTweaks
 							if( ArmorStandPatch.CanAttach( armorStand , slot , item ) )
 							{
 								ArmorStandPatch.RPC_DropItem( armorStand , index );
+								DoInteractAnimation( Player.m_localPlayer , armorStand.gameObject );
 								return;
 							}
 						}
@@ -579,6 +593,7 @@ namespace InputTweaks
 						{
 							// Checking the pending item and slot is insufficient for some reason
 							VanillaDragState.ClearDrag();
+							DoInteractAnimation( Player.m_localPlayer , armorStand.gameObject );
 							return;
 						}
 					}
@@ -594,7 +609,10 @@ namespace InputTweaks
 							continue;
 
 						if( armorStand.HaveAttachment( index ) )
+						{
 							ArmorStandPatch.RPC_DropItem( armorStand , index );
+							DoInteractAnimation( Player.m_localPlayer , armorStand.gameObject );
+						}
 
 						return;
 					}
@@ -607,28 +625,38 @@ namespace InputTweaks
 				float colliderHeight = bounds.max.y - bounds.min.y;
 				float collisionHeight = hit.point.y - bounds.min.y;
 				float normalizedHeight = collisionHeight / colliderHeight;
+				// TODO: Revisit this someday
+				//Vector3 heightAdjustedHitPoint = hit.point;
+				//heightAdjustedHitPoint.y = bounds.center.y;
+				//float distanceFromAxis = ( bounds.center - heightAdjustedHitPoint ).magnitude;
 
-				// Prefabs don't have a collider, bounds, or anything obvious that we can test,
-				// so we estimate the item based on its position in a way that makes sufficient sense.
-				// Even if we could, it would make it difficult to get items from the back of the stand.
-				// TODO: It would be cool to represent main/off hand items as the vertical edges.
-				// Those can be detected by treating the bounds as a cylinder, not a box.
-				const float oneSixtheenth = 1.0f / 16.0f;
+				// TODO: Turn side-selection into a plugin option
+				//if( distanceFromAxis < 0.24f ) // Reasonable value determined by experimentation
+				{
+					// Prefabs don't have a collider, bounds, or anything obvious that we can test,
+					// so we estimate the item based on its position in a way that makes sufficient sense.
+					// Even if we could, it would make it difficult to get items from the back of the stand.
+					const float oneSixtheenth = 1.0f / 16.0f;
 
-				if( normalizedHeight >= 15 * oneSixtheenth )
-					return ItemDrop.ItemData.ItemType.Helmet;
-				else if( normalizedHeight >= 14 * oneSixtheenth )
-					return ItemDrop.ItemData.ItemType.Shoulder;
-				else if( normalizedHeight >= 12 * oneSixtheenth )
-					return ItemDrop.ItemData.ItemType.Chest;
-				else if( normalizedHeight >= 10 * oneSixtheenth )
-					return ItemDrop.ItemData.ItemType.Utility; // What, if not the belt?
-				else if( normalizedHeight >= 8 * oneSixtheenth )
-					return ItemDrop.ItemData.ItemType.OneHandedWeapon; // Matches the "weapon" slot
-				else if( normalizedHeight >= 6 * oneSixtheenth )
-					return ItemDrop.ItemData.ItemType.Shield;
-				else
-					return ItemDrop.ItemData.ItemType.Legs;
+					if( normalizedHeight >= ( 15 * oneSixtheenth ) )
+						return ItemDrop.ItemData.ItemType.Helmet;
+					else if( normalizedHeight >= ( 14 * oneSixtheenth ) )
+						return ItemDrop.ItemData.ItemType.Shoulder;
+					else if( normalizedHeight >= ( 12 * oneSixtheenth ) )
+						return ItemDrop.ItemData.ItemType.Chest;
+					else if( normalizedHeight >= ( 10 * oneSixtheenth ) )
+						return ItemDrop.ItemData.ItemType.Utility; // What, if not the belt?
+					else if( normalizedHeight >= ( 8 * oneSixtheenth ) )
+						return ItemDrop.ItemData.ItemType.OneHandedWeapon; // Matches the "weapon" slot
+					else if( normalizedHeight >= ( 6 * oneSixtheenth ) )
+						return ItemDrop.ItemData.ItemType.Shield;
+					else
+						return ItemDrop.ItemData.ItemType.Legs;
+				}
+
+				//return normalizedHeight >= 0.5f
+				//	? ItemDrop.ItemData.ItemType.OneHandedWeapon
+				//	: ItemDrop.ItemData.ItemType.Shield;
 			}
 
 			private static void InteractWithContainer( Container container , InventoryGui inventoryGui )
@@ -642,6 +670,8 @@ namespace InputTweaks
 
 				if( container != currentContainer )
 					container.Interact( Player.m_localPlayer , false , false );
+
+				DoInteractAnimation( Player.m_localPlayer , container.gameObject );
 			}
 
 			private static void InteractWithItemStand( ItemStand itemStand )
@@ -650,28 +680,37 @@ namespace InputTweaks
 
 				if( itemStand.HaveAttachment() )
 				{
-					itemStand.Interact( player , false , false );
-				}
-				else if( PrivateArea.CheckAccess( itemStand.transform.position ) )
-				{
-					VanillaDragState dragState = new VanillaDragState();
-					// ItemStand.UseItem() only returns false if the stand already has an item attached.
-					// Otherwise, the item stand will remove the item from the player when the RPC runs.
-					// We explicitly check for access first because we're bypassing ItemStand.Interact().
-					itemStand.UseItem( player , dragState.dragItem );
-					ItemDrop.ItemData queuedItem = Traverse.Create( itemStand )
-						.Field( "m_queuedItem" )
-						.GetValue< ItemDrop.ItemData >();
+					if( itemStand.Interact( player , false , false ) )
+						DoInteractAnimation( Player.m_localPlayer , itemStand.gameObject );
 
-					if( dragState.dragItem == queuedItem && ( new VanillaDragState() ).Decrement() )
-					{
-						// Move into decrement/increment? This is duplicated code.
-						dragState = new VanillaDragState();
-						if( dragState.isValid )
-							dragState.UpdateTooltip();
-						else
-							VanillaDragState.ClearDrag();
-					}
+					return;
+				}
+
+				if( !PrivateArea.CheckAccess( itemStand.transform.position ) )
+					return;
+
+				VanillaDragState dragState = new VanillaDragState();
+				if( !dragState.isValid )
+					return;
+
+				// ItemStand.UseItem() only returns false if the stand already has an item attached.
+				// Otherwise, the item stand will remove the item from the player when the RPC runs.
+				// We explicitly check for access first because we're bypassing ItemStand.Interact().
+				itemStand.UseItem( player , dragState.dragItem );
+				ItemDrop.ItemData queuedItem = Traverse.Create( itemStand )
+					.Field( "m_queuedItem" )
+					.GetValue< ItemDrop.ItemData >();
+
+				if( dragState.dragItem == queuedItem && ( new VanillaDragState() ).Decrement() )
+				{
+					// Move into decrement/increment? This is duplicated code.
+					dragState = new VanillaDragState();
+					if( dragState.isValid )
+						dragState.UpdateTooltip();
+					else
+						VanillaDragState.ClearDrag();
+
+					DoInteractAnimation( Player.m_localPlayer , itemStand.gameObject );
 				}
 			}
 
@@ -688,6 +727,13 @@ namespace InputTweaks
 				return Traverse.Create( inventory )
 					.Method( "AddItem" , new[] { typeof( ItemDrop.ItemData ) , typeof( int ) , typeof( int ) , typeof( int ) } )
 					.GetValue< bool >( item , amount , x , y );
+			}
+
+			public static void DoInteractAnimation( Player player , GameObject gameObject )
+			{
+				Traverse.Create( player )
+					.Method( "DoInteractAnimation" , new[] { typeof( GameObject ) } )
+					.GetValue( gameObject );
 			}
 
 			public static Vector2i FindEmptySlot( Inventory inventory , bool topFirst )
@@ -736,11 +782,6 @@ namespace InputTweaks
 						return;
 					}
 
-					// FIXME: Does not work if we drop outside the confines of the following RectTransform with SuperUltrawideSupport
-					// _GameMain / LoadingGUI / PixelFix / Scaled 3D Viewport / IngameGui / Inventory_screen / root / dropButton
-					// Should we track "invalid" right clicks as drop single? That doesn't solve the root problem.
-					// Can we attach the right click listener to another HUD object?
-					// TODO: If we wanted to be really cool, raytrace clicks to see if we interact with item stands.
 					VanillaDragState dragState = new VanillaDragState();
 					if( dragState.isValid && PlayerDropFromInv( dragState.dragInventory , dragState.dragItem , 1 ) && dragState.Decrement() )
 					{
@@ -790,16 +831,13 @@ namespace InputTweaks
 			[HarmonyPrefix]
 			private static bool OnDropOutsidePrefix( InventoryGui __instance )
 			{
-				Piece piece = RaycastComponentForWorldInteraction< Piece >( out RaycastHit hit );
-				if( piece == null )
-				{
-					ClearWorldInteractionDragPreview();
+				Component component = RaycastComponentForWorldInteraction( out RaycastHit hit );
+				if( component == null )
 					return true;
-				}
 
 				if( InteractWithArmorStands.Value )
 				{
-					ArmorStand armorStand = piece.GetComponentInParent< ArmorStand >();
+					ArmorStand armorStand = component.GetComponentInParent< ArmorStand >();
 					if( armorStand != null )
 					{
 						Common.DebugMessage( $"INTR: Hit ArmorStand" );
@@ -810,7 +848,7 @@ namespace InputTweaks
 
 				if( InteractWithContainers.Value )
 				{
-					Container container = piece.GetComponentInParent< Container >();
+					Container container = component.GetComponentInParent< Container >();
 					if( container != null )
 					{
 						Common.DebugMessage( $"INTR: Hit Container" );
@@ -821,11 +859,24 @@ namespace InputTweaks
 
 				if( InteractWithItemStands.Value )
 				{
-					ItemStand itemStand = piece.GetComponentInParent< ItemStand >();
+					ItemStand itemStand = component.GetComponentInParent< ItemStand >();
 					if( itemStand != null )
 					{
 						Common.DebugMessage( $"INTR: Hit ItemStand" );
 						InteractWithItemStand( itemStand );
+						return false;
+					}
+				}
+
+				if( InteractWithWorldItems.Value )
+				{
+					ItemDrop item = component.GetComponentInParent< ItemDrop >();
+					if( item != null )
+					{
+						Common.DebugMessage( $"INTR: Hit ItemDrop" );
+						Traverse.Create( Player.m_localPlayer )
+							.Method( "Interact" , new[] { typeof( GameObject ) , typeof( bool ) , typeof( bool ) } )
+							.GetValue( item.gameObject , false , false );
 						return false;
 					}
 				}
