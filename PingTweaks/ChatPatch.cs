@@ -100,16 +100,19 @@ namespace PingTweaks
 
 			[HarmonyPatch( "UpdateWorldTextField" )]
 			[HarmonyPrefix]
-			private static void UpdateWorldTextFieldPrefix( ref Chat.WorldTextInstance wt )
+			private static void UpdateWorldTextFieldPrefix( ref Chat __instance , ref Chat.WorldTextInstance wt )
 			{
 				// No need to set all the time in UpdateWorldTextsPostfix()
 				if( IsEnabled.Value && wt.m_type == Talker.Type.Ping )
+				{
 					wt.m_textMeshField.color = Common.CopyColor( PingColor.Value );
+					wt.m_timer = __instance.m_worldTextTTL - (float)PingDuration.Value;
+				}
 			}
 
 			[HarmonyPatch( "UpdateWorldTexts" )]
 			[HarmonyPrefix]
-			private static void UpdateWorldTextsPretfix( ref float dt , ref List< Chat.WorldTextInstance > ___m_worldTexts )
+			private static void UpdateWorldTextsPrefix( ref float dt , ref List< Chat.WorldTextInstance > ___m_worldTexts )
 			{
 				// Stop pings from slowly moving upwards and causing the distance to change
 				if( IsEnabled.Value )

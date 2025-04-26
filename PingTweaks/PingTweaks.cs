@@ -6,7 +6,7 @@ using UnityEngine;
 namespace PingTweaks
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.pingtweaks" , "Ping Tweaks" , "1.0.4" )]
+	[BepInPlugin( "com.riintouge.pingtweaks" , "Ping Tweaks" , "1.0.5" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class PingTweaks : BaseUnityPlugin
     {
@@ -16,6 +16,7 @@ namespace PingTweaks
 		// 1 - General
 		public static ConfigEntry< KeyCode > PingBroadcastModifier;
 		public static ConfigEntry< Color > PingColor;
+		public static ConfigEntry< int > PingDuration;
 		public static ConfigEntry< bool > SavePinnedPings;
 
 		private readonly Harmony Harmony = new Harmony( "com.riintouge.pingtweaks" );
@@ -47,6 +48,14 @@ namespace PingTweaks
 				"PingColor",
 				new Color( 0.6f , 0.7f , 1.0f , 1.0f ), // Vanilla default
 				"In-world ping text color." );
+
+			PingDuration = Config.Bind(
+				"1 - General",
+				"PingDuration",
+				5, // Local testing clocks in at eight seconds, but ILSpy says five seconds
+				new ConfigDescription(
+					"How long to show pings, in seconds.",
+					new AcceptableValueRange< int >( 5 , 60 ) ) );
 
 			SavePinnedPings = Config.Bind(
 				"1 - General",

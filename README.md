@@ -69,6 +69,7 @@ Improves the appearance and behavior of pings.
 - Map marker pings show the marker text
 - Pings are sent and map markers are created with proper elevation data
 - Pings show distance in meters
+- Ping duration may be changed
 - In-world ping text color may be changed
 - Pings from other players may be pinned by double-clicking on them (persistence optional)
 
