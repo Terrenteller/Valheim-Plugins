@@ -10,14 +10,14 @@ namespace SuperUltrawideSupport
 		[HarmonyPatch( typeof( InventoryGui ) )]
 		private class InventoryGuiPatch
 		{
-			private static HashSet< string > TransformNames = new HashSet< string >();
+			private static HashSet< string > TransformPaths = new HashSet< string >();
 
 			private static void Reset()
 			{
-				foreach( string name in TransformNames )
-					Lerper.Unregister( name );
+				foreach( string path in TransformPaths )
+					Lerper.Unregister( path );
 
-				TransformNames.Clear();
+				TransformPaths.Clear();
 			}
 
 			[HarmonyPatch( "Awake" )]
@@ -33,16 +33,19 @@ namespace SuperUltrawideSupport
 					RectTransform child = __instance.m_inventoryRoot.GetChild( index ) as RectTransform;
 					if( child != null && child.name != "dropButton" )
 					{
-						TransformNames.Add( child.name );
+						TransformPaths.Add( AspectLerper.AbsoluteTransformPath( child ) );
 						Lerper.Register( child );
 						Lerper.Lerp( child );
 					}
 				}
+
+				if( TransformPaths.Count > 0 )
+					Lerper.Update();
 			}
 
 			[HarmonyPatch( "OnDestroy" )]
 			[HarmonyPrefix]
-			private static void OnDestroyPrefix( ref InventoryGui __instance )
+			private static void OnDestroyPrefix()
 			{
 				Reset();
 			}

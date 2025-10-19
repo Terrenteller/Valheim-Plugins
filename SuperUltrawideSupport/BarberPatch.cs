@@ -17,12 +17,9 @@ namespace SuperUltrawideSupport
 				GameObject barberRootPanel = PlayerCustomizaton.m_barberInstance.m_rootPanel.gameObject;
 				if( barberRootPanel.activeInHierarchy )
 				{
-					RectTransform rectTransform = Common.FindParentOrSelf( barberRootPanel.transform , "BarberGui" ) as RectTransform;
+					RectTransform rectTransform = Common.FindChildOfParent( barberRootPanel.transform , "root" , "BarberGui" );
 					if( rectTransform != null )
-					{
-						Lerper.Register( rectTransform );
-						Lerper.Lerp( rectTransform );
-					}
+						Lerper.RegisterLerpAndUpdate( rectTransform );
 				}
 			}
 		}

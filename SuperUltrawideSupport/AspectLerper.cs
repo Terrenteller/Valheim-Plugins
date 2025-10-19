@@ -55,7 +55,8 @@ namespace SuperUltrawideSupport
 				Update();
 			}
 
-			//System.Console.WriteLine( $"Target HUD size: {TargetWidth} x {TargetHeight}" );
+			//System.Console.WriteLine( $"Current screen size: {currentWidth} x {currentHeight}" );
+			//System.Console.WriteLine( $"Target HUD size: {targetWidth} x {targetHeight}" );
 		}
 
 		public void Update()
@@ -65,15 +66,11 @@ namespace SuperUltrawideSupport
 				HashSet< string > invalidReferences = new HashSet< string >();
 
 				foreach( KeyValuePair< string , OriginalRectTransform > pair in originals )
-				{
-					if( pair.Value.original.TryGetTarget( out RectTransform rectTransform ) )
-						LerpCore( rectTransform , pair.Value );
-					else
+					if( !pair.Value.original.TryGetTarget( out RectTransform rectTransform ) || !LerpCore( rectTransform , pair.Value ) )
 						invalidReferences.Add( pair.Key );
-				}
 
-				foreach( string name in invalidReferences )
-					originals.Remove( name );
+				foreach( string invalidReference in invalidReferences )
+					originals.Remove( invalidReference );
 			}
 		}
 
@@ -98,17 +95,31 @@ namespace SuperUltrawideSupport
 
 				// We can't always track and remove things at the right time,
 				// so we must handle replacing the old with the new
-				if( originals.ContainsKey( rectTransform.name ) )
+				string transformPath = AbsoluteTransformPath( rectTransform );
+				if( originals.ContainsKey( transformPath ) )
 				{
-					Unregister( rectTransform.name );
-					originals.Remove( rectTransform.name );
+					Unregister( transformPath );
+					originals.Remove( transformPath );
 				}
 
-				originals.Add( rectTransform.name , new OriginalRectTransform( rectTransform ) );
+				originals.Add( transformPath , new OriginalRectTransform( rectTransform ) );
 			}
 		}
 
-		protected void Unregister( string name , RectTransform rectTransform , OriginalRectTransform original )
+		public void RegisterLerpAndUpdate( RectTransform rectTransform )
+		{
+			lock( originals )
+			{
+				if( rectTransform == null )
+					return;
+
+				Register( rectTransform );
+				Lerp( rectTransform );
+				Update(); // For unknown reasons after an unknown game update, Lerp() alone is insufficient
+			}
+		}
+
+		protected void Unregister( string transformPath , RectTransform rectTransform , OriginalRectTransform original )
 		{
 			lock( originals )
 			{
@@ -118,7 +129,7 @@ namespace SuperUltrawideSupport
 					rectTransform.anchorMax = new Vector2( original.maxX , original.maxY );
 				}
 
-				originals.Remove( name );
+				originals.Remove( transformPath );
 			}
 		}
 
@@ -131,14 +142,15 @@ namespace SuperUltrawideSupport
 			}
 		}
 
-		public void Unregister( string name )
+		public void Unregister( string transformPath )
 		{
 			lock( originals )
 			{
-				if( name != null && originals.TryGetValue( name , out OriginalRectTransform original ) )
+				if( transformPath != null
+					&& originals.TryGetValue( transformPath , out OriginalRectTransform original )
+					&& original.original.TryGetTarget( out RectTransform rectTransform ) )
 				{
-					original.original.TryGetTarget( out RectTransform rectTransform );
-					Unregister( name , rectTransform , original );
+					Unregister( transformPath , rectTransform , original );
 				}
 			}
 		}
@@ -152,7 +164,7 @@ namespace SuperUltrawideSupport
 			}
 		}
 
-		protected void LerpCore( RectTransform rectTransform , OriginalRectTransform original )
+		protected bool LerpCore( RectTransform rectTransform , OriginalRectTransform original )
 		{
 			lock( originals )
 			{
@@ -172,6 +184,9 @@ namespace SuperUltrawideSupport
 						rectTransform.anchorMin = new Vector2( original.minX , original.minY );
 						rectTransform.anchorMax = new Vector2( original.maxX , original.maxY );
 					}
+
+					//Common.PrintRectTransform( "New" , rectTransform );
+					return true;
 				}
 				catch( NullReferenceException )
 				{
@@ -192,9 +207,9 @@ namespace SuperUltrawideSupport
 
 					//System.Console.WriteLine( $"Failed to update \"{rectTransform.name}\"! Is it out-of-date?" );
 				}
-			}
 
-			//Common.PrintRectTransform( "New" , rectTransform );
+				return false;
+			}
 		}
 
 		public void InverseLerp( RectTransform rectTransform )
@@ -214,6 +229,21 @@ namespace SuperUltrawideSupport
 					rectTransform.anchorMax.x + xOverflow,
 					rectTransform.anchorMax.y + yOverflow );
 			}
+		}
+
+		// Statics
+
+		public static string AbsoluteTransformPath( Transform transform )
+		{
+			List< string > names = new List< string >();
+			for( ; transform != null ; transform = transform.parent?.gameObject?.transform )
+				names.Add( transform.name );
+
+			string absoluteName = string.Empty;
+			for( int index = names.Count - 1 ; index >= 0 ; index-- )
+				absoluteName += $"/{names[ index ]}";
+
+			return absoluteName;
 		}
 	}
 }

@@ -10,14 +10,14 @@ namespace SuperUltrawideSupport
 		[HarmonyPatch( typeof( FejdStartup ) )]
 		private class FejdStartupPatch
 		{
-			private static HashSet< string > TransformNames = new HashSet< string >();
+			private static HashSet< string > TransformPaths = new HashSet< string >();
 
 			private static void Reset()
 			{
-				foreach( string name in TransformNames )
-					Lerper.Unregister( name );
+				foreach( string transformPath in TransformPaths )
+					Lerper.Unregister( transformPath );
 
-				TransformNames.Clear();
+				TransformPaths.Clear();
 			}
 
 			[HarmonyPatch( "Awake" )]
@@ -39,12 +39,15 @@ namespace SuperUltrawideSupport
 							&& child.name != "PleaseWait"
 							&& child.name != "Scaled 3D Viewport" )
 						{
-							TransformNames.Add( child.name );
+							TransformPaths.Add( child.name );
 							Lerper.Register( child );
 							Lerper.Lerp( child );
 						}
 					}
 				}
+
+				if( TransformPaths.Count > 0 )
+					Lerper.Update();
 			}
 
 			[HarmonyPatch( "OnDestroy" )]

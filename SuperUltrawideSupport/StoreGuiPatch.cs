@@ -9,15 +9,17 @@ namespace SuperUltrawideSupport
 		[HarmonyPatch( typeof( StoreGui ) )]
 		private class StoreGuiPatch
 		{
+			private static string TransformPath = null;
+
 			[HarmonyPatch( "Awake" )]
 			[HarmonyPostfix]
 			private static void AwakePostfix( ref StoreGui __instance )
 			{
-				RectTransform rectTransform = Common.FindParentOrSelf( __instance.transform , "Store_Screen" ) as RectTransform;
+				RectTransform rectTransform = Common.FindChildOfParent( __instance.transform , "Store" , "Store_Screen" );
 				if( rectTransform != null )
 				{
-					Lerper.Register( rectTransform );
-					Lerper.Lerp( rectTransform );
+					TransformPath = AspectLerper.AbsoluteTransformPath( rectTransform );
+					Lerper.RegisterLerpAndUpdate( rectTransform );
 				}
 			}
 
@@ -25,7 +27,7 @@ namespace SuperUltrawideSupport
 			[HarmonyPrefix]
 			private static void OnDestroyPrefix()
 			{
-				Lerper.Unregister( "Store_Screen" );
+				Lerper.Unregister( TransformPath );
 			}
 		}
 	}

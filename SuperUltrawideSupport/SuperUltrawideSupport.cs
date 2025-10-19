@@ -8,7 +8,7 @@ using UnityEngine;
 namespace SuperUltrawideSupport
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.superultrawidesupport" , "Super Ultrawide Support" , "1.1.2" )]
+	[BepInPlugin( "com.riintouge.superultrawidesupport" , "Super Ultrawide Support" , "1.2.0" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class SuperUltrawideSupport : BaseUnityPlugin
 	{
@@ -82,12 +82,7 @@ namespace SuperUltrawideSupport
 			{
 				yield return new WaitForSecondsRealtime( 3.0f );
 
-				if( LastScreenWidth == -1 || LastScreenHeight == -1 )
-				{
-					LastScreenWidth = Screen.width;
-					LastScreenHeight = Screen.height;
-				}
-				else if( LastScreenWidth != Screen.width || LastScreenHeight != Screen.height )
+				if( LastScreenWidth != Screen.width || LastScreenHeight != Screen.height )
 				{
 					LastScreenWidth = Screen.width;
 					LastScreenHeight = Screen.height;

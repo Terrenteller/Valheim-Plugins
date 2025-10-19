@@ -14,12 +14,10 @@ namespace SuperUltrawideSupport
 			private static void AwakePostfix( ref Terminal __instance )
 			{
 				// This has the name "Image" on the start menu and "Chat_box" when joined into a world
-				RectTransform rectTransform = __instance.m_chatWindow;
+				RectTransform rectTransform = Common.FindChildOfParent( __instance.m_chatWindow , "root" , "Chat_box" )
+					?? __instance.m_chatWindow;
 				if( rectTransform != null )
-				{
-					Lerper.Register( rectTransform );
-					Lerper.Lerp( rectTransform );
-				}
+					Lerper.RegisterLerpAndUpdate( rectTransform );
 			}
 		}
 	}

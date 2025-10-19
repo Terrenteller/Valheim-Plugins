@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using HarmonyLib;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SuperUltrawideSupport
@@ -9,6 +10,16 @@ namespace SuperUltrawideSupport
 		[HarmonyPatch( typeof( MessageHud ) )]
 		private class MessageHudPatch
 		{
+			private static HashSet< string > TransformPaths = new HashSet< string >();
+
+			private static void Reset()
+			{
+				foreach( string transformPath in TransformPaths )
+					Lerper.Unregister( transformPath );
+
+				TransformPaths.Clear();
+			}
+
 			[HarmonyPatch( "Awake" )]
 			[HarmonyPostfix]
 			private static void AwakePostfix( ref MessageHud __instance )
@@ -18,18 +29,18 @@ namespace SuperUltrawideSupport
 					RectTransform rectTransform = Common.FindParentOrSelf( transform , "HudMessage" ) as RectTransform;
 					if( rectTransform != null )
 					{
-						Lerper.Register( rectTransform );
-						Lerper.Lerp( rectTransform );
+						TransformPaths.Add( AspectLerper.AbsoluteTransformPath( rectTransform ) );
+						Lerper.RegisterLerpAndUpdate( rectTransform );
 					}
 				}
 
 				{
 					Transform transform = __instance.m_messageText.gameObject.transform;
-					RectTransform rectTransform = Common.FindParentOrSelf( transform , "TopLeftMessage" ) as RectTransform;
+					RectTransform rectTransform = Common.FindChildOfParent( transform , "root" , "TopLeftMessage" );
 					if( rectTransform != null )
 					{
-						Lerper.Register( rectTransform );
-						Lerper.Lerp( rectTransform );
+						TransformPaths.Add( AspectLerper.AbsoluteTransformPath( rectTransform ) );
+						Lerper.RegisterLerpAndUpdate( rectTransform );
 					}
 				}
 			}
@@ -38,8 +49,7 @@ namespace SuperUltrawideSupport
 			[HarmonyPrefix]
 			private static void OnDestroyPrefix()
 			{
-				Lerper.Unregister( "HudMessage" );
-				Lerper.Unregister( "TopLeftMessage" );
+				Reset();
 			}
 		}
 	}

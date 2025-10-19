@@ -9,16 +9,16 @@ namespace SuperUltrawideSupport
 		[HarmonyPatch( typeof( Minimap ) )]
 		private class MinimapPatch
 		{
-			private static RectTransform largeTransform;
-			private static float minX;
-			private static float minY;
-			private static float maxX;
-			private static float maxY;
+			private static RectTransform LargeTransform;
+			private static float MinX;
+			private static float MinY;
+			private static float MaxX;
+			private static float MaxY;
 			private static bool AppliedInverseLerp = false;
 
 			public static void Update( bool userUpdate )
 			{
-				if( largeTransform == null || Minimap.instance.m_mode != Minimap.MapMode.Large )
+				if( LargeTransform == null || Minimap.instance.m_mode != Minimap.MapMode.Large )
 					return;
 
 				// We only need to cycle the map mode for updates when the big map is open
@@ -32,13 +32,13 @@ namespace SuperUltrawideSupport
 				}
 
 				// Undo interpolation as our aspect ratio may have changed
-				largeTransform.anchorMin = new Vector2( minX , minY );
-				largeTransform.anchorMax = new Vector2( maxX , maxY );
+				LargeTransform.anchorMin = new Vector2( MinX , MinY );
+				LargeTransform.anchorMax = new Vector2( MaxX , MaxY );
 				AppliedInverseLerp = false;
 
 				if( IsEnabled.Value && FullSizeMap.Value && !AppliedInverseLerp )
 				{
-					Lerper.InverseLerp( largeTransform );
+					Lerper.InverseLerp( LargeTransform );
 					AppliedInverseLerp = true;
 				}
 			}
@@ -47,11 +47,11 @@ namespace SuperUltrawideSupport
 			[HarmonyPostfix]
 			private static void AwakePostfix( ref Minimap __instance )
 			{
-				largeTransform = __instance.m_largeRoot.transform as RectTransform;
-				minX = largeTransform.anchorMin.x;
-				minY = largeTransform.anchorMin.y;
-				maxX = largeTransform.anchorMax.x;
-				maxY = largeTransform.anchorMax.y;
+				LargeTransform = __instance.m_largeRoot.transform as RectTransform;
+				MinX = LargeTransform.anchorMin.x;
+				MinY = LargeTransform.anchorMin.y;
+				MaxX = LargeTransform.anchorMax.x;
+				MaxY = LargeTransform.anchorMax.y;
 				AppliedInverseLerp = false;
 			}
 
@@ -59,17 +59,17 @@ namespace SuperUltrawideSupport
 			[HarmonyPrefix]
 			private static void OnDestroyPrefix()
 			{
-				if( largeTransform != null )
+				if( LargeTransform != null )
 				{
-					largeTransform.anchorMin = new Vector2( minX , minY );
-					largeTransform.anchorMax = new Vector2( maxX , maxY );
+					LargeTransform.anchorMin = new Vector2( MinX , MinY );
+					LargeTransform.anchorMax = new Vector2( MaxX , MaxY );
 				}
 
-				largeTransform = null;
-				minX = 0.0f;
-				minY = 0.0f;
-				maxX = 0.0f;
-				maxY = 0.0f;
+				LargeTransform = null;
+				MinX = 0.0f;
+				MinY = 0.0f;
+				MaxX = 0.0f;
+				MaxY = 0.0f;
 				AppliedInverseLerp = false;
 			}
 

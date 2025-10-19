@@ -1,9 +1,15 @@
-﻿using UnityEngine;
+﻿using System.Text;
+using UnityEngine;
 
 namespace SuperUltrawideSupport
 {
 	public static class Common
 	{
+		public static RectTransform FindChildOfParent( Transform transform , string childName , string parentName )
+		{
+			return Common.FindParentOrSelf( transform , parentName )?.Find( childName ) as RectTransform;
+		}
+
 		public static Transform FindParentOrSelf( Transform transform , string name )
 		{
 			while( transform != null )
@@ -14,16 +20,15 @@ namespace SuperUltrawideSupport
 				transform = transform.parent?.gameObject?.transform;
 			}
 
-			//System.Console.WriteLine( $"Unable to find parent or self transform \"{name}\"!" );
+			System.Console.WriteLine( $"Unable to find parent or self transform \"{name}\"!" );
 			return null;
 		}
 
-		/*
+#if !PACKAGE
 		public static void PrintRectTransform( string text , RectTransform rectTransform )
 		{
-			System.Console.WriteLine( $"{text} {rectTransform.name}: {rectTransform.anchorMin}" );
-			System.Console.WriteLine( $"{text} {rectTransform.name}: {rectTransform.anchorMax}" );
-			System.Console.WriteLine( $"{text} {rectTransform.name}: {rectTransform.anchoredPosition}" );
+			System.Console.WriteLine( $"{text} {rectTransform.name}:" );
+			System.Console.WriteLine( $"\t{rectTransform.anchorMin} <-> {rectTransform.anchorMax} @ {rectTransform.anchoredPosition}" );
 		}
 
 		public static void PrintParents( Transform transform )
@@ -61,6 +66,6 @@ namespace SuperUltrawideSupport
 			for( int index = 0 ; index < transform.childCount ; index++ )
 				DumpTransformTree( transform.GetChild( index ) , indent + 1 );
 		}
-		*/
+#endif
 	}
 }

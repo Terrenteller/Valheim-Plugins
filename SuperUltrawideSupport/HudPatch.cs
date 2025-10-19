@@ -9,6 +9,8 @@ namespace SuperUltrawideSupport
 		[HarmonyPatch( typeof( Hud ) )]
 		private class HudPatch
 		{
+			private static string TransformPath = null;
+
 			[HarmonyPatch( "Awake" )]
 			[HarmonyPostfix]
 			private static void AwakePostfix( ref Hud __instance )
@@ -17,8 +19,8 @@ namespace SuperUltrawideSupport
 				RectTransform rectTransform = __instance.transform.Find( "hudroot" ) as RectTransform;
 				if( rectTransform != null )
 				{
-					Lerper.Register( rectTransform );
-					Lerper.Lerp( rectTransform );
+					TransformPath = AspectLerper.AbsoluteTransformPath( rectTransform );
+					Lerper.RegisterLerpAndUpdate( rectTransform );
 				}
 			}
 
@@ -26,7 +28,7 @@ namespace SuperUltrawideSupport
 			[HarmonyPrefix]
 			private static void OnDestroyPrefix()
 			{
-				Lerper.Unregister( "hudroot" );
+				Lerper.Unregister( TransformPath );
 			}
 		}
 	}
