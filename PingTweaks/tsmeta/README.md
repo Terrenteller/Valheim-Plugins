@@ -1,16 +1,25 @@
 PingTweaks improves the appearance and behavior of pings.
 
 - Pings are not broadcast to other players without a modifier key
-- Map marker pings show the marker text
-- Pings are sent and map markers are created with proper elevation data
+- Pings may be created as persistent with a modifier key (persistent broadcast allowed)
+- A player may cancel their ping by pinging it again (not networked)
+- Map marker pings show the marker text, if any
+- Pings are sent and map markers are created with reasonably accurate elevation values
 - Pings show distance in meters
-- Ping duration may be changed
-- In-world ping text color may be changed
+- Transient ping duration is adjustable
+- In-world ping text color is adjustable
 - Pings from other players may be pinned by double-clicking on them (persistence optional)
 
 PingTweaks is client-side but works better when all clients have it.
 
 ## Changelog
+
+1.0.6
+
+- Update for 0.221.4 (Call To Arms)
+- Add persistent pings
+- Improve ping positions below sea level
+- Fix exception computing distance during disconnection
 
 1.0.5
 

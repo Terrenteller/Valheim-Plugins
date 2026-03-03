@@ -11,16 +11,30 @@ namespace PingTweaks
 		[HarmonyPatch( typeof( Chat ) )]
 		private class ChatPatch
 		{
+			public static bool BroadcastPing = false;
+			public static bool CreatePersistentPing = false;
+			public static Vector3? PersistentPingLocation = null;
+			//private static Material PingTextMaterial = null; // See below
+
+			public static Chat.WorldTextInstance FindExistingWorldText( Chat instance , long senderID )
+			{
+				return Traverse.Create( instance )
+					.Method( "FindExistingWorldText" , new[] { typeof( long ) } )
+					.GetValue< Chat.WorldTextInstance >( senderID );
+			}
+
 			[HarmonyPatch( "AddInworldText" )]
 			[HarmonyPrefix]
 			private static void AddInworldTextPrefix(
+				ref Chat __instance,
+				ref long senderID,
 				ref Vector3 position,
 				ref string text,
 				ref Talker.Type type,
 				out string __state )
 			{
-				// Grab the text before the real method modifies it
-				__state = text;
+				// Grab the text before the real method clobbers it
+				__state = text.IsNullOrWhiteSpace() ? "PING" : text;
 
 				if( !IsEnabled.Value || type != Talker.Type.Ping )
 					return;
@@ -50,6 +64,16 @@ namespace PingTweaks
 					// Same for the reverse case.
 					position.y = playerY + Common.DungeonFakeDepth;
 				}
+				else if( position.y < Common.EstimatedSeaLevel )
+				{
+					// Point is below sea level.
+					// Show as slightly above to not break zero checks.
+					// Order matters here to not conflict with fake dungeon depth.
+					position.y = Common.EstimatedSeaLevel;
+				}
+
+				if( CreatePersistentPing && senderID == ZNet.GetUID() )
+					PersistentPingLocation = position + Vector3.zero;
 			}
 
 			[HarmonyPatch( "AddInworldText" )]
@@ -60,21 +84,36 @@ namespace PingTweaks
 				ref Talker.Type type,
 				ref string __state )
 			{
-				if( type != Talker.Type.Ping || !IsEnabled.Value || __state.IsNullOrWhiteSpace() )
+				if( !IsEnabled.Value || type != Talker.Type.Ping )
 					return;
 
-				Chat.WorldTextInstance worldText = Traverse.Create( __instance )
-					.Method( "FindExistingWorldText" , new[] { typeof( long ) } )
-					.GetValue< Chat.WorldTextInstance >( senderID );
+				Chat.WorldTextInstance worldText = FindExistingWorldText( __instance , senderID );
 				if( worldText == null )
 					return;
 
 				worldText.m_text = Localization.instance.Localize( __state ).ToUpperInvariant();
-				Traverse.Create( __instance )
-					.Method( "UpdateWorldTextField" , new[] { typeof( Chat.WorldTextInstance ) } )
-					.GetValue( worldText );
-
 				MinimapPatch.RegeneratePingPins = true;
+
+				// TODO: Consider improving the visibility of text against similar backgrounds
+				//worldText.m_textMeshField.fontStyle = TMPro.FontStyles.Bold; // Does the font not have a bold style?
+				//worldText.m_textMeshField.fontSize += 2; // Determine a good size, if different, and set it exactly
+				//System.Console.WriteLine( $"AddInworldTextPostfix() worldText.m_textMeshField.fontSize is {worldText.m_textMeshField.fontSize}" );
+
+				//if( PingTextMaterial == null )
+				//{
+				//	// FIXME: This helps, but the outline expand inwards too much and takes over the text.
+				//	// Would it look better with a bold font? Negative outline widths do not work.
+				//	// Also needs to be done regardless of __state.
+				//	// https://stackoverflow.com/a/79833376
+				//	PingTextMaterial = worldText.m_textMeshField.fontMaterial;
+				//	PingTextMaterial.EnableKeyword( "OUTLINE_ON" );
+				//	PingTextMaterial.SetFloat( "_OutlineWidth" , 0.2f );
+				//	PingTextMaterial.SetColor( "_OutlineColor" , Color.black );
+				//}
+
+				// This gets runs often enough to raise an optimization eyebrow. Can we improve that?
+				//worldText.m_textMeshField.fontMaterial = PingTextMaterial;
+				//worldText.m_textMeshField.UpdateMeshPadding();
 			}
 
 			[HarmonyPatch( "SendPing" )]
@@ -102,23 +141,22 @@ namespace PingTweaks
 			[HarmonyPrefix]
 			private static void UpdateWorldTextFieldPrefix( ref Chat __instance , ref Chat.WorldTextInstance wt )
 			{
-				// No need to set all the time in UpdateWorldTextsPostfix()
-				if( IsEnabled.Value && wt.m_type == Talker.Type.Ping )
+				if( !IsEnabled.Value || wt.m_type != Talker.Type.Ping )
+					return;
+
+				// These values get overwritten somehow if set in AddInworldTextPostfix()
+				if( PersistentPingLocation != null
+					&& wt.m_position == PersistentPingLocation.GetValueOrDefault()
+					&& wt.m_talkerID == ZNet.GetUID() )
+				{
+					wt.m_textMeshField.color = Common.CopyColor( PersistentPingColor.Value );
+					wt.m_timer = Mathf.NegativeInfinity;
+				}
+				else
 				{
 					wt.m_textMeshField.color = Common.CopyColor( PingColor.Value );
 					wt.m_timer = __instance.m_worldTextTTL - (float)PingDuration.Value;
 				}
-			}
-
-			[HarmonyPatch( "UpdateWorldTexts" )]
-			[HarmonyPrefix]
-			private static void UpdateWorldTextsPrefix( ref float dt , ref List< Chat.WorldTextInstance > ___m_worldTexts )
-			{
-				// Stop pings from slowly moving upwards and causing the distance to change
-				if( IsEnabled.Value )
-					foreach( Chat.WorldTextInstance worldText in ___m_worldTexts )
-						if( worldText.m_type == Talker.Type.Ping )
-							worldText.m_position.y -= dt * 0.15f; // Taken from the original method
 			}
 
 			[HarmonyPatch( "UpdateWorldTexts" )]
@@ -130,16 +168,12 @@ namespace PingTweaks
 
 				foreach( Chat.WorldTextInstance worldText in ___m_worldTexts )
 				{
-					// Limit to pings for consistency
-					if( worldText.m_type != Talker.Type.Ping )
-						continue;
-
-					worldText.m_textMeshField.SetText(
-						string.Format(
-							"{0}\n{1}\n{2}",
-							worldText.m_name,
-							worldText.m_text,
-							Common.PrettyPrintDistance( Player.m_localPlayer.transform.position , worldText.m_position ) ) );
+					if( worldText.m_type == Talker.Type.Ping )
+					{
+						// Cancel out pings slowly moving upwards and causing the distance to change
+						worldText.m_position.y -= dt * 0.15f;
+						worldText.m_textMeshField.SetText( Common.PrettyPrintPingText( worldText ) );
+					}
 				}
 			}
 		}

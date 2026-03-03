@@ -14,7 +14,7 @@ Allows items to be equipped in custom slots defined.
 
 This is an update and drop-in replacement of [CustomSlotItemLib](https://thunderstore.io/c/valheim/p/nearbear/CustomSlotItemLib/) originally written by [nearbear](https://github.com/nearbear/ValheimBepinexMods/tree/main/CustomSlotItemLib). It was broken by an unknown game update and appears to be abandoned. More information can be found in the original [README](https://github.com/nearbear/ValheimBepinexMods/blob/main/CustomSlotItemLib/Package/README.md).
 
-### InputTweaks | [Settings](InputTweaks/InputTweaks.cs)
+### Input Tweaks | [Settings](InputTweaks/InputTweaks.cs)
 
 InputTweaks is a Valheim clone of Mouse Wheelie, a re-make of InventoryTweaks, and a dash of default Minecraft controls.
 
@@ -63,15 +63,19 @@ Vikings may love to fight and throwing hands is a great way to start a brawl, bu
 
 ### Ping Tweaks | [Settings](PingTweaks/PingTweaks.cs)
 
-Improves the appearance and behavior of pings.
+PingTweaks improves the appearance and behavior of pings.
 
 - Pings are not broadcast to other players without a modifier key
-- Map marker pings show the marker text
-- Pings are sent and map markers are created with proper elevation data
+- Pings may be created as persistent with a modifier key (persistent broadcast allowed)
+- A player may cancel their ping by pinging it again (not networked)
+- Map marker pings show the marker text, if any
+- Pings are sent and map markers are created with reasonably accurate elevation values
 - Pings show distance in meters
-- Ping duration may be changed
-- In-world ping text color may be changed
+- Transient ping duration is adjustable
+- In-world ping text color is adjustable
 - Pings from other players may be pinned by double-clicking on them (persistence optional)
+
+PingTweaks is client-side but works better when all clients have it.
 
 ### Restful Arrival | [Settings](RestfulArrival/RestfulArrival.cs)
 

@@ -84,8 +84,11 @@
   <ItemGroup>
     <Compile Include="ChatPatch.cs" />
     <Compile Include="Common.cs" />
+    <Compile Include="GamePatch.cs" />
     <Compile Include="MinimapPatch.cs" />
+    <Compile Include="MinimapPinNameDataPatch.cs" />
     <Compile Include="PingTweaks.cs" />
+    <Compile Include="PlayerPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ZRoutedRpcPatch.cs" />
   </ItemGroup>
