@@ -1,6 +1,11 @@
-Off by default, but toggleable at any time with an in-game configuration manager.
+Adds an option to the graphics settings dialog to remove the border when not fullscreen.
 
 ## Changelog
+
+1.1.2
+
+- Update for 0.221.4 (Call To Arms)
+- Add a proper widget to the graphics settings GUI
 
 1.1.1
 

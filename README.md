@@ -4,9 +4,7 @@ Each plugin in this repo is briefly described below. Please refer to settings as
 
 ### Borderless Windowed | [Settings](BorderlessWindowed/BorderlessWindowed.cs)
 
-Removes the border from the game window when not fullscreen.
-
-Does not remove the border by default. It should be toggled with an in-game configuration manager.
+Adds an option to the graphics settings dialog to remove the border when not fullscreen.
 
 ### Custom Slot Item Lib | [Settings](CustomSlotItemLib/CustomSlotItemLib.cs)
 
@@ -91,6 +89,6 @@ This repo is licenced under [LGPL 3.0](LICENCE.md) unless where otherwise stated
 
 CustomItemSlotLib is a fork of [nearbear](https://github.com/nearbear/ValheimBepinexMods/tree/main/CustomSlotItemLib)'s repo and remains licensed under the [MIT Licence](CustomSlotItemLib/LICENCE).
 
-Package preview imagery is derived from content provided by https://clipart-library.com and is approved for "Non-Commercial Use" per their [custom license](http://clipart-library.com/terms.html).
+Package preview imagery is, in part, derived from content provided by https://clipart-library.com and is approved for "Non-Commercial Use" per their [custom license](http://clipart-library.com/terms.html).
 
 Modification of Valheim is understood to be acceptable per [Iron Gate's official stance on mods](https://www.valheimgame.com/news/regarding-mods/). NOT AN OFFICIAL VALHEIM PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH IRON GATE.

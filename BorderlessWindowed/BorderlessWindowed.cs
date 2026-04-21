@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 namespace BorderlessWindowed
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.borderlesswindowed" , "Borderless Windowed" , "1.1.1" )]
+	[BepInPlugin( "com.riintouge.borderlesswindowed" , "Borderless Windowed" , "1.1.2" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class BorderlessWindowed : BaseUnityPlugin
 	{
@@ -38,7 +38,7 @@ namespace BorderlessWindowed
 				true,
 				"Whether the border should be shown on the game window." );
 
-			// TODO: Forced size options?
+			// TODO: Forced size and position options?
 
 			if( LoadOnStart.Value )
 			{
@@ -51,7 +51,10 @@ namespace BorderlessWindowed
 		private void Config_SettingChanged( object sender , SettingChangedEventArgs e )
 		{
 			if( e.ChangedSetting == ShowBorder )
+			{
 				Instance.StartCoroutine( Instance.CoUpdateBorder() );
+				GraphicsSettingsPatch.SynchronizeWithConfigEntry( null );
+			}
 		}
 
 		internal IEnumerator CoUpdateBorder()

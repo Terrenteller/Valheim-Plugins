@@ -1,19 +1,18 @@
-﻿using HarmonyLib;
-using Valheim.SettingsGui;
-
+﻿using GUIFramework;
+using HarmonyLib;
+using System;
 namespace BorderlessWindowed
 {
 	public partial class BorderlessWindowed
 	{
-		[HarmonyPatch( typeof( GraphicsModeManager ) )]
-		private class GraphicsModeManagerPatch
+		[HarmonyPatch( typeof( GraphicsSettingsManager ) )]
+		private class GraphicsSettingsManagerPatch
 		{
-			[HarmonyPatch( "ApplyMode" )]
+			[HarmonyPatch( "ApplyTargetResolutionSetting" )]
 			[HarmonyPostfix]
-			private static void ApplyModePostfix( bool __result , GraphicsQualityMode mode )
+			private static void ApplyTargetResolutionSettingPostfix()
 			{
-				if( __result )
-					Instance.StartCoroutine( Instance.CoUpdateBorder() );
+				Instance.StartCoroutine( Instance.CoUpdateBorder() );
 			}
 		}
 	}

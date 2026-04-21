@@ -172,7 +172,7 @@ namespace BorderlessWindowed
 
 		private WindowRect ComputeBorderThickness( WindowRect outer , int width , int height )
 		{
-			// Default initialization is to make C# happy about the assignment at the end of this block.
+			// Default initialization is to make C# happy about the assignment at the end of this block
 			WindowRect thickness = default( WindowRect );
 			thickness.Left = ( ( outer.Right - outer.Left ) - width ) / 2;
 			thickness.Right = thickness.Left;
