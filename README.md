@@ -79,6 +79,10 @@ PingTweaks is client-side but works better when all clients have it.
 
 Removes the delay between resting and rested upon joining a world.
 
+### Safety Net | [Settings](SafetyNet/SafetyNet.cs)
+
+Visualizes volumes in which mobs cannot spawn, like around campfires and workbenches.
+
 ### Super Ultrawide Support | [Settings](SuperUltrawideSupport/SuperUltrawideSupport.cs)
 
 Do your monitors fulfill the Manifest Destiny of your desk? Does your cursor accumulate frequent flyer miles? Never skip neck day? Designed for a triple-monitor experience, SuperUltrawideSupport fits important HUD and GUI elements to an aspect ratio of your choice.

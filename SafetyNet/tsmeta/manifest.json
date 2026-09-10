@@ -1,0 +1,9 @@
+{
+	"name": "SafetyNet",
+	"version_number": "1.0.0",
+	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
+	"description": "Visualizes volumes in which mobs cannot spawn.",
+	"dependencies": [
+		"denikson-BepInExPack_Valheim-5.4.2333"
+	]
+}
