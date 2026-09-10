@@ -84,29 +84,54 @@ namespace SafetyNet
 
 			protected bool CreateOrUpdateMesh()
 			{
-				if( collider is SphereCollider )
-				{
-					if( meshFilter.sharedMesh != SharedSphereMesh )
-					{
-						meshFilter.mesh = null;
-						meshFilter.sharedMesh = SharedSphereMesh;
-						return true;
-					}
-				}
-				else if( collider is CapsuleCollider capsuleCollider )
-				{
-					if( capsuleCollider.radius != capsuleColliderRadius )
-					{
-						meshFilter.sharedMesh = null;
-						meshFilter.mesh = meshFilter.mesh ?? new Mesh();
-						WireframeMeshFactory.RegenerateMeshForCapsule( meshFilter.mesh , capsuleCollider );
-						capsuleColliderRadius = capsuleCollider.radius;
-						return true;
-					}
-				}
-
 				// TODO: Draw a bounding box around the associated piece for improved visibility?
 				// The mess (or sparsity) of lines can make it difficult to tell what's what.
+
+				try
+				{
+					if( collider is SphereCollider )
+					{
+						if( meshFilter.sharedMesh != SharedSphereMesh )
+						{
+							meshFilter.mesh = null;
+							meshFilter.sharedMesh = SharedSphereMesh;
+						}
+
+						return true;
+					}
+					else if( collider is CapsuleCollider capsuleCollider )
+					{
+						if( capsuleCollider.radius != capsuleColliderRadius )
+						{
+							if( ( capsuleCollider.height - ( 2.0f * capsuleCollider.radius ) ) <= 0.0f )
+							{
+								// Actually a sphere or spheroid
+								meshFilter.mesh = null;
+								meshFilter.sharedMesh = SharedSphereMesh;
+							}
+							else
+							{
+								meshFilter.sharedMesh = null;
+								meshFilter.mesh = meshFilter.mesh ?? new Mesh();
+								WireframeMeshFactory.RegenerateMeshForCapsule( meshFilter.mesh , capsuleCollider );
+								capsuleColliderRadius = capsuleCollider.radius;
+							}
+						}
+
+						return true;
+					}
+
+					// There are other colliders, but none seen or known to be relevant
+					System.Console.WriteLine( $"SafetyNet does not handle collider type \"{collider.GetType()}\"" );
+				}
+				catch( ArgumentException e )
+				{
+					System.Console.WriteLine( e );
+				}
+
+				meshFilter.mesh = null;
+				meshFilter.sharedMesh = null;
+				enabled = false; // Disable ourself so we don't spam the console
 				return false;
 			}
 
@@ -135,12 +160,21 @@ namespace SafetyNet
 						distanceFactor = playerDistanceFromCenterSquared - ( radius * radius );
 						considerForRender = true;
 
-						if( collider is SphereCollider )
-							gameObject.transform.localScale = new Vector3( radius , radius , radius );
-						else if( CreateOrUpdateMesh() )
-							gameObject.transform.localScale = Vector3.one;
+						if( CreateOrUpdateMesh() )
+						{
+							if( collider is SphereCollider )
+							{
+								gameObject.transform.localScale = new Vector3( radius , radius , radius );
+							}
+							else if( collider is CapsuleCollider capsuleCollider )
+							{
+								gameObject.transform.localScale = meshFilter.sharedMesh == SharedSphereMesh
+									? new Vector3( radius , capsuleCollider.height , radius ) // Degenerate case
+									: gameObject.transform.localScale = Vector3.one;
+							}
 
-						return;
+							return;
+						}
 					}
 				}
 

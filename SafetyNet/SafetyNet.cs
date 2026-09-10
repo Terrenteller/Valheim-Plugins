@@ -7,7 +7,7 @@ using UnityEngine;
 namespace SafetyNet
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.safetynet" , "Safety Net" , "1.0.0" )]
+	[BepInPlugin( "com.riintouge.safetynet" , "Safety Net" , "1.0.1" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class SafetyNet : BaseUnityPlugin
 	{
