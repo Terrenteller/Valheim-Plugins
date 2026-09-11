@@ -7,7 +7,9 @@ namespace NagMessages
 	// TODO: Clean up the outrageous redundancy in this project
 	public partial class NagMessages
 	{
+		private readonly int AshlandsPowerNameHash = "GP_Ashlands".GetHashCode();
 		private readonly int BonemassPowerNameHash = "GP_Bonemass".GetHashCode();
+		private readonly int DeepNorthPowerNameHash = "GP_DeepNorth".GetHashCode();
 		private readonly int EikthyrPowerNameHash = "GP_Eikthyr".GetHashCode();
 		private readonly int ModerPowerNameHash = "GP_Moder".GetHashCode();
 		private readonly int TheElderPowerNameHash = "GP_TheElder".GetHashCode();
@@ -68,11 +70,13 @@ namespace NagMessages
 			}
 
 			int powerNameHash = player.GetGuardianPowerName().GetHashCode();
-			if( ( !AllowBonemass.Value && powerNameHash == BonemassPowerNameHash )
+			if( ( !AllowAshlands.Value && powerNameHash == AshlandsPowerNameHash )
+				|| ( !AllowBonemass.Value && powerNameHash == BonemassPowerNameHash )
+				|| ( !AllowDeepNorth.Value && powerNameHash == DeepNorthPowerNameHash )
 				|| ( !AllowEikthyr.Value && powerNameHash == EikthyrPowerNameHash )
 				|| ( !AllowModer.Value && powerNameHash == ModerPowerNameHash )
 				|| ( !AllowTheElder.Value && powerNameHash == TheElderPowerNameHash )
-				|| ( !AllowTheQueen.Value && powerNameHash == TheQueenPowerNameHash )
+				|| ( !AllowQueen.Value && powerNameHash == TheQueenPowerNameHash )
 				|| ( !AllowYagluth.Value && powerNameHash == YagluthPowerNameHash ) )
 			{
 				// TODO: Don't nag if the world does not have any of the preferred powers unlocked

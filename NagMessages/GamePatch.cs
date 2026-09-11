@@ -11,10 +11,10 @@ namespace NagMessages
 
 			[HarmonyPatch( "FixedUpdate" )]
 			[HarmonyPrefix]
+			[HarmonyPriority( Priority.First + 1 )]
 			private static void FixedUpdatePrefix( ref bool ___m_firstSpawn )
 			{
-				// Other mods which do or change things on first spawn may screw with Game.m_firstSpawn.
-				// Capture the value sooner so we have a higher chance of working correctly.
+				// Capture this value before other plugins mess with it
 				if( ___m_firstSpawn )
 					FirstSpawnPending = true;
 			}

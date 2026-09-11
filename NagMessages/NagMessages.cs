@@ -7,7 +7,7 @@ using UnityEngine;
 namespace NagMessages
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.nagmessages" , "Nag Messages" , "1.0.1" )]
+	[BepInPlugin( "com.riintouge.nagmessages" , "Nag Messages" , "1.0.2" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class NagMessages : BaseUnityPlugin
 	{
@@ -19,11 +19,13 @@ namespace NagMessages
 		// 1 - General
 		public static ConfigEntry< bool > QueueCenterMessages;
 		// 2 - Forsaken Powers
+		public static ConfigEntry< bool > AllowAshlands;
 		public static ConfigEntry< bool > AllowBonemass;
+		public static ConfigEntry< bool > AllowDeepNorth;
 		public static ConfigEntry< bool > AllowEikthyr;
 		public static ConfigEntry< bool > AllowModer;
+		public static ConfigEntry< bool > AllowQueen;
 		public static ConfigEntry< bool > AllowTheElder;
-		public static ConfigEntry< bool > AllowTheQueen;
 		public static ConfigEntry< bool > AllowYagluth;
 		public static ConfigEntry< int > PowerNagFrequency;
 		private static int LastPowerNagFrequency;
@@ -58,9 +60,21 @@ namespace NagMessages
 				true,
 				"Whether front-and-center messages will be queued for display. Provided for compatibility." );
 
+			AllowAshlands = Config.Bind(
+				"2 - Forsaken Powers",
+				"AllowAshlands",
+				true,
+				"If false, periodically nag the player to switch powers." );
+
 			AllowBonemass = Config.Bind(
 				"2 - Forsaken Powers",
 				"AllowBonemass",
+				true,
+				"If false, periodically nag the player to switch powers." );
+
+			AllowDeepNorth = Config.Bind(
+				"2 - Forsaken Powers",
+				"AllowDeepNorth",
 				true,
 				"If false, periodically nag the player to switch powers." );
 
@@ -76,15 +90,15 @@ namespace NagMessages
 				true,
 				"If false, periodically nag the player to switch powers." );
 
-			AllowTheElder = Config.Bind(
+			AllowQueen = Config.Bind(
 				"2 - Forsaken Powers",
-				"AllowTheElder",
+				"AllowTheQueen",
 				true,
 				"If false, periodically nag the player to switch powers." );
 
-			AllowTheQueen = Config.Bind(
+			AllowTheElder = Config.Bind(
 				"2 - Forsaken Powers",
-				"AllowTheQueen",
+				"AllowTheElder",
 				true,
 				"If false, periodically nag the player to switch powers." );
 
@@ -139,11 +153,13 @@ namespace NagMessages
 
 		private void Config_SettingChanged( object sender , SettingChangedEventArgs e )
 		{
-			if( e.ChangedSetting == AllowBonemass
+			if( e.ChangedSetting == AllowAshlands
+				|| e.ChangedSetting == AllowBonemass
+				|| e.ChangedSetting == AllowDeepNorth
 				|| e.ChangedSetting == AllowEikthyr
 				|| e.ChangedSetting == AllowModer
 				|| e.ChangedSetting == AllowTheElder
-				|| e.ChangedSetting == AllowTheQueen
+				|| e.ChangedSetting == AllowQueen
 				|| e.ChangedSetting == AllowYagluth )
 			{
 				if( !(bool)e.ChangedSetting.BoxedValue )
