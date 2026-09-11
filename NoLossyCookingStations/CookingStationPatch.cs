@@ -13,7 +13,7 @@ namespace NoLossyCookingStations
 			// We take a three-prong approach to preventing item loss:
 			// 1. Forcefully take network ownership of the cooking station so adding items happens locally
 			// 2. Limit the rate at which items can be added
-			// 3. Dump overflow back into the world when we're the network owner
+			// 3. Dump overflow back into the world when we're the network owner to assist clients without this plugin
 
 			private static double RateLimitTimeout = 0.0;
 

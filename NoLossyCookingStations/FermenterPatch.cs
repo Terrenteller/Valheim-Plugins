@@ -68,21 +68,21 @@ namespace NoLossyCookingStations
 
 			[HarmonyPatch( "RPC_AddItem" )]
 			[HarmonyPrefix]
-			private static bool RPC_AddItemPrefix( ref Fermenter __instance , ref ZNetView ___m_nview , ref string name )
+			private static bool RPC_AddItemPrefix( ref Fermenter __instance , ref ZNetView ___m_nview , ref int nameHash )
 			{
 				if( !IsEnabled.Value || !___m_nview.IsOwner() )
 					return true;
 
 				bool itemIsAllowed = Traverse.Create( __instance )
-					.Method( "IsItemAllowed" , new[] { typeof( string ) } )
-					.GetValue< bool >( name );
+					.Method( "IsItemAllowed" , new[] { typeof( int ) } )
+					.GetValue< bool >( nameHash );
 				string content = Traverse.Create( __instance )
 					.Method( "GetContent" )
 					.GetValue< string >();
 
 				if( itemIsAllowed && !content.IsNullOrWhiteSpace() )
 				{
-					GameObject itemPrefab = ObjectDB.instance.GetItemPrefab( name );
+					GameObject itemPrefab = ObjectDB.instance.GetItemPrefab( nameHash );
 					Vector3 position = __instance.m_outputPoint.position + Vector3.up;
 					Instantiate( itemPrefab , position , Quaternion.identity );
 
