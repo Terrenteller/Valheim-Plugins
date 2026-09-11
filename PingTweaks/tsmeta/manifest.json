@@ -1,9 +1,9 @@
 {
 	"name": "PingTweaks",
-	"version_number": "1.0.6",
+	"version_number": "1.0.7",
 	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
 	"description": "Improves the appearance and behavior of pings.",
 	"dependencies": [
-		"denikson-BepInExPack_Valheim-5.4.2333"
+		"denikson-BepInExPack_Valheim-5.4.2350"
 	]
 }

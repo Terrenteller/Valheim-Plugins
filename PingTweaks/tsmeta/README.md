@@ -14,6 +14,10 @@ PingTweaks is client-side but works better when all clients have it.
 
 ## Changelog
 
+1.0.7
+
+- Update for 1.0.7 (Deep North)
+
 1.0.6
 
 - Update for 0.221.4 (Call To Arms)

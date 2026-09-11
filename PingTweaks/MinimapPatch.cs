@@ -15,7 +15,7 @@ namespace PingTweaks
 			{
 				return Traverse.Create( instance )
 					.Method( "ScreenToWorldPoint" , new[] { typeof( Vector3 ) } )
-					.GetValue< Vector3 >( ZInput.mousePosition );
+					.GetValue< Vector3 >( ZInput.pointerPosition );
 			}
 
 			internal static Minimap.PinData GetClosestPin( Minimap instance , Vector3 pos , float radius , bool mustBeVisible = true )
