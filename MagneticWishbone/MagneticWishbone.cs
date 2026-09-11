@@ -6,7 +6,7 @@ using Jotunn.Managers;
 namespace MagneticWishbone
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.magneticwishbone", "Magnetic Wishbone", "1.1.1" )]
+	[BepInPlugin( "com.riintouge.magneticwishbone", "Magnetic Wishbone", "1.1.2" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class MagneticWishbone : BaseUnityPlugin
 	{

@@ -8,6 +8,10 @@ Don't want to make the tough decision between an upgraded Wishbone and other uti
 
 ## Changelog
 
+1.1.2
+
+- Update for 1.0.7 (Deep North)
+
 1.1.1
 
 - Update for 0.219.14

@@ -46,6 +46,7 @@ namespace MagneticWishbone
 		{
 			if( Chainloader.PluginInfos.ContainsKey( "com.maxsch.valheim.vnei" ) )
 			{
+				// FIXME: This adds a duplicate every time it is called
 				RegisterWithVNEICore();
 				return true;
 			}
@@ -53,6 +54,7 @@ namespace MagneticWishbone
 			return false;
 		}
 
+		// VNEI types are abstracted by a function that is never called if VNEI is not present
 		protected virtual void RegisterWithVNEICore()
 		{
 			for( int quality = 1 ; quality <= m_item.m_itemData.m_shared.m_maxQuality ; quality++ )
@@ -60,7 +62,7 @@ namespace MagneticWishbone
 					VNEI.Logic.Indexing.AddRecipeToItems( (VNEI.Logic.RecipeInfo)RegisterWithVNEICore( quality ) );
 		}
 
-		// Object, so the vtable can be constructed when VNEI is not present
+		// Object, to not require resolution of VNEI types
 		protected virtual Object RegisterWithVNEICore( int quality )
 		{
 			// Props to the VNEI devs for having the foresight to make a distinction between quality and everything else
