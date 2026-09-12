@@ -1,0 +1,9 @@
+{
+	"name": "IHaveArrived",
+	"version_number": "1.1.0",
+	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
+	"description": "Turn off or change those annoying messages when joining a server/world.",
+	"dependencies": [
+		"denikson-BepInExPack_Valheim-5.4.2350"
+	]
+}

@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BorderlessWindowed", "Borde
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SafetyNet", "SafetyNet\SafetyNet.csproj", "{86837B32-6908-4223-9D5D-E45BD958ED45}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IHaveArrived", "IHaveArrived\IHaveArrived.csproj", "{4B818248-130A-472A-9E58-6CE207CD049D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -138,6 +140,12 @@ Global
 		{86837B32-6908-4223-9D5D-E45BD958ED45}.Package|Any CPU.Build.0 = Package|Any CPU
 		{86837B32-6908-4223-9D5D-E45BD958ED45}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{86837B32-6908-4223-9D5D-E45BD958ED45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B818248-130A-472A-9E58-6CE207CD049D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B818248-130A-472A-9E58-6CE207CD049D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B818248-130A-472A-9E58-6CE207CD049D}.Package|Any CPU.ActiveCfg = Package|Any CPU
+		{4B818248-130A-472A-9E58-6CE207CD049D}.Package|Any CPU.Build.0 = Package|Any CPU
+		{4B818248-130A-472A-9E58-6CE207CD049D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B818248-130A-472A-9E58-6CE207CD049D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

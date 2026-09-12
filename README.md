@@ -12,6 +12,12 @@ Allows items to be equipped in custom slots defined.
 
 This is an update and drop-in replacement of [CustomSlotItemLib](https://thunderstore.io/c/valheim/p/nearbear/CustomSlotItemLib/) originally written by [nearbear](https://github.com/nearbear/ValheimBepinexMods/tree/main/CustomSlotItemLib). It was broken by an unknown game update and appears to be abandoned. More information can be found in the original [README](https://github.com/nearbear/ValheimBepinexMods/blob/main/CustomSlotItemLib/Package/README.md).
 
+### I Have Arrived | [Settings](IHaveArrived/IHaveArrived.cs)
+
+"Remove those annoying messages when joining a server. Or even better, change them to fit your taste."
+
+This is an update and lightweight replacement of [IHaveArrived](https://thunderstore.io/c/valheim/p/givenameplz/IHaveArrived/) originally written by [givenameplz](https://givenameplz.de). It was broken by the Deep North update and appears to be abandoned. Unlike the original plugin, this one has no console commands. Announcements are one per line, not to exceed 150 characters, chosen at random from a file named "announcements.txt" next to the plugin DLL. The "messages.txt" used by the original plugin will be prioritized if it exists.
+
 ### Input Tweaks | [Settings](InputTweaks/InputTweaks.cs)
 
 InputTweaks is a Valheim clone of Mouse Wheelie, a re-make of InventoryTweaks, and a dash of default Minecraft controls.
