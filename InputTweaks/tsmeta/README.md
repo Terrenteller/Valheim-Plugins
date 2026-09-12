@@ -8,25 +8,30 @@ Enabled by default (or hardcoded):
 - [LMB] drag will collect/divide similar items from/into applicable stacks/slots
 - [RMB] drag will move one item from the cursor into applicable slots
 - [LMB] double-click on an item will collect similar items from other stacks
+	- The current inventory is prioritized
 - [RMB] with an item on the cursor outside of the inventory will drop a single item
 - [Q] will drop a single item from the stack beneath the cursor
 	- This conflicts with auto-run out-of-the-box
 	- [SHIFT], in addition, will drop the entire stack
 - Mouse scroll will pull/push items under the cursor and increment/decrement the split dialog
-- [LMB] will put/take items on/from item/armor stands
+- [LMB] will put/take items on/from item/armor stands, and pick up items in the world
 - [LMB] will open/close containers
 - [F3] will toggle the HUD
 	- [CTRL] + [F3] is the game default and is not changed
-	- [F1] would conflict with configuration managers
+	- [F1] may conflict with configuration managers
 
 Disabled by default:
 - Swapped items stay selected (à la Minecraft)
 - Stack splits round down
 - Unbalanced stack smear remainders stay selected
 
-Other plugins that deal with the inventory and modifier keys may require configuration to be compatible with InputTweaks, such as SmartContainers' route-on-move feature. Please check configuration options if you encounter input conflicts.
+Other plugins that deal with the inventory and modifier keys may require configuration to be compatible with InputTweaks, such as any "smart containers" route-on-move feature. Please check configuration options if you encounter input conflicts.
 
 ## Changelog
+
+1.1.3
+
+- Update for 1.0.7 (Deep North)
 
 1.1.2
 

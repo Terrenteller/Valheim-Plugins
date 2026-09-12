@@ -71,12 +71,14 @@ namespace InputTweaks
 		{
 			int width = InputTweaks.InventoryGridPatch.Width( grid );
 			Inventory inv = grid.GetInventory();
+			if( inv == null )
+				return new List< ItemDrop.ItemData >();
 
 			return inv.GetAllItems()
-			   .Where( x => CanStackOnto( x , item ) )
-			   .OrderBy( x => x.m_stack )
-			   .ThenBy( x => x.m_gridPos.x + ( x.m_gridPos.y * width ) )
-			   .ToList();
+				.Where( x => CanStackOnto( x , item ) )
+				.OrderBy( x => x.m_stack )
+				.ThenBy( x => x.m_gridPos.x + ( x.m_gridPos.y * width ) )
+				.ToList();
 		}
 
 		public static ItemDrop.ItemData FindFirstSimilarItemInInventory( ItemDrop.ItemData item , Inventory inv )

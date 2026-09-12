@@ -192,20 +192,24 @@ namespace InputTweaks
 				if( player == null || scroll == 0.0f )
 					return;
 
-				GameObject splitPanel = inventoryGui.m_splitPanel.gameObject;
+				GameObject splitPanel = inventoryGui.m_splitDialog.gameObject;
 				if( splitPanel.activeInHierarchy )
 				{
-					// The split panel is the full size of the screen
-					if( Common.IsCursorOver( inventoryGui.m_splitPanel.Find( "win_bkg" ) as RectTransform ) )
+					RectTransform panel = Traverse.Create( inventoryGui.m_splitDialog )
+						.Field( "m_panel" )
+						.GetValue< RectTransform >();
+
+					// Because the split dialog is the full size of the screen
+					if( Common.IsCursorOver( panel ) )
 					{
-						Slider splitSlider = inventoryGui.m_splitSlider;
+						Slider splitSlider = inventoryGui.m_splitDialog.m_splitSlider;
 						splitSlider.value = Mathf.Clamp(
 							splitSlider.value + ( scroll > 0.0f ? 1.0f : -1.0f ),
 							splitSlider.minValue,
 							splitSlider.maxValue );
 
-						Traverse.Create( inventoryGui )
-							.Method( "OnSplitSliderChanged" , new[] { typeof( float ) } )
+						Traverse.Create( inventoryGui.m_splitDialog )
+							.Method( "SliderChanged" , new[] { typeof( float ) } )
 							.GetValue( Mathf.Clamp( splitSlider.value , splitSlider.minValue , splitSlider.maxValue ) );
 					}
 
@@ -505,11 +509,8 @@ namespace InputTweaks
 							else if( !armorStand.HaveAttachment( index ) )
 								break;
 
-							return Traverse.Create( armorStand )
-								.Field( "m_nview" )
-								.GetValue< ZNetView >()
-								.GetZDO()
-								.GetString( index + "_item" );
+							int itemNameHash = armorStand.GetAttachedItem( index );
+							return ObjectDB.instance.GetItemPrefab( itemNameHash )?.name;
 						}
 
 						return null;
@@ -521,9 +522,11 @@ namespace InputTweaks
 					ItemStand itemStand = component.GetComponentInParent< ItemStand >();
 					if( itemStand != null )
 					{
-						return Traverse.Create( itemStand )
-							.Field( "m_visualName" )
-							.GetValue< string >();
+						int itemNameHash = Traverse.Create( itemStand )
+							.Field( "m_visualHash" )
+							.GetValue< int >();
+
+						return ObjectDB.instance.GetItemPrefab( itemNameHash )?.name;
 					}
 				}
 
@@ -680,7 +683,7 @@ namespace InputTweaks
 
 				if( itemStand.HaveAttachment() )
 				{
-					if( itemStand.Interact( player , false , false ) )
+					if( itemStand.Interact( player , true , false ) )
 						DoInteractAnimation( Player.m_localPlayer , itemStand.gameObject );
 
 					return;
@@ -725,8 +728,8 @@ namespace InputTweaks
 			public static bool AddItem( Inventory inventory , ItemDrop.ItemData item , int amount , int x , int y )
 			{
 				return Traverse.Create( inventory )
-					.Method( "AddItem" , new[] { typeof( ItemDrop.ItemData ) , typeof( int ) , typeof( int ) , typeof( int ) } )
-					.GetValue< bool >( item , amount , x , y );
+					.Method( "AddItem" , new[] { typeof( ItemDrop.ItemData ) , typeof( int ) , typeof( int ) , typeof( int ) , typeof( bool ) } )
+					.GetValue< bool >( item , amount , x , y , false );
 			}
 
 			public static void DoInteractAnimation( Player player , GameObject gameObject )
@@ -935,10 +938,10 @@ namespace InputTweaks
 							.GetValue( item , grid.GetInventory() );
 
 						int amount = SplitRoundsUp.Value ? Mathf.CeilToInt( item.m_stack / 2.0f ) : Mathf.FloorToInt( item.m_stack / 2.0f );
-						__instance.m_splitSlider.value = amount;
+						__instance.m_splitDialog.m_splitSlider.value = amount;
 
-						Traverse.Create( __instance )
-							.Method( "OnSplitSliderChanged" , new[] { typeof( float ) } )
+						Traverse.Create( __instance.m_splitDialog )
+							.Method( "SliderChanged" , new[] { typeof( float ) } )
 							.GetValue( amount );
 					}
 
@@ -1053,10 +1056,10 @@ namespace InputTweaks
 						if( !SplitRoundsUp.Value )
 						{
 							int amount = Mathf.Max( 1 , Mathf.FloorToInt( item.m_stack / 2.0f ) );
-							__instance.m_splitSlider.value = amount;
+							__instance.m_splitDialog.m_splitSlider.value = amount;
 
 							Traverse.Create( __instance )
-								.Method( "OnSplitSliderChanged" , new[] { typeof( float ) } )
+								.Method( "SliderChanged" , new[] { typeof( float ) } )
 								.GetValue( amount );
 						}
 					}

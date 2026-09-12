@@ -7,11 +7,14 @@ namespace InputTweaks
 		[HarmonyPatch( typeof( Inventory ) )]
 		public class InventoryPatch
 		{
-			public static void Changed( Inventory inv )
+			public static void Changed( Inventory inv , bool success = false , bool cheatedStateChanged = false )
 			{
-				Traverse.Create( inv )
-					.Method( "Changed" )
-					.GetValue();
+				if( inv != null )
+				{
+					Traverse.Create( inv )
+						.Method( "Changed" , new[] { typeof( bool ) , typeof( bool ) } )
+						.GetValue( success , cheatedStateChanged );
+				}
 			}
 		}
 	}
