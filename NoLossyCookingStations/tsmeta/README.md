@@ -7,6 +7,10 @@ Also works for "Smelter" interactables like blast furnaces and windmills. Client
 
 ## Changelog
 
+1.1.2
+
+- Fix InvalidCastException when using the fermenter
+
 1.1.1
 
 - Update for 1.0.7 (Deep North)
