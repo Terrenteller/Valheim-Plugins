@@ -29,6 +29,13 @@ Other plugins that deal with the inventory and modifier keys may require configu
 
 ## Changelog
 
+1.1.4
+
+- Fix intermittent exception storm caused by unknown state change delays
+- Fix world interaction previews incorrectly appearing over GUI elements
+- Handle player inventory size changes
+- Prioritize mouse wheel item movement over inventory scrolling
+
 1.1.3
 
 - Update for 1.0.7 (Deep North)

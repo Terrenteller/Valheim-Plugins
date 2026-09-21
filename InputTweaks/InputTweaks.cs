@@ -6,7 +6,7 @@ using UnityEngine;
 namespace InputTweaks
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.inputtweaks" , "Input Tweaks" , "1.1.3" )]
+	[BepInPlugin( "com.riintouge.inputtweaks" , "Input Tweaks" , "1.1.4" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class InputTweaks : BaseUnityPlugin
 	{

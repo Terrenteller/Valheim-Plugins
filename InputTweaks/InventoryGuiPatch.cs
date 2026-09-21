@@ -14,16 +14,12 @@ namespace InputTweaks
 		{
 			// Used to skip a very specific sequence that causes RMB to reset the drag
 			private static bool IgnoreUpdateItemDragRightMouseReset = false;
-			// Hide() is called at a bad time by a code path ILSpy is not revealing.
-			// This causes UpdatePostfix() to cache soon-to-be stale buttons immediately after HidePostfix()
-			// clears them, preventing fresh buttons from being cached when the GUI is shown next.
-			private static bool SkipNextUpdate = false;
 			private static bool SingleDropCoolDown = false;
 			private static AbstractInventoryGuiCursorContext MouseContext = null;
 			private static VanillaDragState CurrentDragState = new VanillaDragState();
 			private static List< InventoryButton > PlayerButtons = new List< InventoryButton >();
-			private static bool ForceContainerButtonUpdate = false;
 			private static List< InventoryButton > ContainerButtons = new List< InventoryButton >();
+			private static WeakReference< Container > LastContainer = new WeakReference< Container >( null );
 			private static InventoryButton CurrentButton = null;
 			private static Component LastWorldComponent = null;
 			private static Component CurrentWorldComponent = null;
@@ -33,24 +29,18 @@ namespace InputTweaks
 
 			private static void CollectInventoryButtons( InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
-				// Valid player buttons prevent unnecessary attempts at caching container buttons.
-				// With the addition of "world interactions", containers can be opened and closed at any time.
-				bool standardInitialization = PlayerButtons.Count == 0 && ContainerButtons.Count == 0;
-
-				if( standardInitialization )
+				if( PlayerButtons.Count == 0 && playerGrid )
 				{
 					Common.DebugMessage( $"INFO: Attempting to index PlayerButtons" );
 					CollectInventoryButtons( playerGrid , PlayerButtons );
 					Common.DebugMessage( $"INFO: Indexed {PlayerButtons.Count} player buttons" );
 				}
 
-				if( standardInitialization || ForceContainerButtonUpdate )
+				if( ContainerButtons.Count == 0 && containerGrid )
 				{
 					Common.DebugMessage( $"INFO: Attempting to index ContainerButtons" );
 					CollectInventoryButtons( containerGrid , ContainerButtons );
 					Common.DebugMessage( $"INFO: Indexed {ContainerButtons.Count} container buttons" );
-
-					ForceContainerButtonUpdate = false;
 				}
 			}
 
@@ -89,10 +79,22 @@ namespace InputTweaks
 
 			internal static InventoryButton GetHoveredButton( InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
-				if( playerGrid != null && playerGrid.gameObject.activeInHierarchy && Common.IsCursorOver( playerGrid.gameObject ) )
-					return PlayerButtons.Where( x => Common.IsCursorOver( x.inputHandler.gameObject ) ).FirstOrDefault();
-				else if( containerGrid != null && containerGrid.gameObject.activeInHierarchy && Common.IsCursorOver( containerGrid.gameObject ) )
-					return ContainerButtons.Where( x => Common.IsCursorOver( x.inputHandler.gameObject ) ).FirstOrDefault();
+				try
+				{
+					if( playerGrid != null && playerGrid.gameObject.activeInHierarchy && Common.IsCursorOver( playerGrid.gameObject ) )
+						return PlayerButtons.Where( x => Common.IsCursorOver( x.inputHandler.gameObject ) ).FirstOrDefault();
+					else if( containerGrid != null && containerGrid.gameObject.activeInHierarchy && Common.IsCursorOver( containerGrid.gameObject ) )
+						return ContainerButtons.Where( x => Common.IsCursorOver( x.inputHandler.gameObject ) ).FirstOrDefault();
+				}
+				catch( NullReferenceException )
+				{
+#if !PACKAGE
+					// We shouldn't end up in this state anymore with the aggressive checks in UpdatePostfix()
+					System.Console.WriteLine( "Caught NullReferenceException in GetHoveredButton()!" );
+#endif
+					// But if we do, don't spam the console with exceptions and try again next frame
+					LastContainer.SetTarget( null );
+				}
 
 				return null;
 			}
@@ -184,6 +186,16 @@ namespace InputTweaks
 
 			private static void UpdateMouseWheel( InventoryGui inventoryGui , InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
+				ScrollRect containerScrollRect = null;
+				RectTransform containerTransform = inventoryGui.ContainerGrid.transform.parent as RectTransform;
+				if( Common.IsCursorOver( containerTransform ) )
+				{
+					containerScrollRect = containerTransform.Find( "ContainerGrid" )
+						?.gameObject
+						.GetComponent< ScrollRect >();
+				}
+				ScrollRectPatch.ContainerScrollRect.SetTarget( containerScrollRect );
+
 				if( MouseContext != null || CurrentDragState.isValid || FrameInputs.Current.Any )
 					return;
 
@@ -433,20 +445,22 @@ namespace InputTweaks
 				for( int index = 0 ; index < rootTransform.childCount ; index++ )
 				{
 					RectTransform child = rootTransform.GetChild( index ) as RectTransform;
-					// TODO: What were we doing here? Was this a workaround for the SuperUltrawideSupport bug?
-					//if( child == dropButtonTransform )
-					//{
-					//	if( !child.gameObject.activeInHierarchy || !Common.IsCursorOver( child ) )
-					//	{
-					//		ClearWorldInteractionDragPreview();
-					//		return;
-					//	}
-					//}
-					//else if( child.gameObject.activeInHierarchy && Common.IsCursorOver( child ) )
-					if( child != dropButtonTransform && child.gameObject.activeInHierarchy && Common.IsCursorOver( child ) )
+					if( child == null || child == dropButtonTransform || !child.gameObject.activeInHierarchy )
+						continue;
+
+					if( Common.IsCursorOver( child ) )
 					{
 						ClearWorldInteractionDragPreview();
 						return;
+					}
+					else if( child.name == "Player" )
+					{
+						RectTransform container = child.Find( "Container" ) as RectTransform;
+						if( container != null && container.gameObject.activeInHierarchy && Common.IsCursorOver( container ) )
+						{
+							ClearWorldInteractionDragPreview();
+							return;
+						}
 					}
 				}
 
@@ -822,7 +836,7 @@ namespace InputTweaks
 			private static void OnDestroyPrefix()
 			{
 				IgnoreUpdateItemDragRightMouseReset = false;
-				SkipNextUpdate = true;
+				LastContainer.SetTarget( null );
 				SingleDropCoolDown = false;
 				MouseContext = null;
 				PlayerButtons.Clear();
@@ -1099,6 +1113,13 @@ namespace InputTweaks
 				}
 			}
 
+			[HarmonyPatch( "SetInventorySize" )]
+			[HarmonyPostfix]
+			private static void SetInventorySizePostfix()
+			{
+				PlayerButtons.Clear();
+			}
+
 			[HarmonyPatch( "SetupDragItem" )]
 			[HarmonyPrefix]
 			private static bool SetupDragItemPrefix( ItemDrop.ItemData item , Inventory inventory , int amount )
@@ -1116,7 +1137,8 @@ namespace InputTweaks
 			[HarmonyPostfix]
 			private static void ShowPostfix( Container container , int activeGroup = 1 )
 			{
-				ForceContainerButtonUpdate = true;
+				ContainerButtons.Clear();
+				LastContainer.SetTarget( null );
 			}
 
 			[HarmonyPatch( "ShowSplitDialog" )]
@@ -1128,12 +1150,33 @@ namespace InputTweaks
 
 			[HarmonyPatch( "Update" )]
 			[HarmonyPostfix]
-			private static void UpdatePostfix( int ___m_hiddenFrames , InventoryGrid ___m_playerGrid , InventoryGrid ___m_containerGrid )
+			private static void UpdatePostfix(
+				InventoryGui __instance,
+				int ___m_hiddenFrames,
+				InventoryGrid ___m_playerGrid,
+				InventoryGrid ___m_containerGrid,
+				Container ___m_currentContainer )
 			{
-				if( ___m_hiddenFrames == 0 && !SkipNextUpdate )
-					CollectInventoryButtons( ___m_playerGrid , ___m_containerGrid );
+				if( ___m_hiddenFrames != 0 )
+					return;
 
-				SkipNextUpdate = false;
+				CollectInventoryButtons( ___m_playerGrid , (InventoryGrid)null );
+
+				// This is ugly, but sometimes the container takes several frames to stabilize
+				LastContainer.TryGetTarget( out Container lastContainer );
+				Inventory containerInv = ___m_currentContainer?.GetInventory();
+				int containerSize = containerInv == null ? 0 : ( containerInv.GetWidth() * containerInv.GetHeight() );
+				if( ___m_currentContainer != lastContainer || containerSize != ContainerButtons.Count )
+				{
+#if !PACKAGE
+					System.Console.WriteLine( "Container or container size changed!" );
+#endif
+					LastContainer.SetTarget( ___m_currentContainer );
+					ContainerButtons.Clear();
+
+					if( ___m_currentContainer )
+						CollectInventoryButtons( null , ___m_containerGrid );
+				}
 			}
 
 			[HarmonyPatch( "UpdateItemDrag" )]
@@ -1152,6 +1195,11 @@ namespace InputTweaks
 				FrameInputs.Update();
 				CurrentDragState = new VanillaDragState();
 				CurrentButton = GetHoveredButton( ___m_playerGrid , ___m_containerGrid );
+
+				// Blocking will fail if a scroll is performed on the first hovered frame.
+				// This is very unlikely during normal game play but we do our best.
+				// It does not matter what inventory the button belongs to.
+				ScrollRectPatch.BlockContainerButtonScrolling = CurrentButton != null;
 
 				// Order is mildly important here to keep multiple things from happening on the same frame
 				UpdateContext( ___m_playerGrid , ___m_containerGrid );

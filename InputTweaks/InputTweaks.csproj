@@ -102,6 +102,7 @@
     <Compile Include="InventoryPatch.cs" />
     <Compile Include="Lockable.cs" />
     <Compile Include="MouseContext.cs" />
+    <Compile Include="ScrollRectPatch.cs" />
     <Compile Include="VanillaDragState.cs" />
     <Compile Include="FrameInputs.cs" />
     <Compile Include="InventoryGridPatch.cs" />
