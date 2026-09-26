@@ -29,6 +29,11 @@ Other plugins that deal with the inventory and modifier keys may require configu
 
 ## Changelog
 
+1.1.5
+
+- Fix incompatibility with HipCharms and possibly other inventory expansion plugins
+- Hide a debug message that should not appear in distribution builds
+
 1.1.4
 
 - Fix intermittent exception storm caused by unknown state change delays

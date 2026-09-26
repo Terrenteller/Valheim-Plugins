@@ -32,41 +32,36 @@ namespace InputTweaks
 				if( PlayerButtons.Count == 0 && playerGrid )
 				{
 					Common.DebugMessage( $"INFO: Attempting to index PlayerButtons" );
-					CollectInventoryButtons( playerGrid , PlayerButtons );
+					PlayerButtons.AddRange( EnumerateInventoryGridButtons( playerGrid ) );
 					Common.DebugMessage( $"INFO: Indexed {PlayerButtons.Count} player buttons" );
 				}
 
 				if( ContainerButtons.Count == 0 && containerGrid )
 				{
 					Common.DebugMessage( $"INFO: Attempting to index ContainerButtons" );
-					CollectInventoryButtons( containerGrid , ContainerButtons );
+					ContainerButtons.AddRange( EnumerateInventoryGridButtons( containerGrid ) );
 					Common.DebugMessage( $"INFO: Indexed {ContainerButtons.Count} container buttons" );
 				}
 			}
 
-			private static void CollectInventoryButtons( InventoryGrid grid , List< InventoryButton > buttons )
+			private static IEnumerable< InventoryButton > EnumerateInventoryGridButtons( InventoryGrid grid )
 			{
-				buttons.Clear();
-
 				Inventory inv = grid?.GetInventory();
 				if( inv == null )
-					return;
+					yield break;
 
 				int width = inv.GetWidth();
 				int height = inv.GetHeight();
 				if( width <= 0 || height <= 0 )
-					return;
+					yield break;
 
-				// EVIL: If the object argument is not specified, it news ONE up, and sets ALL new indices to it
-				buttons.Resize( width * height , null );
 				foreach( UIInputHandler inputHandler in grid.GetComponentsInChildren< UIInputHandler >() )
 				{
 					Vector2i gridPos = InventoryGridPatch.GetButtonPos( grid , inputHandler );
 					if( gridPos.x == -1 || gridPos.y == -1 )
 						continue; // UnityEngine.Object.Destroy() does not destroy on the same frame
 
-					int gridIndex = gridPos.x + ( gridPos.y * width );
-					buttons[ gridIndex ] = new InventoryButton
+					yield return new InventoryButton
 					{
 						inputHandler = inputHandler,
 						grid = grid,
@@ -82,18 +77,20 @@ namespace InputTweaks
 				try
 				{
 					if( playerGrid != null && playerGrid.gameObject.activeInHierarchy && Common.IsCursorOver( playerGrid.gameObject ) )
-						return PlayerButtons.Where( x => Common.IsCursorOver( x.inputHandler.gameObject ) ).FirstOrDefault();
+						return PlayerButtons.Where( x => Common.IsCursorOver( x?.inputHandler.gameObject ) ).FirstOrDefault();
 					else if( containerGrid != null && containerGrid.gameObject.activeInHierarchy && Common.IsCursorOver( containerGrid.gameObject ) )
-						return ContainerButtons.Where( x => Common.IsCursorOver( x.inputHandler.gameObject ) ).FirstOrDefault();
+						return ContainerButtons.Where( x => Common.IsCursorOver( x?.inputHandler.gameObject ) ).FirstOrDefault();
 				}
 				catch( NullReferenceException )
 				{
 #if !PACKAGE
-					// We shouldn't end up in this state anymore with the aggressive checks in UpdatePostfix()
+					// We shouldn't end up in this state anymore with aggressive null checking...
 					System.Console.WriteLine( "Caught NullReferenceException in GetHoveredButton()!" );
 #endif
-					// But if we do, don't spam the console with exceptions and try again next frame
+					// ...but if we do, don't spam the console with exceptions and try again next time
 					LastContainer.SetTarget( null );
+					PlayerButtons.Clear();
+					ContainerButtons.Clear();
 				}
 
 				return null;
@@ -124,8 +121,17 @@ namespace InputTweaks
 
 			private static void EndDrag( bool clearContext )
 			{
-				PlayerButtons.ForEach( x => x.considerForDrag = false );
-				ContainerButtons.ForEach( x => x.considerForDrag = false );
+				PlayerButtons.ForEach( x =>
+				{
+					if( x != null )
+						x.considerForDrag = false;
+				} );
+
+				ContainerButtons.ForEach( x =>
+				{
+					if( x != null )
+						x.considerForDrag = false;
+				} );
 
 				if( clearContext )
 				{
@@ -1160,7 +1166,7 @@ namespace InputTweaks
 				if( ___m_hiddenFrames != 0 )
 					return;
 
-				CollectInventoryButtons( ___m_playerGrid , (InventoryGrid)null );
+				CollectInventoryButtons( ___m_playerGrid , null );
 
 				// This is ugly, but sometimes the container takes several frames to stabilize
 				LastContainer.TryGetTarget( out Container lastContainer );

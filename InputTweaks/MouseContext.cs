@@ -139,27 +139,49 @@ namespace InputTweaks
 			}
 
 			VanillaDragState dragState = new VanillaDragState();
-			UpdateInventoryButtons( playerGrid , this.playerButtons , dragState.dragItem );
+			int exceptions = UpdateInventoryButtons( playerGrid , this.playerButtons , dragState.dragItem );
+#if !PACKAGE
+			if( exceptions > 0 )
+				Common.DebugMessage( $"CNTX: Caught {exceptions} exception(s) updating player buttons!" );
+#endif
 			UpdateInventoryButtons( containerGrid , this.containerButtons , dragState.dragItem );
+#if !PACKAGE
+			if( exceptions > 0 )
+				Common.DebugMessage( $"CNTX: Caught {exceptions} exception(s) updating container buttons!" );
+#endif
 		}
 
-		protected void UpdateInventoryButtons(
+		protected int UpdateInventoryButtons(
 			InventoryGrid grid,
 			List< InventoryButton > buttons,
 			ItemDrop.ItemData dragItem )
 		{
 			Inventory inv = grid.GetInventory();
+			int exceptions = 0;
 
 			foreach( InventoryButton button in buttons )
 			{
-				Vector2i gridPos = button.gridPos;
-				ItemDrop.ItemData otherItem = inv.GetItemAt( gridPos.x , gridPos.y );
-				button.considerForDrag = otherItem == null
-					|| dragItem == null
-					|| otherItem == dragItem
-					|| Common.CanStackOnto( dragItem , otherItem );
-				button.representsExistingItem = otherItem != null;
+				if( button == null )
+					continue;
+
+				try
+				{
+					Vector2i gridPos = button.gridPos;
+					ItemDrop.ItemData otherItem = inv.GetItemAt( gridPos.x , gridPos.y );
+					button.considerForDrag = otherItem == null
+						|| dragItem == null
+						|| otherItem == dragItem
+						|| Common.CanStackOnto( dragItem , otherItem );
+					button.representsExistingItem = otherItem != null;
+				}
+				catch( Exception )
+				{
+					// We don't anticipate getting here, but if we do, ignore it
+					exceptions++;
+				}
 			}
+
+			return exceptions;
 		}
 
 		// AbstractInventoryGuiCursorContext overrides
