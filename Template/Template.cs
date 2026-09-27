@@ -5,7 +5,7 @@ using HarmonyLib;
 // This is a template project for copying or prototyping. To copy:
 // 1. Duplicate the top-level "Template" directory outside of Visual Studio
 // 2. Generate a new GUID in .../Properties/AssemblyInfo.cs
-// 3. Rename Template.cs
+// 3. Rename Template.csproj, Template.cs, and Template.cs within Template.csproj
 // 4. Add the new project to the solution
 // 5. Template -> MyPlugin (minding capitalization) except for BepInPlugin( ... , "My Plugin" , ... )
 // 6. Remove unused library references

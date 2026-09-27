@@ -1,0 +1,10 @@
+{
+	"name": "PettingZoo",
+	"version_number": "1.0.0",
+	"website_url": "https://github.com/Terrenteller/Valheim-Plugins",
+	"description": "You wished to pet the seals. Now you can!",
+	"dependencies": [
+		"denikson-BepInExPack_Valheim-5.4.2350",
+		"ValheimModding-Jotunn-2.30.0"
+	]
+}
