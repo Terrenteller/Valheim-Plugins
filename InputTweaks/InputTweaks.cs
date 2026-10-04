@@ -1,15 +1,18 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
 
 namespace InputTweaks
 {
 	// Keep the version up-to-date with AssemblyInfo.cs, manifest.json, and README.md!
-	[BepInPlugin( "com.riintouge.inputtweaks" , "Input Tweaks" , "1.1.5" )]
+	[BepInPlugin( "com.riintouge.inputtweaks" , "Input Tweaks" , "1.1.6" )]
 	[BepInProcess( "valheim.exe" )]
 	public partial class InputTweaks : BaseUnityPlugin
 	{
+		public static ManualLogSource Log = null;
+
 		// 0 - Core
 		public static ConfigEntry< bool > IsEnabled;
 		public static ConfigEntry< bool > LoadOnStart;
@@ -238,6 +241,7 @@ namespace InputTweaks
 
 			if( LoadOnStart.Value )
 			{
+				Log = Logger;
 				InitialSwapMoveAndSplit = SwapMoveAndSplit.Value;
 				Harmony.PatchAll();
 			}

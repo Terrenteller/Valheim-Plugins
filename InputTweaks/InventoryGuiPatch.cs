@@ -85,7 +85,7 @@ namespace InputTweaks
 				{
 #if !PACKAGE
 					// We shouldn't end up in this state anymore with aggressive null checking...
-					System.Console.WriteLine( "Caught NullReferenceException in GetHoveredButton()!" );
+					InputTweaks.Log.LogWarning( "Caught NullReferenceException in GetHoveredButton()!" );
 #endif
 					// ...but if we do, don't spam the console with exceptions and try again next time
 					LastContainer.SetTarget( null );
@@ -1175,7 +1175,7 @@ namespace InputTweaks
 				if( ___m_currentContainer != lastContainer || containerSize != ContainerButtons.Count )
 				{
 #if !PACKAGE
-					System.Console.WriteLine( "Container or container size changed!" );
+					InputTweaks.Log.LogInfo( "Container or container size changed!" );
 #endif
 					LastContainer.SetTarget( ___m_currentContainer );
 					ContainerButtons.Clear();

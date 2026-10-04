@@ -35,9 +35,9 @@ namespace InputTweaks
 					.GetValue< int >();
 			}
 
-			[HarmonyPatch( "OnLeftClick" )]
+			[HarmonyPatch( "OnLeftDown" )]
 			[HarmonyTranspiler]
-			private static IEnumerable< CodeInstruction > OnLeftClickTranspiler( IEnumerable< CodeInstruction > instructionsIn )
+			private static IEnumerable< CodeInstruction > OnLeftDownTranspiler( IEnumerable< CodeInstruction > instructionsIn )
 			{
 				return InitialSwapMoveAndSplit ? Common.SwapShiftAndCtrl( instructionsIn ) : instructionsIn;
 			}

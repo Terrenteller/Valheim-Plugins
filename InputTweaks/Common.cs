@@ -64,7 +64,7 @@ namespace InputTweaks
 		public static void DebugMessage( string message )
 		{
 			if( InputTweaks.DebugMessages.Value )
-				Debug.Log( message );
+				InputTweaks.Log.LogInfo( message ); // LogDebug() doesn't write to the console by default
 		}
 
 		public static List< ItemDrop.ItemData > EquivalentStackables( ItemDrop.ItemData item , InventoryGrid grid )
@@ -148,23 +148,42 @@ namespace InputTweaks
 
 		public static IEnumerable< CodeInstruction > SwapShiftAndCtrl( IEnumerable< CodeInstruction > instructionsIn )
 		{
+			int operandsUpdated = 0;
+
 			foreach( CodeInstruction instruction in instructionsIn )
 			{
 				if( instruction.opcode == OpCodes.Ldc_I4 && (int)instruction.operand == LeftShiftInt )
+				{
 					instruction.operand = LeftControlInt;
+					operandsUpdated++;
+				}
 				else if( instruction.opcode == OpCodes.Ldc_I4 && (int)instruction.operand == RightShiftInt )
+				{
 					instruction.operand = RightControlInt;
+					operandsUpdated++;
+				}
 				else if( instruction.opcode == OpCodes.Ldc_I4 && (int)instruction.operand == LeftControlInt )
+				{
 					instruction.operand = LeftShiftInt;
+					operandsUpdated++;
+				}
 				else if( instruction.opcode == OpCodes.Ldc_I4 && (int)instruction.operand == RightControlInt )
+				{
 					instruction.operand = RightShiftInt;
+					operandsUpdated++;
+				}
 
 				yield return instruction;
 			}
+
+			if( operandsUpdated == 0 )
+				InputTweaks.Log.LogError( "Common.SwapShiftAndCtrl() did not change any operands!" );
 		}
 
 		public static List< CodeInstruction > SwapMoveAndSplitInSwitch( IEnumerable< CodeInstruction > instructionsIn )
 		{
+			int operandsUpdated = 0;
+
 			List< CodeInstruction > instructions = new List< CodeInstruction >( instructionsIn );
 			for( int index = 0 ; ( index + 2 ) < instructions.Count ; index++ )
 			{
@@ -177,11 +196,20 @@ namespace InputTweaks
 					// Swap InventoryGrid.Modifier.Split (1) and InventoryGrid.Modifier.Move (2)
 					CodeInstruction instruction1 = instructions[ index + 1 ];
 					if( instruction1.opcode == OpCodes.Ldc_I4_1 )
+					{
 						instruction1.opcode = OpCodes.Ldc_I4_2;
+						operandsUpdated++;
+					}
 					else if( instruction1.opcode == OpCodes.Ldc_I4_2 )
+					{
 						instruction1.opcode = OpCodes.Ldc_I4_1;
+						operandsUpdated++;
+					}
 				}
 			}
+
+			if( operandsUpdated == 0 )
+				InputTweaks.Log.LogError( "Common.SwapMoveAndSplitInSwitch() did not change any operands!" );
 
 			return instructions;
 		}
