@@ -52,6 +52,7 @@ namespace InputTweaks
 
 				int width = inv.GetWidth();
 				int height = inv.GetHeight();
+				Common.DebugMessage( $"INFO: InventoryGrid is {width} wide and {height} tall" );
 				if( width <= 0 || height <= 0 )
 					yield break;
 
@@ -74,12 +75,17 @@ namespace InputTweaks
 
 			internal static InventoryButton GetHoveredButton( InventoryGrid playerGrid , InventoryGrid containerGrid )
 			{
+				InventoryButton button = null;
+
 				try
 				{
-					if( playerGrid != null && playerGrid.gameObject.activeInHierarchy && Common.IsCursorOver( playerGrid.gameObject ) )
-						return PlayerButtons.Where( x => Common.IsCursorOver( x?.inputHandler.gameObject ) ).FirstOrDefault();
-					else if( containerGrid != null && containerGrid.gameObject.activeInHierarchy && Common.IsCursorOver( containerGrid.gameObject ) )
-						return ContainerButtons.Where( x => Common.IsCursorOver( x?.inputHandler.gameObject ) ).FirstOrDefault();
+					// We cannot check if the cursor is within the bounds of either grid as an optimization.
+					// Inventory management/expansion plugins may cause buttons to appear outside of their grid.
+					if( playerGrid != null && playerGrid.gameObject.activeInHierarchy )
+						button = PlayerButtons.Where( x => Common.IsCursorOver( x?.inputHandler.gameObject ) ).FirstOrDefault();
+
+					if( button == null && containerGrid != null && containerGrid.gameObject.activeInHierarchy )
+						button = ContainerButtons.Where( x => Common.IsCursorOver( x?.inputHandler.gameObject ) ).FirstOrDefault();
 				}
 				catch( NullReferenceException )
 				{
@@ -93,7 +99,7 @@ namespace InputTweaks
 					ContainerButtons.Clear();
 				}
 
-				return null;
+				return button;
 			}
 
 			#endregion

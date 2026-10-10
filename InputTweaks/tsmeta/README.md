@@ -29,6 +29,10 @@ Other plugins that deal with the inventory and modifier keys may require configu
 
 ## Changelog
 
+1.1.7
+
+- Fix incompatibility with ExtraSlots and possibly other inventory expansion plugins
+
 1.1.6
 
 - Fix [CTRL] + [LMB] split when `SwapMoveAndSplit` is enabled
